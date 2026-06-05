@@ -8,7 +8,7 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/invitations
   const invitation = await db.invitation.findUnique({
     where: { token },
     include: {
-      organization: { select: { id: true, name: true } },
+      workspace: { select: { id: true, name: true } },
     },
   });
 
@@ -24,6 +24,6 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/invitations
     status: expired && invitation.status === "PENDING" ? "EXPIRED" : invitation.status,
     expiresAt: invitation.expiresAt,
     valid,
-    organization: invitation.organization,
+    workspace: invitation.workspace,
   });
 }

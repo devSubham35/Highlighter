@@ -13,9 +13,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
   const userId = session!.user.id;
 
   const project = await db.project.findFirst({
-    where: { id: projectId, organization: { memberships: { some: { userId } } } },
+    where: { id: projectId, workspace: { memberships: { some: { userId } } } },
     include: {
-      organization: {
+      workspace: {
         include: {
           memberships: {
             include: { user: { select: { id: true, name: true, email: true, image: true } } },
@@ -30,7 +30,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
 
   if (!project) notFound();
 
-  const members = project.organization.memberships.map((membership) => membership.user);
+  const members = project.workspace.memberships.map((membership) => membership.user);
   const issues = project.reports
     .map((report, index) => {
       const existing = parseReportMetadata(report.metadata);

@@ -17,13 +17,13 @@ export default async function ProjectLayout({
   const project = await db.project.findFirst({
     where: {
       id: projectId,
-      organization: { memberships: { some: { userId: session!.user.id } } },
+      workspace: { memberships: { some: { userId: session!.user.id } } },
     },
     select: {
       id: true,
       name: true,
       websiteUrl: true,
-      organizationId: true,
+      workspaceId: true,
     },
   });
 
@@ -35,7 +35,7 @@ export default async function ProjectLayout({
         projectId={project.id}
         projectName={project.name}
         websiteUrl={project.websiteUrl}
-        workspaceId={project.organizationId}
+        workspaceId={project.workspaceId}
       >
         {children}
       </ProjectShell>

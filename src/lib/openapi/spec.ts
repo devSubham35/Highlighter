@@ -28,13 +28,13 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
     tags: [
       { name: "Auth", description: "Better Auth session endpoints (cookie-based)" },
       { name: "Users", description: "Current user profile and account settings" },
-      { name: "Organizations", description: "Workspace management" },
+      { name: "Workspaces", description: "Workspace management" },
       { name: "Members", description: "Workspace team members" },
       { name: "Projects", description: "Project and widget configuration" },
       { name: "Reports", description: "Issue reports from widget and dashboard" },
-      { name: "Comments", description: "Issue comment threads" },
       { name: "Invitations", description: "Workspace member invitations" },
       { name: "Upload", description: "Screenshot presigned upload (widget)" },
+      { name: "Documentation", description: "OpenAPI spec and Swagger UI" },
     ],
     paths: {
       "/api/auth/sign-up/email": {
@@ -219,36 +219,36 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
           },
         },
       },
-      "/api/organizations": {
+      "/api/workspaces": {
         get: {
-          tags: ["Organizations"],
+          tags: ["Workspaces"],
           summary: "List workspaces for current user",
-          operationId: "listOrganizations",
+          operationId: "listWorkspaces",
           security: [{ sessionCookie: [] }],
           responses: {
             "200": jsonResponse("Workspace list", {
               type: "array",
-              items: { $ref: "#/components/schemas/OrganizationSummary" },
+              items: { $ref: "#/components/schemas/WorkspaceSummary" },
             }),
             "401": jsonResponse("Unauthorized", errorRef, { error: "Unauthorized" }),
           },
         },
         post: {
-          tags: ["Organizations"],
+          tags: ["Workspaces"],
           summary: "Create a workspace",
-          operationId: "createOrganization",
+          operationId: "createWorkspace",
           security: [{ sessionCookie: [] }],
           requestBody: {
             required: true,
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/CreateOrganizationRequest" },
-                example: { name: "Acme Design", inviteEmail: "teammate@example.com" },
+                schema: { $ref: "#/components/schemas/CreateWorkspaceRequest" },
+                example: { name: "Acme Design", inviteEmail: "" },
               },
             },
           },
           responses: {
-            "201": jsonResponse("Workspace created", { $ref: "#/components/schemas/Organization" }),
+            "201": jsonResponse("Workspace created", { $ref: "#/components/schemas/Workspace" }),
             "400": jsonResponse("Validation error", errorRef),
             "401": jsonResponse("Unauthorized", errorRef, { error: "Unauthorized" }),
             "409": jsonResponse("Duplicate workspace name", errorRef, {
@@ -257,50 +257,50 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
           },
         },
       },
-      "/api/organizations/{organizationId}": {
+      "/api/workspaces/{workspaceId}": {
         get: {
-          tags: ["Organizations"],
+          tags: ["Workspaces"],
           summary: "Get workspace details",
-          operationId: "getOrganization",
+          operationId: "getWorkspace",
           security: [{ sessionCookie: [] }],
           parameters: [
             {
-              name: "organizationId",
+              name: "workspaceId",
               in: "path",
               required: true,
-              schema: { type: "string", example: "clxorg123abc456" },
+              schema: { type: "string", example: "clxws123abc456" },
             },
           ],
           responses: {
-            "200": jsonResponse("Workspace detail", { $ref: "#/components/schemas/OrganizationDetail" }),
+            "200": jsonResponse("Workspace detail", { $ref: "#/components/schemas/WorkspaceDetail" }),
             "401": jsonResponse("Unauthorized", errorRef, { error: "Unauthorized" }),
             "404": jsonResponse("Workspace not found", errorRef, { error: "Not found" }),
           },
         },
         patch: {
-          tags: ["Organizations"],
+          tags: ["Workspaces"],
           summary: "Update workspace name",
-          operationId: "updateOrganization",
+          operationId: "updateWorkspace",
           security: [{ sessionCookie: [] }],
           parameters: [
             {
-              name: "organizationId",
+              name: "workspaceId",
               in: "path",
               required: true,
-              schema: { type: "string", example: "clxorg123abc456" },
+              schema: { type: "string", example: "clxws123abc456" },
             },
           ],
           requestBody: {
             required: true,
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/UpdateOrganizationRequest" },
+                schema: { $ref: "#/components/schemas/UpdateWorkspaceRequest" },
                 example: { name: "Acme Design Team" },
               },
             },
           },
           responses: {
-            "200": jsonResponse("Updated workspace", { $ref: "#/components/schemas/OrganizationSummary" }),
+            "200": jsonResponse("Updated workspace", { $ref: "#/components/schemas/WorkspaceSummary" }),
             "400": jsonResponse("Validation error", errorRef),
             "401": jsonResponse("Unauthorized", errorRef, { error: "Unauthorized" }),
             "403": jsonResponse("Insufficient role", errorRef, { error: "Forbidden" }),
@@ -309,16 +309,16 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
           },
         },
         delete: {
-          tags: ["Organizations"],
+          tags: ["Workspaces"],
           summary: "Delete a workspace",
-          operationId: "deleteOrganization",
+          operationId: "deleteWorkspace",
           security: [{ sessionCookie: [] }],
           parameters: [
             {
-              name: "organizationId",
+              name: "workspaceId",
               in: "path",
               required: true,
-              schema: { type: "string", example: "clxorg123abc456" },
+              schema: { type: "string", example: "clxws123abc456" },
             },
           ],
           responses: {
@@ -329,18 +329,18 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
           },
         },
       },
-      "/api/organizations/{organizationId}/members": {
+      "/api/workspaces/{workspaceId}/members": {
         get: {
           tags: ["Members"],
           summary: "List workspace members",
-          operationId: "listOrganizationMembers",
+          operationId: "listWorkspaceMembers",
           security: [{ sessionCookie: [] }],
           parameters: [
             {
-              name: "organizationId",
+              name: "workspaceId",
               in: "path",
               required: true,
-              schema: { type: "string", example: "clxorg123abc456" },
+              schema: { type: "string", example: "clxws123abc456" },
             },
           ],
           responses: {
@@ -353,7 +353,7 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
           },
         },
       },
-      "/api/organizations/{organizationId}/members/{userId}": {
+      "/api/workspaces/{workspaceId}/members/{userId}": {
         patch: {
           tags: ["Members"],
           summary: "Update member role",
@@ -361,10 +361,10 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
           security: [{ sessionCookie: [] }],
           parameters: [
             {
-              name: "organizationId",
+              name: "workspaceId",
               in: "path",
               required: true,
-              schema: { type: "string", example: "clxorg123abc456" },
+              schema: { type: "string", example: "clxws123abc456" },
             },
             {
               name: "userId",
@@ -397,10 +397,10 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
           security: [{ sessionCookie: [] }],
           parameters: [
             {
-              name: "organizationId",
+              name: "workspaceId",
               in: "path",
               required: true,
-              schema: { type: "string", example: "clxorg123abc456" },
+              schema: { type: "string", example: "clxws123abc456" },
             },
             {
               name: "userId",
@@ -417,18 +417,18 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
           },
         },
       },
-      "/api/organizations/{organizationId}/invitations": {
+      "/api/workspaces/{workspaceId}/invitations": {
         get: {
           tags: ["Invitations"],
           summary: "List workspace invitations",
-          operationId: "listOrganizationInvitations",
+          operationId: "listWorkspaceInvitations",
           security: [{ sessionCookie: [] }],
           parameters: [
             {
-              name: "organizationId",
+              name: "workspaceId",
               in: "path",
               required: true,
-              schema: { type: "string", example: "clxorg123abc456" },
+              schema: { type: "string", example: "clxws123abc456" },
             },
           ],
           responses: {
@@ -449,10 +449,10 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
           security: [{ sessionCookie: [] }],
           parameters: [
             {
-              name: "organizationId",
+              name: "workspaceId",
               in: "query",
               required: true,
-              schema: { type: "string", example: "clxorg123abc456" },
+              schema: { type: "string", example: "clxws123abc456" },
               description: "Workspace ID to list projects for",
             },
             {
@@ -468,7 +468,7 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
               type: "array",
               items: { $ref: "#/components/schemas/ProjectListItem" },
             }),
-            "400": jsonResponse("Missing organizationId", errorRef, { error: "organizationId required" }),
+            "400": jsonResponse("Missing workspaceId", errorRef, { error: "workspaceId required" }),
             "401": jsonResponse("Unauthorized", errorRef, { error: "Unauthorized" }),
             "403": jsonResponse("Not a workspace member", errorRef, { error: "Forbidden" }),
           },
@@ -484,7 +484,7 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
               "application/json": {
                 schema: { $ref: "#/components/schemas/CreateProjectRequest" },
                 example: {
-                  organizationId: "clxorg123abc456",
+                  workspaceId: "clxws123abc456",
                   name: "Marketing Site",
                   websiteUrl: "https://example.com",
                   widgetColor: "#2563eb",
@@ -656,7 +656,7 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
       "/api/reports/{reportId}": {
         get: {
           tags: ["Reports"],
-          summary: "Get report with comments",
+          summary: "Get report detail",
           operationId: "getReport",
           security: [{ sessionCookie: [] }],
           parameters: [
@@ -744,59 +744,6 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
           },
         },
       },
-      "/api/reports/{reportId}/comments": {
-        get: {
-          tags: ["Comments"],
-          summary: "List comments on a report",
-          operationId: "listComments",
-          security: [{ sessionCookie: [] }],
-          parameters: [
-            {
-              name: "reportId",
-              in: "path",
-              required: true,
-              schema: { type: "string", example: "clxreport123abc456" },
-            },
-          ],
-          responses: {
-            "200": jsonResponse("Comment thread", {
-              type: "array",
-              items: { $ref: "#/components/schemas/Comment" },
-            }),
-            "401": jsonResponse("Unauthorized", errorRef, { error: "Unauthorized" }),
-            "404": jsonResponse("Report not found", errorRef, { error: "Not found" }),
-          },
-        },
-        post: {
-          tags: ["Comments"],
-          summary: "Add a comment to a report",
-          operationId: "createComment",
-          security: [{ sessionCookie: [] }],
-          parameters: [
-            {
-              name: "reportId",
-              in: "path",
-              required: true,
-              schema: { type: "string", example: "clxreport123abc456" },
-            },
-          ],
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/CreateCommentRequest" },
-                example: { content: "I can reproduce this on Safari as well." },
-              },
-            },
-          },
-          responses: {
-            "201": jsonResponse("Comment created", { $ref: "#/components/schemas/Comment" }),
-            "400": jsonResponse("Validation error", errorRef),
-            "401": jsonResponse("Unauthorized", errorRef, { error: "Unauthorized" }),
-            "404": jsonResponse("Report not found", errorRef, { error: "Not found" }),
-          },
-        },
-      },
       "/api/invitations": {
         get: {
           tags: ["Invitations"],
@@ -805,10 +752,10 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
           security: [{ sessionCookie: [] }],
           parameters: [
             {
-              name: "organizationId",
+              name: "workspaceId",
               in: "query",
               required: true,
-              schema: { type: "string", example: "clxorg123abc456" },
+              schema: { type: "string", example: "clxws123abc456" },
             },
           ],
           responses: {
@@ -816,7 +763,7 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
               type: "array",
               items: { $ref: "#/components/schemas/Invitation" },
             }),
-            "400": jsonResponse("Missing organizationId", errorRef, { error: "organizationId required" }),
+            "400": jsonResponse("Missing workspaceId", errorRef, { error: "workspaceId required" }),
             "401": jsonResponse("Unauthorized", errorRef, { error: "Unauthorized" }),
             "403": jsonResponse("Admin role required", errorRef, { error: "Forbidden" }),
           },
@@ -834,7 +781,7 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
                 example: {
                   email: "teammate@example.com",
                   role: "MEMBER",
-                  organizationId: "clxorg123abc456",
+                  workspaceId: "clxws123abc456",
                 },
               },
             },
@@ -942,6 +889,29 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
           summary: "CORS preflight for upload",
           operationId: "uploadOptions",
           responses: { "204": { description: "CORS preflight OK" } },
+        },
+      },
+      "/api/docs": {
+        get: {
+          tags: ["Documentation"],
+          summary: "Swagger UI HTML",
+          operationId: "getDocs",
+          responses: {
+            "200": {
+              description: "Swagger UI HTML page",
+              content: { "text/html": { schema: { type: "string" } } },
+            },
+          },
+        },
+      },
+      "/api/openapi": {
+        get: {
+          tags: ["Documentation"],
+          summary: "OpenAPI 3.0 JSON spec",
+          operationId: "getOpenApi",
+          responses: {
+            "200": jsonResponse("OpenAPI specification", { type: "object" }),
+          },
         },
       },
     },

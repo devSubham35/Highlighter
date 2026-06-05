@@ -56,8 +56,8 @@ const features = [
   },
   {
     icon: MessageSquareText,
-    title: "Team comments",
-    description: "Discuss reports in context so QA, design, and engineering stay aligned.",
+    title: "Activity history",
+    description: "Track status and priority changes with a clear audit trail on every issue.",
   },
 ];
 
@@ -75,7 +75,7 @@ const steps = [
   {
     step: "03",
     title: "Triage in one place",
-    description: "Review screenshots, metadata, and comments from a clean dashboard built for bug fixing.",
+    description: "Review screenshots, metadata, and activity history from a clean dashboard built for bug fixing.",
   },
 ];
 
@@ -305,7 +305,7 @@ export function LandingPage() {
                 "Status workflow from open to resolved",
                 "Priority and severity at a glance",
                 "Screenshot previews with full metadata",
-                "Comment threads on every issue",
+                "Activity history on every issue",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3 text-sm text-foreground">
                   <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">

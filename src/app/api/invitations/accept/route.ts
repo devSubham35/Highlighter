@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
   const invitation = await db.invitation.findUnique({
     where: { token: parsed.data.token },
-    include: { organization: true },
+    include: { workspace: true },
   });
 
   if (!invitation) return jsonError("Invitation not found", 404);
@@ -34,9 +34,9 @@ export async function POST(req: NextRequest) {
 
   const existingMembership = await db.membership.findUnique({
     where: {
-      userId_organizationId: {
+      userId_workspaceId: {
         userId: authResult.session.user.id,
-        organizationId: invitation.organizationId,
+        workspaceId: invitation.workspaceId,
       },
     },
   });
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     db.membership.create({
       data: {
         userId: authResult.session.user.id,
-        organizationId: invitation.organizationId,
+        workspaceId: invitation.workspaceId,
         role: invitation.role,
       },
       include: {
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     ok: true,
-    organization: invitation.organization,
+    workspace: invitation.workspace,
     membership: {
       id: membership.id,
       role: membership.role,

@@ -1,13 +1,12 @@
 import {
-  getOrganizationCounts,
-  getSession,
-  isOrganizationNameTaken,
+  getWorkspaceCounts,
   jsonError,
+  isWorkspaceNameTaken,
   requireSession,
-  slugify,
 } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { createOrganizationSchema } from "@/lib/validations";
+import { slugify } from "@/lib/slugify";
+import { createWorkspaceSchema } from "@/lib/validations";
 import { addDays } from "date-fns";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -15,7 +14,7 @@ export async function GET() {
   const authResult = await requireSession();
   if ("error" in authResult) return authResult.error;
 
-  const organizations = await db.organization.findMany({
+  const workspaces = await db.workspace.findMany({
     where: { memberships: { some: { userId: authResult.session.user.id } } },
     orderBy: { createdAt: "desc" },
     include: {
@@ -33,16 +32,16 @@ export async function GET() {
   });
 
   return NextResponse.json(
-    organizations.map((organization) => ({
-      id: organization.id,
-      name: organization.name,
-      slug: organization.slug,
-      ownerId: organization.ownerId,
-      role: organization.memberships[0]?.role ?? "MEMBER",
-      projectCount: organization._count.projects,
-      memberCount: organization._count.memberships,
-      createdAt: organization.createdAt,
-      updatedAt: organization.updatedAt,
+    workspaces.map((workspace) => ({
+      id: workspace.id,
+      name: workspace.name,
+      slug: workspace.slug,
+      ownerId: workspace.ownerId,
+      role: workspace.memberships[0]?.role ?? "MEMBER",
+      projectCount: workspace._count.projects,
+      memberCount: workspace._count.memberships,
+      createdAt: workspace.createdAt,
+      updatedAt: workspace.updatedAt,
     })),
   );
 }
@@ -52,18 +51,18 @@ export async function POST(req: NextRequest) {
   if ("error" in authResult) return authResult.error;
 
   const body = await req.json();
-  const parsed = createOrganizationSchema.safeParse(body);
+  const parsed = createWorkspaceSchema.safeParse(body);
   if (!parsed.success) {
     return jsonError(parsed.error.flatten(), 400);
   }
 
-  if (await isOrganizationNameTaken(authResult.session.user.id, parsed.data.name)) {
+  if (await isWorkspaceNameTaken(authResult.session.user.id, parsed.data.name)) {
     return jsonError("A workspace with this name already exists.", 409);
   }
 
   const baseSlug = slugify(parsed.data.name);
   const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`;
-  const organization = await db.organization.create({
+  const workspace = await db.workspace.create({
     data: {
       name: parsed.data.name,
       slug,
@@ -76,7 +75,7 @@ export async function POST(req: NextRequest) {
   if (inviteEmail) {
     await db.invitation.create({
       data: {
-        organizationId: organization.id,
+        workspaceId: workspace.id,
         email: inviteEmail,
         role: "MEMBER",
         invitedById: authResult.session.user.id,
@@ -85,7 +84,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const counts = await getOrganizationCounts(organization.id);
+  const counts = await getWorkspaceCounts(workspace.id);
 
-  return NextResponse.json({ ...organization, ...counts, role: "OWNER" }, { status: 201 });
+  return NextResponse.json({ ...workspace, ...counts, role: "OWNER" }, { status: 201 });
 }

@@ -77,8 +77,6 @@ function ActivityRow({
     );
   }
 
-  if (entry.kind === "comment") return null;
-
   return (
     <div className="flex gap-3 py-4">
       <IssueUserAvatar name={actor} className="h-7 w-7 shrink-0 text-[10px]" />

@@ -1,5 +1,4 @@
 import { jsonError, requireSession } from "@/lib/api/helpers";
-import { auth } from "@/lib/auth";
 import { checkRateLimit, corsHeaders } from "@/lib/http";
 import { db } from "@/lib/db";
 import { createReportSchema } from "@/lib/validations";
@@ -56,10 +55,10 @@ export async function GET(req: NextRequest) {
       ...(severity ? { severity: severity as never } : {}),
       ...(search ? { title: { contains: search, mode: "insensitive" } } : {}),
       project: {
-        organization: { memberships: { some: { userId: authResult.session.user.id } } },
+        workspace: { memberships: { some: { userId: authResult.session.user.id } } },
       },
     },
-    include: { project: true, _count: { select: { comments: true } } },
+    include: { project: true },
     orderBy: { createdAt: "desc" },
     take: 50,
   });

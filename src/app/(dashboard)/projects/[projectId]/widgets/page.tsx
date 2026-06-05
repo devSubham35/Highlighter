@@ -13,7 +13,7 @@ export default async function ProjectWidgetsPage({
   const { projectId } = await params;
   const session = await auth.api.getSession({ headers: await headers() });
   const project = await db.project.findFirst({
-    where: { id: projectId, organization: { memberships: { some: { userId: session!.user.id } } } },
+    where: { id: projectId, workspace: { memberships: { some: { userId: session!.user.id } } } },
     select: { id: true, name: true, apiKey: true },
   });
   if (!project) notFound();

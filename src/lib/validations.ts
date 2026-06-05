@@ -21,7 +21,7 @@ export const registerFormSchema = z.object({
     .min(8, "Password must be at least 8 characters"),
 });
 
-export const createOrganizationFormSchema = z.object({
+export const createWorkspaceFormSchema = z.object({
   name: z
     .string()
     .trim()
@@ -49,24 +49,15 @@ export const createProjectFormSchema = z.object({
     .max(100, "Display name is too long"),
 });
 
-export const createCommentFormSchema = z.object({
-  content: z
-    .string()
-    .trim()
-    .min(1, "Comment is required")
-    .max(2000, "Comment is too long"),
-});
-
 export type LoginFormData = z.infer<typeof loginFormSchema>;
 export type RegisterFormData = z.infer<typeof registerFormSchema>;
-export type CreateOrganizationFormData = z.infer<typeof createOrganizationFormSchema>;
+export type CreateWorkspaceFormData = z.infer<typeof createWorkspaceFormSchema>;
 export type CreateProjectFormData = z.infer<typeof createProjectFormSchema>;
-export type CreateCommentFormData = z.infer<typeof createCommentFormSchema>;
 
-export const createOrganizationSchema = createOrganizationFormSchema;
+export const createWorkspaceSchema = createWorkspaceFormSchema;
 
 export const createProjectSchema = createProjectFormSchema.extend({
-  organizationId: z.string().cuid(),
+  workspaceId: z.string().cuid(),
   widgetColor: z.string().regex(/^#[0-9a-f]{6}$/i).optional(),
   widgetPosition: z
     .enum(["bottom-right", "bottom-left", "top-right", "top-left"])
@@ -122,7 +113,7 @@ export const updateReportSchema = z.object({
         .array(
           z.object({
             id: z.string(),
-            kind: z.enum(["reported", "title_ai", "status", "priority", "comment"]),
+            kind: z.enum(["reported", "title_ai", "status", "priority"]),
             at: z.string(),
             actorName: z.string().optional(),
             issueType: z.enum(["BUG", "IMPROVEMENT"]).optional(),
@@ -130,7 +121,6 @@ export const updateReportSchema = z.object({
             toStatus: z.enum(["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"]).optional(),
             fromPriority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
             toPriority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
-            comment: z.string().optional(),
           }),
         )
         .optional(),
@@ -138,15 +128,13 @@ export const updateReportSchema = z.object({
     .optional(),
 });
 
-export const createCommentSchema = createCommentFormSchema;
-
 export const inviteMemberSchema = z.object({
   email: z.string().email(),
   role: z.enum(["ADMIN", "MEMBER"]),
-  organizationId: z.string().cuid(),
+  workspaceId: z.string().cuid(),
 });
 
-export const updateOrganizationSchema = z.object({
+export const updateWorkspaceSchema = z.object({
   name: z
     .string()
     .trim()

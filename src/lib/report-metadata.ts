@@ -2,7 +2,7 @@ import type { IssuePriority, IssueType, ReportStatus } from "@/types";
 
 export type ActivityEntry = {
   id: string;
-  kind: "reported" | "title_ai" | "status" | "priority" | "comment";
+  kind: "reported" | "title_ai" | "status" | "priority";
   at: string;
   actorName?: string;
   issueType?: IssueType;
@@ -10,7 +10,6 @@ export type ActivityEntry = {
   toStatus?: ReportStatus;
   fromPriority?: IssuePriority;
   toPriority?: IssuePriority;
-  comment?: string;
 };
 
 export type ReportMetadata = {
@@ -117,7 +116,6 @@ export function appendActivityLog(
     toStatus: entry.toStatus,
     fromPriority: entry.fromPriority,
     toPriority: entry.toPriority,
-    comment: entry.comment,
   };
   return mergeReportMetadata(metadata, { activityLog: [...log, next] });
 }

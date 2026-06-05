@@ -5,8 +5,8 @@ import { RHFTextField } from "@/components/common/hook-form/RHFTextField";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  createOrganizationFormSchema,
-  type CreateOrganizationFormData,
+  createWorkspaceFormSchema,
+  type CreateWorkspaceFormData,
 } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -17,23 +17,23 @@ export function CreateOrganizationForm() {
   const router = useRouter();
   const [serverError, setServerError] = useState("");
 
-  const methods = useForm<CreateOrganizationFormData>({
-    resolver: zodResolver(createOrganizationFormSchema),
+  const methods = useForm<CreateWorkspaceFormData>({
+    resolver: zodResolver(createWorkspaceFormSchema),
     defaultValues: { name: "" },
     mode: "onSubmit",
   });
 
-  async function onSubmit(data: CreateOrganizationFormData) {
+  async function onSubmit(data: CreateWorkspaceFormData) {
     setServerError("");
 
-    const response = await fetch("/api/organizations", {
+    const response = await fetch("/api/workspaces", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      setServerError("Could not create organization. Please try again.");
+      setServerError("Could not create workspace. Please try again.");
       return;
     }
 
@@ -44,8 +44,8 @@ export function CreateOrganizationForm() {
   return (
     <Card className="max-w-md border border-sidebar-border shadow-sm dark:bg-surface-elevated">
       <CardHeader>
-        <CardTitle>Create an organization</CardTitle>
-        <CardDescription>Projects live inside an organization.</CardDescription>
+        <CardTitle>Create a workspace</CardTitle>
+        <CardDescription>Projects live inside a workspace.</CardDescription>
       </CardHeader>
       <CardContent>
         <FormProvider
@@ -56,7 +56,7 @@ export function CreateOrganizationForm() {
           <div className="flex-1">
             <RHFTextField
               name="name"
-              label="Organization name"
+              label="Workspace name"
               placeholder="Acme Corp"
               required
             />

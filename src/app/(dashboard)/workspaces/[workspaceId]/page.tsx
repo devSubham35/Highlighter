@@ -14,7 +14,7 @@ export default async function WorkspaceProjectsPage({
   const { workspaceId } = await params;
   const session = await auth.api.getSession({ headers: await headers() });
 
-  const organization = await db.organization.findFirst({
+  const workspace = await db.workspace.findFirst({
     where: {
       id: workspaceId,
       memberships: { some: { userId: session!.user.id } },
@@ -38,20 +38,20 @@ export default async function WorkspaceProjectsPage({
     },
   });
 
-  if (!organization) notFound();
+  if (!workspace) notFound();
 
   const imageCounts = await db.report.groupBy({
     by: ["projectId"],
     where: {
       screenshotUrl: { not: null },
-      project: { organizationId: organization.id },
+      project: { workspaceId: workspace.id },
     },
     _count: { _all: true },
   });
 
   const imageCountMap = new Map(imageCounts.map((row) => [row.projectId, row._count._all]));
 
-  const projects = organization.projects.map((project) => ({
+  const projects = workspace.projects.map((project) => ({
     id: project.id,
     name: project.name,
     websiteUrl: project.websiteUrl,
@@ -65,8 +65,8 @@ export default async function WorkspaceProjectsPage({
   return (
     <ContentContainer>
       <div className="space-y-6">
-        <PageHeader title="Projects" description={organization.name} backHref="/workspaces" />
-        <ProjectsView organizationId={organization.id} workspaceId={workspaceId} projects={projects} />
+        <PageHeader title="Projects" description={workspace.name} backHref="/workspaces" />
+        <ProjectsView workspaceId={workspaceId} projects={projects} />
       </div>
     </ContentContainer>
   );

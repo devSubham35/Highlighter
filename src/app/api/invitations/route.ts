@@ -1,20 +1,20 @@
-import { jsonError, requireOrgMembership, requireSession } from "@/lib/api/helpers";
+import { jsonError, requireSession, requireWorkspaceMembership } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { inviteMemberSchema } from "@/lib/validations";
 import { addDays } from "date-fns";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
-  const organizationId = req.nextUrl.searchParams.get("organizationId");
-  if (!organizationId) {
-    return jsonError("organizationId required", 400);
+  const workspaceId = req.nextUrl.searchParams.get("workspaceId");
+  if (!workspaceId) {
+    return jsonError("workspaceId required", 400);
   }
 
-  const access = await requireOrgMembership(organizationId, "ADMIN");
+  const access = await requireWorkspaceMembership(workspaceId, "ADMIN");
   if ("error" in access) return access.error;
 
   const invitations = await db.invitation.findMany({
-    where: { organizationId },
+    where: { workspaceId },
     orderBy: { createdAt: "desc" },
   });
 
@@ -30,14 +30,14 @@ export async function POST(req: NextRequest) {
     return jsonError(parsed.error.flatten(), 400);
   }
 
-  const access = await requireOrgMembership(parsed.data.organizationId, "ADMIN");
+  const access = await requireWorkspaceMembership(parsed.data.workspaceId, "ADMIN");
   if ("error" in access) return access.error;
 
   const email = parsed.data.email.toLowerCase();
 
   const existingMember = await db.membership.findFirst({
     where: {
-      organizationId: parsed.data.organizationId,
+      workspaceId: parsed.data.workspaceId,
       user: { email: { equals: email, mode: "insensitive" } },
     },
   });
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
   const pendingInvite = await db.invitation.findFirst({
     where: {
-      organizationId: parsed.data.organizationId,
+      workspaceId: parsed.data.workspaceId,
       email: { equals: email, mode: "insensitive" },
       status: "PENDING",
       expiresAt: { gt: new Date() },

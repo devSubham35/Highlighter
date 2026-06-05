@@ -1,8 +1,6 @@
 "use client";
 
 import { IssueActivityTimeline } from "@/components/issues/IssueActivityTimeline";
-import { IssueCommentComposer } from "@/components/issues/IssueCommentComposer";
-import { IssueCommentsList, type IssueComment } from "@/components/issues/IssueCommentsList";
 import { IssueDescriptionEditor } from "@/components/issues/IssueDescriptionEditor";
 import { IssueDetailSidebar } from "@/components/issues/IssueDetailSidebar";
 import { IssueScreenshotPreview } from "@/components/issues/IssueScreenshotPreview";
@@ -15,7 +13,6 @@ import {
 } from "@/lib/report-metadata";
 import type { ActivityEntry } from "@/lib/report-metadata";
 import type { IssuePriority, IssueType, OrgMember, ReportStatus } from "@/types";
-import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -25,17 +22,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { isIssuePriority } from "@/lib/issue-options";
-import { isReportStatus } from "@/lib/report-options";
 import { ExternalLink, Link2, MoreHorizontal, Sparkles, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-
-type Comment = {
-  id: string;
-  content: string;
-  createdAt: string;
-  author: { name: string; email: string; image?: string | null };
-};
 
 export function IssueDetailModal({
   open,
@@ -61,10 +50,8 @@ export function IssueDetailModal({
   onDelete?: (issueId: string) => void;
 }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"comments" | "history">("comments");
   const [detail, setDetail] = useState<IssueItem | null>(issue);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
-  const [comments, setComments] = useState<IssueComment[]>([]);
   const [loading, setLoading] = useState(false);
 
   const currentIndex = useMemo(
@@ -77,7 +64,7 @@ export function IssueDetailModal({
     const response = await fetch(`/api/reports/${issueId}`);
     setLoading(false);
     if (!response.ok) return;
-    const data = (await response.json()) as IssueItem & { comments?: Comment[] };
+    const data = (await response.json()) as IssueItem;
     const base = seed ?? data;
     const metadata = parseReportMetadata(data.metadata ?? base.metadata);
     const issueType: IssueType = metadata.type ?? "IMPROVEMENT";
@@ -92,25 +79,16 @@ export function IssueDetailModal({
       reporterName,
       title: data.title,
       existing: metadata.activityLog,
-    }).filter((entry) => entry.kind !== "comment");
+    });
 
     setDetail({ ...base, ...data });
     setActivity(activityLog);
-    setComments(
-      (data.comments ?? []).map((comment) => ({
-        id: comment.id,
-        content: comment.content,
-        createdAt: new Date(comment.createdAt),
-        author: comment.author,
-      })),
-    );
   }, [currentUserName]);
 
   useEffect(() => {
     if (!open || !issue) {
       if (!open) {
         setDetail(null);
-        setComments([]);
         setActivity([]);
       }
       return;
@@ -168,18 +146,6 @@ export function IssueDetailModal({
 
   async function saveDescription(description: string | null) {
     await patchIssue({ description });
-  }
-
-  async function postComment(content: string) {
-    if (!detail) return;
-    const response = await fetch(`/api/reports/${detail.id}/comments`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
-    });
-    if (!response.ok) return;
-    await loadIssue(detail.id);
-    router.refresh();
   }
 
   function handleMetadataPatch(patch: { metadata?: Record<string, unknown> }) {
@@ -280,52 +246,18 @@ export function IssueDetailModal({
 
               <IssueDescriptionEditor description={displayDetail.description} onSave={saveDescription} />
 
-              <section className="bg-card">
-                <div className="flex gap-6 border-b border-sidebar-border px-5">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("comments")}
-                    className={cn(
-                      "border-b-2 py-3 text-sm font-medium transition-colors",
-                      activeTab === "comments"
-                        ? "border-primary text-foreground"
-                        : "border-transparent text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    Comments{comments.length > 0 ? ` ${comments.length}` : ""}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("history")}
-                    className={cn(
-                      "border-b-2 py-3 text-sm font-medium transition-colors",
-                      activeTab === "history"
-                        ? "border-primary text-foreground"
-                        : "border-transparent text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    History
-                  </button>
-                </div>
-
-                <div className="px-5">
-                  {loading ? (
-                    <p className="py-8 text-sm text-muted-foreground">Loading…</p>
-                  ) : activeTab === "comments" ? (
-                    <IssueCommentsList comments={comments} />
-                  ) : (
-                    <IssueActivityTimeline
-                      entries={activity}
-                      currentUserName={currentUserName}
-                      reporterName={reporterName}
-                    />
-                  )}
-                </div>
+              <section className="bg-card px-5 py-4">
+                <h3 className="mb-4 text-sm font-semibold text-foreground">History</h3>
+                {loading ? (
+                  <p className="py-8 text-sm text-muted-foreground">Loading…</p>
+                ) : (
+                  <IssueActivityTimeline
+                    entries={activity}
+                    currentUserName={currentUserName}
+                    reporterName={reporterName}
+                  />
+                )}
               </section>
-            </div>
-
-            <div className="shrink-0 border-t border-sidebar-border bg-muted/40 px-5 py-4">
-              <IssueCommentComposer onSubmit={postComment} disabled={loading} />
             </div>
           </div>
 

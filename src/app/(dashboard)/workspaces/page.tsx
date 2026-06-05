@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 
 export default async function WorkspacesPage() {
   const session = await auth.api.getSession({ headers: await headers() });
-  const organizations = await db.organization.findMany({
+  const workspacesData = await db.workspace.findMany({
     where: { memberships: { some: { userId: session!.user.id } } },
     orderBy: { createdAt: "desc" },
     select: {
@@ -34,13 +34,13 @@ export default async function WorkspacesPage() {
     },
   });
 
-  const workspaces = organizations.map((org) => ({
-    id: org.id,
-    name: org.name,
-    createdAt: org.createdAt.toISOString(),
-    projectCount: org._count.projects,
-    memberCount: org._count.memberships,
-    members: org.memberships.map((membership) => ({
+  const workspaces = workspacesData.map((workspace) => ({
+    id: workspace.id,
+    name: workspace.name,
+    createdAt: workspace.createdAt.toISOString(),
+    projectCount: workspace._count.projects,
+    memberCount: workspace._count.memberships,
+    members: workspace.memberships.map((membership) => ({
       id: membership.user.id,
       name: membership.user.name,
       image: membership.user.image,

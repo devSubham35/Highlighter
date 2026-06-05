@@ -12,9 +12,9 @@ async function requireReport(reportId: string) {
   const report = await db.report.findFirst({
     where: {
       id: reportId,
-      project: { organization: { memberships: { some: { userId: session.user.id } } } },
+      project: { workspace: { memberships: { some: { userId: session.user.id } } } },
     },
-    include: { project: true, comments: { include: { author: true }, orderBy: { createdAt: "asc" } } },
+    include: { project: true },
   });
 
   if (!report) return { error: "Not found" as const };

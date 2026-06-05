@@ -6,7 +6,6 @@ import {
   Circle,
   Clock,
   Highlighter,
-  MessageSquare,
 } from "lucide-react";
 
 const issues = [
@@ -17,7 +16,6 @@ const issues = [
     statusVariant: "info" as const,
     priority: "High",
     priorityVariant: "warning" as const,
-    comments: 3,
     time: "2h ago",
   },
   {
@@ -27,7 +25,6 @@ const issues = [
     statusVariant: "warning" as const,
     priority: "Medium",
     priorityVariant: "secondary" as const,
-    comments: 1,
     time: "5h ago",
   },
   {
@@ -37,7 +34,6 @@ const issues = [
     statusVariant: "success" as const,
     priority: "Low",
     priorityVariant: "outline" as const,
-    comments: 5,
     time: "1d ago",
   },
 ];
@@ -92,10 +88,6 @@ export function DashboardPreview() {
               </div>
 
               <div className="flex shrink-0 items-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  {issue.comments}
-                </span>
                 <span>{issue.time}</span>
               </div>
             </div>
@@ -108,11 +100,8 @@ export function DashboardPreview() {
           <div className="h-10 w-14 shrink-0 rounded-md border-2 border-dashed border-primary/40 bg-primary/5" />
           <div className="min-w-0 flex-1 space-y-1.5">
             <div className="h-2 w-32 rounded-full bg-muted-foreground/20" />
-            <div className="h-2 w-full max-w-xs rounded-full bg-muted" />
+            <div className="h-2 w-48 rounded-full bg-muted-foreground/10" />
           </div>
-          <Badge variant="outline" className={cn("hidden sm:inline-flex")}>
-            Screenshot attached
-          </Badge>
         </div>
       </div>
     </div>

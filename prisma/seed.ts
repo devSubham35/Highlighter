@@ -186,14 +186,14 @@ function hoursAgoDate(hoursAgo: number) {
   return new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
 }
 
-function apiKeyForOrg(organizationId: string, index: number) {
-  const orgPart = organizationId.replace(/[^a-z0-9]/gi, "").slice(-16).padStart(16, "0");
-  return `project_live_${orgPart}${String(index).padStart(2, "0")}`;
+function apiKeyForWorkspace(workspaceId: string, index: number) {
+  const workspacePart = workspaceId.replace(/[^a-z0-9]/gi, "").slice(-16).padStart(16, "0");
+  return `project_live_${workspacePart}${String(index).padStart(2, "0")}`;
 }
 
-async function seedProjectsForOrg(organizationId: string, orgName: string) {
+async function seedProjectsForWorkspace(workspaceId: string, workspaceName: string) {
   for (const [index, seedProject] of DEMO_PROJECTS.entries()) {
-    const apiKey = apiKeyForOrg(organizationId, index);
+    const apiKey = apiKeyForWorkspace(workspaceId, index);
 
     const project = await db.project.upsert({
       where: { apiKey },
@@ -206,7 +206,7 @@ async function seedProjectsForOrg(organizationId: string, orgName: string) {
         name: seedProject.name,
         websiteUrl: seedProject.websiteUrl,
         archived: seedProject.archived ?? false,
-        organizationId,
+        workspaceId,
         apiKey,
       },
     });
@@ -260,7 +260,7 @@ async function seedProjectsForOrg(organizationId: string, orgName: string) {
     }
   }
 
-  console.log(`Seeded dummy projects for "${orgName}"`);
+  console.log(`Seeded dummy projects for "${workspaceName}"`);
 }
 
 async function main() {
@@ -275,7 +275,7 @@ async function main() {
     },
   });
 
-  const org = await db.organization.upsert({
+  const workspace = await db.workspace.upsert({
     where: { slug: "acme-corp" },
     update: {},
     create: {
@@ -286,18 +286,18 @@ async function main() {
   });
 
   await db.membership.upsert({
-    where: { userId_organizationId: { userId: user.id, organizationId: org.id } },
+    where: { userId_workspaceId: { userId: user.id, workspaceId: workspace.id } },
     update: {},
-    create: { userId: user.id, organizationId: org.id, role: "OWNER" },
+    create: { userId: user.id, workspaceId: workspace.id, role: "OWNER" },
   });
 
-  const allOrgs = await db.organization.findMany({ select: { id: true, name: true } });
+  const allWorkspaces = await db.workspace.findMany({ select: { id: true, name: true } });
 
-  for (const existingOrg of allOrgs) {
-    await seedProjectsForOrg(existingOrg.id, existingOrg.name);
+  for (const existingWorkspace of allWorkspaces) {
+    await seedProjectsForWorkspace(existingWorkspace.id, existingWorkspace.name);
   }
 
-  console.log("Seed complete — 4 projects with reports added per organization");
+  console.log("Seed complete — 4 projects with reports added per workspace");
 }
 
 main().finally(() => db.$disconnect());

@@ -9,7 +9,7 @@ import { headers } from "next/headers";
 
 export default async function SettingsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
-  const organizations = await db.organization.findMany({
+  const workspaces = await db.workspace.findMany({
     where: { memberships: { some: { userId: session!.user.id } } },
     include: { memberships: { include: { user: true } }, invitations: true },
   });
@@ -18,7 +18,7 @@ export default async function SettingsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Settings"
-        description="Account, organization, and team management."
+        description="Account, workspace, and team management."
       />
       <Card className="border border-sidebar-border shadow-sm dark:bg-surface-elevated">
         <CardHeader>
@@ -44,15 +44,15 @@ export default async function SettingsPage() {
         </CardContent>
       </Card>
       <CreateOrganizationForm />
-      {organizations.map((org) => (
-        <Card key={org.id} className="border border-sidebar-border shadow-sm dark:bg-surface-elevated">
+      {workspaces.map((workspace) => (
+        <Card key={workspace.id} className="border border-sidebar-border shadow-sm dark:bg-surface-elevated">
           <CardHeader>
-            <CardTitle>{org.name}</CardTitle>
+            <CardTitle>{workspace.name}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <h3 className="text-sm font-semibold text-foreground">Team members</h3>
             <div className="divide-y divide-sidebar-border overflow-hidden rounded-xl border border-sidebar-border">
-              {org.memberships.map((membership) => (
+              {workspace.memberships.map((membership) => (
                 <div key={membership.id} className="flex items-center justify-between p-3 text-sm">
                   <span className="text-foreground">{membership.user.email}</span>
                   <span className="text-muted-foreground">{membership.role.toLowerCase()}</span>

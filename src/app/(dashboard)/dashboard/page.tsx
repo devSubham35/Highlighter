@@ -10,11 +10,11 @@ export default async function DashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session!.user.id;
 
-  const orgFilter = { organization: { memberships: { some: { userId } } } };
+  const workspaceFilter = { workspace: { memberships: { some: { userId } } } };
 
   const [projects, activeProjects] = await Promise.all([
-    db.project.count({ where: orgFilter }),
-    db.project.count({ where: { ...orgFilter, archived: false } }),
+    db.project.count({ where: workspaceFilter }),
+    db.project.count({ where: { ...workspaceFilter, archived: false } }),
   ]);
 
   return (

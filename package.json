@@ -10,7 +10,9 @@
     "prisma:migrate": "prisma migrate dev",
     "seed": "tsx prisma/seed.ts",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:api": "tsx scripts/test-api.ts",
+    "validate:openapi": "tsx scripts/validate-openapi.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1057.0",

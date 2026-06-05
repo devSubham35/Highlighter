@@ -8,7 +8,7 @@ type SessionData = NonNullable<Awaited<ReturnType<typeof getSession>>>;
 
 export type ApiErrorResult = { error: NextResponse };
 export type SessionResult = { session: SessionData };
-export type OrgAccessResult = SessionResult & { membership: Membership };
+export type WorkspaceAccessResult = SessionResult & { membership: Membership };
 
 export function jsonError(message: string | object, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -34,18 +34,18 @@ export function hasMinRole(role: MemberRole, minimum: MemberRole) {
   return roleRank[role] >= roleRank[minimum];
 }
 
-export async function requireOrgMembership(
-  organizationId: string,
+export async function requireWorkspaceMembership(
+  workspaceId: string,
   minimumRole: MemberRole = "MEMBER",
-): Promise<ApiErrorResult | OrgAccessResult> {
+): Promise<ApiErrorResult | WorkspaceAccessResult> {
   const authResult = await requireSession();
   if ("error" in authResult) return authResult;
 
   const membership = await db.membership.findUnique({
     where: {
-      userId_organizationId: {
+      userId_workspaceId: {
         userId: authResult.session.user.id,
-        organizationId,
+        workspaceId,
       },
     },
   });
@@ -61,12 +61,8 @@ export async function requireOrgMembership(
   return { session: authResult.session, membership };
 }
 
-export function slugify(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
-
-export async function isOrganizationNameTaken(userId: string, name: string, excludeId?: string) {
-  const existing = await db.organization.findFirst({
+export async function isWorkspaceNameTaken(userId: string, name: string, excludeId?: string) {
+  const existing = await db.workspace.findFirst({
     where: {
       id: excludeId ? { not: excludeId } : undefined,
       name: { equals: name, mode: "insensitive" },
@@ -77,21 +73,21 @@ export async function isOrganizationNameTaken(userId: string, name: string, excl
   return Boolean(existing);
 }
 
-export async function getOrganizationCounts(organizationId: string) {
+export async function getWorkspaceCounts(workspaceId: string) {
   const [projectCount, memberCount, pendingInvites] = await Promise.all([
-    db.project.count({ where: { organizationId, archived: false } }),
-    db.membership.count({ where: { organizationId } }),
-    db.invitation.count({ where: { organizationId, status: "PENDING" } }),
+    db.project.count({ where: { workspaceId, archived: false } }),
+    db.membership.count({ where: { workspaceId } }),
+    db.invitation.count({ where: { workspaceId, status: "PENDING" } }),
   ]);
 
   return { projectCount, memberCount, pendingInvites };
 }
 
-export async function enrichProjects(projects: Array<{ id: string; organizationId: string }>) {
+export async function enrichProjects(projects: Array<{ id: string; workspaceId: string }>) {
   if (projects.length === 0) return [];
 
   const projectIds = projects.map((project) => project.id);
-  const organizationId = projects[0]?.organizationId;
+  const workspaceId = projects[0]?.workspaceId;
 
   const [imageCounts, openCounts, lastIssues] = await Promise.all([
     db.report.groupBy({
@@ -127,6 +123,6 @@ export async function enrichProjects(projects: Array<{ id: string; organizationI
     openCount: openCountMap.get(project.id) ?? 0,
     imageCount: imageCountMap.get(project.id) ?? 0,
     lastIssueAt: lastIssueMap.get(project.id) ?? null,
-    organizationId: project.organizationId ?? organizationId,
+    workspaceId: project.workspaceId ?? workspaceId,
   }));
 }

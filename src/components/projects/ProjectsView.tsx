@@ -34,11 +34,9 @@ export type ProjectListItem = {
 type StatusFilter = "active" | "archived";
 
 export function ProjectsView({
-  organizationId,
   workspaceId,
   projects,
 }: {
-  organizationId: string;
   workspaceId: string;
   projects: ProjectListItem[];
 }) {
@@ -225,7 +223,7 @@ export function ProjectsView({
             </Button>
           </div>
 
-          <CreateProjectDialog organizationId={organizationId} />
+          <CreateProjectDialog workspaceId={workspaceId} />
         </div>
       </div>
 

@@ -1,14 +1,14 @@
-import { jsonError, requireOrgMembership } from "@/lib/api/helpers";
+import { requireWorkspaceMembership } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(_req: NextRequest, ctx: RouteContext<"/api/organizations/[organizationId]/members">) {
-  const { organizationId } = await ctx.params;
-  const access = await requireOrgMembership(organizationId);
+export async function GET(_req: NextRequest, ctx: RouteContext<"/api/workspaces/[workspaceId]/members">) {
+  const { workspaceId } = await ctx.params;
+  const access = await requireWorkspaceMembership(workspaceId);
   if ("error" in access) return access.error;
 
   const memberships = await db.membership.findMany({
-    where: { organizationId },
+    where: { workspaceId },
     include: {
       user: { select: { id: true, name: true, email: true, image: true } },
     },

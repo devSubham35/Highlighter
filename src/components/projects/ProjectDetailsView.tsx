@@ -26,12 +26,6 @@ export type IssueItem = {
   userAgent: string | null;
   metadata: unknown;
   createdAt: string;
-  comments?: {
-    id: string;
-    content: string;
-    createdAt: string;
-    author: { name: string; email: string };
-  }[];
 };
 
 type IssueFilter = "all" | "assigned" | "open" | "unassigned";

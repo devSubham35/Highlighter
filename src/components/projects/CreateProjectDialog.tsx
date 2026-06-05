@@ -23,7 +23,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-export function CreateProjectDialog({ organizationId }: { organizationId: string }) {
+export function CreateProjectDialog({ workspaceId }: { workspaceId: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -53,7 +53,7 @@ export function CreateProjectDialog({ organizationId }: { organizationId: string
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...data,
-        organizationId,
+        workspaceId,
       }),
     });
 

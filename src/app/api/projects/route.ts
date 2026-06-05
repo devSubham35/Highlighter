@@ -1,22 +1,22 @@
-import { enrichProjects, jsonError, requireOrgMembership } from "@/lib/api/helpers";
+import { enrichProjects, jsonError, requireWorkspaceMembership } from "@/lib/api/helpers";
 import { generateApiKey } from "@/lib/api-key";
 import { db } from "@/lib/db";
 import { createProjectSchema } from "@/lib/validations";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
-  const organizationId = req.nextUrl.searchParams.get("organizationId");
-  if (!organizationId) {
-    return jsonError("organizationId required", 400);
+  const workspaceId = req.nextUrl.searchParams.get("workspaceId");
+  if (!workspaceId) {
+    return jsonError("workspaceId required", 400);
   }
 
-  const access = await requireOrgMembership(organizationId);
+  const access = await requireWorkspaceMembership(workspaceId);
   if ("error" in access) return access.error;
 
   const enriched = req.nextUrl.searchParams.get("enriched") !== "false";
 
   const projects = await db.project.findMany({
-    where: { organizationId },
+    where: { workspaceId },
     include: { _count: { select: { reports: true } } },
     orderBy: { createdAt: "desc" },
   });
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     return jsonError(parsed.error.flatten(), 400);
   }
 
-  const access = await requireOrgMembership(parsed.data.organizationId, "ADMIN");
+  const access = await requireWorkspaceMembership(parsed.data.workspaceId, "ADMIN");
   if ("error" in access) return access.error;
 
   const project = await db.project.create({

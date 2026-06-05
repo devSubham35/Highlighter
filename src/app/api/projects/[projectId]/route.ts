@@ -12,7 +12,7 @@ async function requireProjectAccess(projectId: string) {
   const project = await db.project.findFirst({
     where: {
       id: projectId,
-      organization: { memberships: { some: { userId: session.user.id } } },
+      workspace: { memberships: { some: { userId: session.user.id } } },
     },
   });
 

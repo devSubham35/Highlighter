@@ -19,7 +19,6 @@ model User {
   sessions    Session[]
   accounts    Account[]
   memberships Membership[]
-  comments    Comment[]
   invitations Invitation[] @relation("InvitedBy")
 
   @@map("users")
@@ -71,7 +70,7 @@ model Verification {
   @@map("verifications")
 }
 
-model Organization {
+model Workspace {
   id        String   @id @default(cuid())
   name      String
   slug      String   @unique
@@ -83,7 +82,7 @@ model Organization {
   projects    Project[]
   invitations Invitation[]
 
-  @@map("organizations")
+  @@map("workspaces")
 }
 
 enum MemberRole {
@@ -93,22 +92,22 @@ enum MemberRole {
 }
 
 model Membership {
-  id             String     @id @default(cuid())
-  userId         String
-  organizationId String
-  role           MemberRole @default(MEMBER)
-  createdAt      DateTime   @default(now())
+  id          String     @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        MemberRole @default(MEMBER)
+  createdAt   DateTime   @default(now())
 
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, organizationId])
+  @@unique([userId, workspaceId])
   @@map("memberships")
 }
 
 model Project {
   id             String   @id @default(cuid())
-  organizationId String
+  workspaceId    String
   name           String
   websiteUrl     String?
   archived       Boolean  @default(false)
@@ -118,10 +117,10 @@ model Project {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  reports      Report[]
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  reports   Report[]
 
-  @@index([organizationId])
+  @@index([workspaceId])
   @@map("projects")
 }
 
@@ -162,29 +161,13 @@ model Report {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
-  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  comments Comment[]
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
   @@index([status])
   @@index([severity])
   @@index([createdAt])
   @@map("reports")
-}
-
-model Comment {
-  id        String   @id @default(cuid())
-  reportId  String
-  authorId  String
-  content   String   @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
-  author User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
-  @@index([reportId])
-  @@map("comments")
 }
 
 enum InvitationStatus {
@@ -194,20 +177,20 @@ enum InvitationStatus {
 }
 
 model Invitation {
-  id             String           @id @default(cuid())
-  organizationId String
-  email          String
-  role           MemberRole       @default(MEMBER)
-  status         InvitationStatus @default(PENDING)
-  token          String           @unique @default(cuid())
-  invitedById    String
-  expiresAt      DateTime
-  createdAt      DateTime         @default(now())
+  id          String           @id @default(cuid())
+  workspaceId String
+  email       String
+  role        MemberRole       @default(MEMBER)
+  status      InvitationStatus @default(PENDING)
+  token       String           @unique @default(cuid())
+  invitedById String
+  expiresAt   DateTime
+  createdAt   DateTime         @default(now())
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  invitedBy    User         @relation("InvitedBy", fields: [invitedById], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation("InvitedBy", fields: [invitedById], references: [id])
 
-  @@index([organizationId])
+  @@index([workspaceId])
   @@index([email])
   @@map("invitations")
 }

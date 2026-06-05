@@ -66,10 +66,10 @@ export const openApiSchemas = {
       password: { type: "string", minLength: 6, example: "password123" },
     },
   },
-  Organization: {
+  Workspace: {
     type: "object",
     properties: {
-      id: { type: "string", example: "clxorg123abc456" },
+      id: { type: "string", example: "clxws123abc456" },
       name: { type: "string", example: "Acme Design" },
       slug: { type: "string", example: "acme-design-x7k2m" },
       ownerId: { type: "string", example: "clx1abc123def456" },
@@ -77,10 +77,10 @@ export const openApiSchemas = {
       updatedAt: { type: "string", format: "date-time", example: "2026-06-01T10:00:00.000Z" },
     },
   },
-  OrganizationSummary: {
+  WorkspaceSummary: {
     type: "object",
     properties: {
-      id: { type: "string", example: "clxorg123abc456" },
+      id: { type: "string", example: "clxws123abc456" },
       name: { type: "string", example: "Acme Design" },
       slug: { type: "string", example: "acme-design-x7k2m" },
       ownerId: { type: "string", example: "clx1abc123def456" },
@@ -91,9 +91,9 @@ export const openApiSchemas = {
       updatedAt: { type: "string", format: "date-time", example: "2026-06-01T10:00:00.000Z" },
     },
   },
-  OrganizationDetail: {
+  WorkspaceDetail: {
     allOf: [
-      { $ref: "#/components/schemas/OrganizationSummary" },
+      { $ref: "#/components/schemas/WorkspaceSummary" },
       {
         type: "object",
         properties: {
@@ -111,7 +111,7 @@ export const openApiSchemas = {
       },
     ],
   },
-  UpdateOrganizationRequest: {
+  UpdateWorkspaceRequest: {
     type: "object",
     required: ["name"],
     properties: {
@@ -150,7 +150,7 @@ export const openApiSchemas = {
     type: "object",
     properties: {
       ok: { type: "boolean", example: true },
-      organization: { $ref: "#/components/schemas/Organization" },
+      workspace: { $ref: "#/components/schemas/Workspace" },
       membership: { $ref: "#/components/schemas/Member" },
     },
   },
@@ -163,10 +163,10 @@ export const openApiSchemas = {
       status: { type: "string", enum: ["PENDING", "ACCEPTED", "EXPIRED"], example: "PENDING" },
       expiresAt: { type: "string", format: "date-time", example: "2026-06-08T10:00:00.000Z" },
       valid: { type: "boolean", example: true },
-      organization: {
+      workspace: {
         type: "object",
         properties: {
-          id: { type: "string", example: "clxorg123abc456" },
+          id: { type: "string", example: "clxws123abc456" },
           name: { type: "string", example: "Acme Design" },
         },
       },
@@ -212,7 +212,7 @@ export const openApiSchemas = {
       },
     ],
   },
-  CreateOrganizationRequest: {
+  CreateWorkspaceRequest: {
     type: "object",
     required: ["name"],
     properties: {
@@ -229,7 +229,7 @@ export const openApiSchemas = {
     type: "object",
     properties: {
       id: { type: "string", example: "clxproj123abc456" },
-      organizationId: { type: "string", example: "clxorg123abc456" },
+      workspaceId: { type: "string", example: "clxws123abc456" },
       name: { type: "string", example: "Marketing Site" },
       websiteUrl: { type: "string", format: "uri", nullable: true, example: "https://example.com" },
       archived: { type: "boolean", example: false },
@@ -250,9 +250,9 @@ export const openApiSchemas = {
   },
   CreateProjectRequest: {
     type: "object",
-    required: ["organizationId", "name", "websiteUrl"],
+    required: ["workspaceId", "name", "websiteUrl"],
     properties: {
-      organizationId: { type: "string", example: "clxorg123abc456" },
+      workspaceId: { type: "string", example: "clxws123abc456" },
       name: { type: "string", minLength: 1, maxLength: 100, example: "Marketing Site" },
       websiteUrl: { type: "string", format: "uri", example: "https://example.com" },
       widgetColor: { type: "string", pattern: "^#[0-9a-f]{6}$", example: "#2563eb" },
@@ -303,7 +303,7 @@ export const openApiSchemas = {
       id: { type: "string", example: "activity-1" },
       kind: {
         type: "string",
-        enum: ["reported", "title_ai", "status", "priority", "comment"],
+        enum: ["reported", "title_ai", "status", "priority"],
         example: "status",
       },
       at: { type: "string", format: "date-time", example: "2026-06-01T12:00:00.000Z" },
@@ -313,7 +313,6 @@ export const openApiSchemas = {
       toStatus: { $ref: "#/components/schemas/ReportStatus" },
       fromPriority: { $ref: "#/components/schemas/IssuePriority" },
       toPriority: { $ref: "#/components/schemas/IssuePriority" },
-      comment: { type: "string", example: "Moved to in progress" },
     },
   },
   ReportMetadata: {
@@ -369,14 +368,6 @@ export const openApiSchemas = {
       createdAt: { type: "string", format: "date-time", example: "2026-06-01T10:00:00.000Z" },
       updatedAt: { type: "string", format: "date-time", example: "2026-06-01T10:00:00.000Z" },
       project: { $ref: "#/components/schemas/Project" },
-      comments: {
-        type: "array",
-        items: { $ref: "#/components/schemas/Comment" },
-      },
-      _count: {
-        type: "object",
-        properties: { comments: { type: "integer", example: 3 } },
-      },
     },
   },
   CreateReportRequest: {
@@ -438,35 +429,11 @@ export const openApiSchemas = {
       status: { $ref: "#/components/schemas/ReportStatus" },
     },
   },
-  Comment: {
-    type: "object",
-    properties: {
-      id: { type: "string", example: "clxcomment123abc456" },
-      reportId: { type: "string", example: "clxreport123abc456" },
-      authorId: { type: "string", example: "clx1abc123def456" },
-      content: { type: "string", example: "I can reproduce this on Safari as well." },
-      createdAt: { type: "string", format: "date-time", example: "2026-06-01T11:00:00.000Z" },
-      updatedAt: { type: "string", format: "date-time", example: "2026-06-01T11:00:00.000Z" },
-      author: { $ref: "#/components/schemas/User" },
-    },
-  },
-  CreateCommentRequest: {
-    type: "object",
-    required: ["content"],
-    properties: {
-      content: {
-        type: "string",
-        minLength: 1,
-        maxLength: 2000,
-        example: "I can reproduce this on Safari as well.",
-      },
-    },
-  },
   Invitation: {
     type: "object",
     properties: {
       id: { type: "string", example: "clxinvite123abc456" },
-      organizationId: { type: "string", example: "clxorg123abc456" },
+      workspaceId: { type: "string", example: "clxws123abc456" },
       email: { type: "string", format: "email", example: "teammate@example.com" },
       role: { type: "string", enum: ["OWNER", "ADMIN", "MEMBER"], example: "MEMBER" },
       status: { type: "string", enum: ["PENDING", "ACCEPTED", "EXPIRED"], example: "PENDING" },
@@ -478,11 +445,11 @@ export const openApiSchemas = {
   },
   InviteMemberRequest: {
     type: "object",
-    required: ["email", "role", "organizationId"],
+    required: ["email", "role", "workspaceId"],
     properties: {
       email: { type: "string", format: "email", example: "teammate@example.com" },
       role: { type: "string", enum: ["ADMIN", "MEMBER"], example: "MEMBER" },
-      organizationId: { type: "string", example: "clxorg123abc456" },
+      workspaceId: { type: "string", example: "clxws123abc456" },
     },
   },
   UploadRequest: {

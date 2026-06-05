@@ -13,8 +13,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  createOrganizationFormSchema,
-  type CreateOrganizationFormData,
+  createWorkspaceFormSchema,
+  type CreateWorkspaceFormData,
 } from "@/lib/validations";
 import { toast } from "@/lib/toast";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,8 +31,8 @@ export function CreateWorkspaceDialog({
 }) {
   const router = useRouter();
 
-  const methods = useForm<CreateOrganizationFormData>({
-    resolver: zodResolver(createOrganizationFormSchema),
+  const methods = useForm<CreateWorkspaceFormData>({
+    resolver: zodResolver(createWorkspaceFormSchema),
     defaultValues: { name: "", inviteEmail: "" },
     mode: "onSubmit",
   });
@@ -44,8 +44,8 @@ export function CreateWorkspaceDialog({
     }
   }
 
-  async function onSubmit(data: CreateOrganizationFormData) {
-    const response = await fetch("/api/organizations", {
+  async function onSubmit(data: CreateWorkspaceFormData) {
+    const response = await fetch("/api/workspaces", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
