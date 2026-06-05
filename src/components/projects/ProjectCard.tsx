@@ -5,14 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -21,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { Archive, ImageIcon, MoreHorizontal, Settings, Trash2 } from "lucide-react";
+import { Archive, ImageIcon, MoreHorizontal, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -45,10 +37,10 @@ export function ProjectCard({
   variant = "grid",
 }: {
   project: ProjectCardData;
+  workspaceId?: string;
   variant?: "grid" | "list";
 }) {
   const router = useRouter();
-  const [deleteOpen, setDeleteOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -70,21 +62,8 @@ export function ProjectCard({
     router.refresh();
   }
 
-  async function deleteProject() {
-    setLoading(true);
-    setError("");
-    const response = await fetch(`/api/projects/${project.id}`, { method: "DELETE" });
-    setLoading(false);
-    if (!response.ok) {
-      setError("Could not delete project.");
-      return;
-    }
-    setDeleteOpen(false);
-    router.refresh();
-  }
-
   const timeBadge = (
-    <Badge variant="success" className="h-6 rounded-md px-2 text-[11px] font-medium">
+    <Badge className="h-6 rounded-md bg-primary px-2 text-[11px] font-medium text-white">
       {lastIssueBadge}
     </Badge>
   );
@@ -106,13 +85,10 @@ export function ProjectCard({
       />
       <DropdownMenuContent align="end">
         <DropdownMenuItem
-          onClick={() => setDeleteOpen(true)}
-          className="gap-2 text-destructive data-highlighted:text-destructive"
+          onClick={archiveProject}
+          disabled={loading}
+          className="gap-2"
         >
-          <Trash2 className="h-4 w-4" />
-          Delete project
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={archiveProject} disabled={loading} className="gap-2">
           <Archive className="h-4 w-4" />
           {project.archived ? "Restore project" : "Archive project"}
         </DropdownMenuItem>
@@ -131,11 +107,11 @@ export function ProjectCard({
   const stats = (
     <div className="flex items-center gap-3 text-sm text-muted-foreground">
       <span className="inline-flex items-center gap-1.5">
-        <ImageIcon className="h-4 w-4" />
+        <ImageIcon className="h-4 w-4 text-primary" />
         <span className="font-medium text-foreground">{project.imageCount}</span>
       </span>
       <span className="inline-flex items-center gap-1.5">
-        <span>Open</span>
+        <span className="font-bold text-primary">Open</span>
         <span className="font-medium text-foreground">{project.openCount}</span>
       </span>
     </div>
@@ -162,76 +138,51 @@ export function ProjectCard({
   }
 
   return (
-    <>
-      <Card
-        role="button"
-        tabIndex={0}
-        onClick={navigateToProject}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            navigateToProject();
-          }
-        }}
-        className={cn(
-          "cursor-pointer border border-sidebar-border/50 shadow-none transition-colors hover:bg-muted/30 dark:bg-[#1a1d21] dark:hover:bg-white/5",
-          variant === "list" && "p-4",
-          variant === "grid" && "gap-0 overflow-hidden p-0",
-        )}
-      >
-        {variant === "grid" ? (
-          <div className="flex flex-col">
-            <div className="relative">
-              <ProjectThumbnail
-                websiteUrl={project.websiteUrl}
-                className="h-36 w-full rounded-none border-0"
-              />
-              <div className="absolute top-2 right-2">{timeBadge}</div>
-            </div>
-            <div className="space-y-3 p-4">
-              {titleBlock}
-              {footer}
-              {error ? <p className="text-xs text-destructive">{error}</p> : null}
-            </div>
+    <Card
+      role="button"
+      tabIndex={0}
+      onClick={navigateToProject}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          navigateToProject();
+        }
+      }}
+      className={cn(
+        "cursor-pointer border border-border/60 shadow-[var(--shadow-surface)] surface-interactive dark:bg-surface-elevated dark:hover:bg-white/5",
+        variant === "list" && "p-4",
+        variant === "grid" && "gap-0 overflow-hidden p-0",
+      )}
+    >
+      {variant === "grid" ? (
+        <div className="flex flex-col">
+          <div className="relative">
+            <ProjectThumbnail
+              websiteUrl={project.websiteUrl}
+              className="h-36 w-full rounded-none border-0"
+            />
+            <div className="absolute top-2 right-2">{timeBadge}</div>
           </div>
-        ) : (
-          <div className="space-y-2">
-            <div className="flex items-center gap-4">
-              <ProjectThumbnail websiteUrl={project.websiteUrl} className="h-12 w-12 shrink-0 rounded-md" />
-              <div className="min-w-0 flex-1">{titleBlock}</div>
-              <div className="flex shrink-0 items-center gap-3">
-                {timeBadge}
-                {stats}
-                {menu}
-              </div>
-            </div>
+          <div className="space-y-3 p-4">
+            {titleBlock}
+            {footer}
             {error ? <p className="text-xs text-destructive">{error}</p> : null}
           </div>
-        )}
-      </Card>
-
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent showCloseButton>
-          <DialogHeader className="border-b-0 pb-4">
-            <DialogTitle>Delete project?</DialogTitle>
-            <DialogDescription>
-              This will permanently delete <span className="font-medium text-foreground">{project.name}</span> and
-              all of its reports. This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          {error ? (
-            <p className="px-6 pt-2 text-sm text-destructive">{error}</p>
-          ) : null}
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDeleteOpen(false)} disabled={loading}>
-              Cancel
-            </Button>
-            <Button type="button" variant="destructive" onClick={deleteProject} disabled={loading}>
-              {loading ? "Deleting..." : "Delete project"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <div className="flex items-center gap-4">
+            <ProjectThumbnail websiteUrl={project.websiteUrl} className="h-12 w-12 shrink-0 rounded-md" />
+            <div className="min-w-0 flex-1">{titleBlock}</div>
+            <div className="flex shrink-0 items-center gap-3">
+              {timeBadge}
+              {stats}
+              {menu}
+            </div>
+          </div>
+          {error ? <p className="text-xs text-destructive">{error}</p> : null}
+        </div>
+      )}
+    </Card>
   );
 }

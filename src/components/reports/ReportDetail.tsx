@@ -66,7 +66,7 @@ export function ReportDetail({ report }: { report: Report }) {
         />
       </div>
       {report.description ? (
-        <p className="whitespace-pre-wrap rounded-xl border border-sidebar-border bg-card p-4 text-sm text-foreground dark:bg-[#1a1d21]">
+        <p className="whitespace-pre-wrap rounded-xl border border-sidebar-border bg-card p-4 text-sm text-foreground dark:bg-surface-elevated">
           {report.description}
         </p>
       ) : null}

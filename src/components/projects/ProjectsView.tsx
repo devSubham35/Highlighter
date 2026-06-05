@@ -35,9 +35,11 @@ type StatusFilter = "active" | "archived";
 
 export function ProjectsView({
   organizationId,
+  workspaceId,
   projects,
 }: {
   organizationId: string;
+  workspaceId: string;
   projects: ProjectListItem[];
 }) {
   const [status, setStatus] = useState<StatusFilter>("active");
@@ -102,7 +104,7 @@ export function ProjectsView({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 rounded-xl border border-sidebar-border bg-white p-4 dark:bg-[#1a1d21] lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-sidebar-border bg-white p-4 dark:bg-surface-elevated lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <div className="inline-flex rounded-lg border border-sidebar-border bg-muted/40 p-1">
             <Button
@@ -228,7 +230,7 @@ export function ProjectsView({
       </div>
 
       {filteredProjects.length === 0 ? (
-        <div className="rounded-xl border border-sidebar-border bg-card p-10 text-center dark:bg-[#1a1d21]">
+        <div className="rounded-xl border border-sidebar-border bg-card p-10 text-center dark:bg-surface-elevated">
           <p className="text-sm text-muted-foreground">
             {status === "archived"
               ? "No archived projects yet."
@@ -238,13 +240,14 @@ export function ProjectsView({
       ) : (
         <div
           className={cn(
-            viewMode === "grid" ? "grid gap-4 md:grid-cols-2 xl:grid-cols-5" : "flex flex-col gap-3",
+            viewMode === "grid" ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-4" : "flex flex-col gap-3",
           )}
         >
           {filteredProjects.map((project) => (
             <ProjectCard
               key={project.id}
               variant={viewMode}
+              workspaceId={workspaceId}
               project={{
                 id: project.id,
                 name: project.name,

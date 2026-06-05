@@ -55,7 +55,7 @@ export function CommentThread({ reportId, comments }: { reportId: string; commen
           <p className="text-sm text-muted-foreground">No comments yet.</p>
         ) : (
           comments.map((comment) => (
-            <Card key={comment.id} className="border border-sidebar-border dark:bg-[#1a1d21]">
+            <Card key={comment.id} className="border border-sidebar-border dark:bg-surface-elevated">
               <CardContent className="p-4">
                 <div className="flex flex-wrap items-center gap-2 text-sm">
                   <span className="font-medium text-foreground">{comment.author.name}</span>

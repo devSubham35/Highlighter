@@ -107,7 +107,14 @@ export function IssueDetailModal({
   }, [currentUserName]);
 
   useEffect(() => {
-    if (!open || !issue) return;
+    if (!open || !issue) {
+      if (!open) {
+        setDetail(null);
+        setComments([]);
+        setActivity([]);
+      }
+      return;
+    }
     setDetail(issue);
     void loadIssue(issue.id, issue);
   }, [open, issue, loadIssue]);
@@ -197,9 +204,10 @@ export function IssueDetailModal({
     void patchIssue(patch);
   }
 
-  if (!issue || !detail) return null;
+  if (!open || !issue) return null;
 
-  const metadata = parseReportMetadata(detail.metadata);
+  const displayDetail = detail ?? issue;
+  const metadata = parseReportMetadata(displayDetail.metadata);
   const reporterName = metadata.reporterName ?? currentUserName;
   const reporterMember = members.find((member) => member.id === metadata.reporterId);
   const reporterImage = reporterMember?.image ?? null;
@@ -208,33 +216,32 @@ export function IssueDetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        overlayClassName="bg-black/45 backdrop-blur-[1px]"
-        className="flex h-[min(94vh,920px)] w-[min(96vw,1080px)] max-w-none flex-col overflow-hidden rounded-xl border-[#dadce0] bg-white p-0 shadow-2xl"
+        className="flex h-[min(94vh,920px)] w-[min(96vw,1080px)] max-w-none flex-col overflow-hidden rounded-xl border-sidebar-border bg-card p-0 shadow-2xl"
       >
         <div className="flex min-h-0 flex-1">
-          <div className="flex min-w-0 flex-1 flex-col bg-[#eceef1]">
+          <div className="flex min-w-0 flex-1 flex-col bg-muted/40">
             <div className="min-h-0 flex-1 overflow-y-auto">
-              <IssueScreenshotPreview screenshotUrl={detail.screenshotUrl} title={detail.title} />
+              <IssueScreenshotPreview screenshotUrl={displayDetail.screenshotUrl} title={displayDetail.title} />
 
-              <section className="border-b border-[#e8eaed] bg-white px-5 py-4">
+              <section className="border-b border-sidebar-border bg-card px-5 py-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-2">
                       <Sparkles className="h-4 w-4 shrink-0 text-violet-500" />
-                      <h2 className="truncate text-lg font-semibold text-foreground">{detail.title}</h2>
+                      <h2 className="truncate text-lg font-semibold text-foreground">{displayDetail.title}</h2>
                     </div>
                     <a
-                      href={detail.pageUrl}
+                      href={displayDetail.pageUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-sm text-[#1a73e8] hover:underline"
+                      className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-sm text-info hover:underline"
                     >
                       <Link2 className="h-3.5 w-3.5 shrink-0" />
-                      <span className="truncate">{detail.pageUrl}</span>
+                      <span className="truncate">{displayDetail.pageUrl}</span>
                     </a>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    <IssueStatusBadge status={detail.status} onStatusChange={handleStatusChange} />
+                    <IssueStatusBadge status={displayDetail.status} onStatusChange={handleStatusChange} />
                     <DropdownMenu>
                       <DropdownMenuTrigger
                         render={
@@ -242,7 +249,7 @@ export function IssueDetailModal({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-[#5f6368]"
+                            className="h-8 w-8 text-muted-foreground"
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
@@ -251,7 +258,7 @@ export function IssueDetailModal({
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
                           className="gap-2"
-                          onClick={() => window.open(detail.pageUrl, "_blank")}
+                          onClick={() => window.open(displayDetail.pageUrl, "_blank")}
                         >
                           <ExternalLink className="h-4 w-4" />
                           Open page URL
@@ -259,7 +266,7 @@ export function IssueDetailModal({
                         {onDelete ? (
                           <DropdownMenuItem
                             className="gap-2 text-destructive data-highlighted:text-destructive"
-                            onClick={() => onDelete(detail.id)}
+                            onClick={() => onDelete(displayDetail.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                             Delete issue
@@ -271,18 +278,18 @@ export function IssueDetailModal({
                 </div>
               </section>
 
-              <IssueDescriptionEditor description={detail.description} onSave={saveDescription} />
+              <IssueDescriptionEditor description={displayDetail.description} onSave={saveDescription} />
 
-              <section className="bg-white">
-                <div className="flex gap-6 border-b border-[#e8eaed] px-5">
+              <section className="bg-card">
+                <div className="flex gap-6 border-b border-sidebar-border px-5">
                   <button
                     type="button"
                     onClick={() => setActiveTab("comments")}
                     className={cn(
                       "border-b-2 py-3 text-sm font-medium transition-colors",
                       activeTab === "comments"
-                        ? "border-[#1a73e8] text-foreground"
-                        : "border-transparent text-[#5f6368] hover:text-foreground",
+                        ? "border-primary text-foreground"
+                        : "border-transparent text-muted-foreground hover:text-foreground",
                     )}
                   >
                     Comments{comments.length > 0 ? ` ${comments.length}` : ""}
@@ -293,8 +300,8 @@ export function IssueDetailModal({
                     className={cn(
                       "border-b-2 py-3 text-sm font-medium transition-colors",
                       activeTab === "history"
-                        ? "border-[#1a73e8] text-foreground"
-                        : "border-transparent text-[#5f6368] hover:text-foreground",
+                        ? "border-primary text-foreground"
+                        : "border-transparent text-muted-foreground hover:text-foreground",
                     )}
                   >
                     History
@@ -303,7 +310,7 @@ export function IssueDetailModal({
 
                 <div className="px-5">
                   {loading ? (
-                    <p className="py-8 text-sm text-[#80868b]">Loading…</p>
+                    <p className="py-8 text-sm text-muted-foreground">Loading…</p>
                   ) : activeTab === "comments" ? (
                     <IssueCommentsList comments={comments} />
                   ) : (
@@ -317,13 +324,13 @@ export function IssueDetailModal({
               </section>
             </div>
 
-            <div className="shrink-0 border-t border-[#e8eaed] bg-[#eceef1] px-5 py-4">
+            <div className="shrink-0 border-t border-sidebar-border bg-muted/40 px-5 py-4">
               <IssueCommentComposer onSubmit={postComment} disabled={loading} />
             </div>
           </div>
 
           <IssueDetailSidebar
-            detail={detail}
+            detail={displayDetail}
             projectName={projectName}
             members={members}
             reporterName={reporterName}

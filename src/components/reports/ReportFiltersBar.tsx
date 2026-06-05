@@ -38,7 +38,7 @@ export function ReportFiltersBar({
   return (
     <form
       onSubmit={handleSubmit}
-      className="grid gap-3 rounded-xl border border-sidebar-border bg-card p-3 shadow-sm dark:bg-[#1a1d21] md:grid-cols-[1fr_auto_auto_auto] md:items-center"
+      className="grid gap-3 rounded-xl border border-sidebar-border bg-card p-3 shadow-sm dark:bg-surface-elevated md:grid-cols-[1fr_auto_auto_auto] md:items-center"
     >
       <Input
         value={search}

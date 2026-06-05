@@ -23,7 +23,7 @@ export function IssueStatusBadge({
     <Popover>
       <PopoverTrigger
         className={cn(
-          "inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition-colors hover:opacity-90",
+          "inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-all duration-200 hover:opacity-90",
           ISSUE_STATUS_BADGE_CLASS[status],
         )}
         aria-label="Change status"
@@ -65,7 +65,7 @@ export function IssueStatusInline({ status }: { status: ReportStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-xs font-medium",
         ISSUE_STATUS_BADGE_CLASS[status],
       )}
     >

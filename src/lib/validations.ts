@@ -25,8 +25,15 @@ export const createOrganizationFormSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, "Organization name is required")
-    .max(100, "Organization name is too long"),
+    .min(1, "Workspace name is required")
+    .max(100, "Workspace name is too long"),
+  inviteEmail: z
+    .string()
+    .trim()
+    .refine(
+      (value) => value.length === 0 || z.string().email().safeParse(value).success,
+      "Enter a valid email address",
+    ),
 });
 
 export const createProjectFormSchema = z.object({
@@ -137,4 +144,36 @@ export const inviteMemberSchema = z.object({
   email: z.string().email(),
   role: z.enum(["ADMIN", "MEMBER"]),
   organizationId: z.string().cuid(),
+});
+
+export const updateOrganizationSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Workspace name is required")
+    .max(100, "Workspace name is too long"),
+});
+
+export const updateMemberRoleSchema = z.object({
+  role: z.enum(["ADMIN", "MEMBER"]),
+});
+
+export const acceptInvitationSchema = z.object({
+  token: z.string().trim().min(1, "Invitation token is required"),
+});
+
+export const updateUserProfileSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(50, "Name is too long"),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z
+    .string()
+    .min(8, "New password must be at least 8 characters"),
+  revokeOtherSessions: z.boolean().optional(),
 });

@@ -1,3 +1,4 @@
+import { ContentContainer } from "@/components/common/ContentContainer";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { auth } from "@/lib/auth";
@@ -17,15 +18,17 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Dashboard"
-        description="A quick look at your visual feedback pipeline."
-      />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatsCard label="Projects" value={projects} icon={FolderKanban} />
-        <StatsCard label="Active projects" value={activeProjects} icon={LayoutGrid} />
+    <ContentContainer>
+      <div className="space-y-6">
+        <PageHeader
+          title="Dashboard"
+          description="A quick look at your visual feedback pipeline."
+        />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <StatsCard label="Projects" value={projects} icon={FolderKanban} />
+          <StatsCard label="Active projects" value={activeProjects} icon={LayoutGrid} />
+        </div>
       </div>
-    </div>
+    </ContentContainer>
   );
 }

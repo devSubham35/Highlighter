@@ -1,23 +1,19 @@
+import { enrichProjects, jsonError, requireOrgMembership } from "@/lib/api/helpers";
 import { generateApiKey } from "@/lib/api-key";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { createProjectSchema } from "@/lib/validations";
-import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   const organizationId = req.nextUrl.searchParams.get("organizationId");
   if (!organizationId) {
-    return NextResponse.json({ error: "organizationId required" }, { status: 400 });
+    return jsonError("organizationId required", 400);
   }
 
-  const membership = await db.membership.findUnique({
-    where: { userId_organizationId: { userId: session.user.id, organizationId } },
-  });
-  if (!membership) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const access = await requireOrgMembership(organizationId);
+  if ("error" in access) return access.error;
+
+  const enriched = req.nextUrl.searchParams.get("enriched") !== "false";
 
   const projects = await db.project.findMany({
     where: { organizationId },
@@ -25,29 +21,21 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json(projects);
+  if (!enriched) {
+    return NextResponse.json(projects);
+  }
+
+  return NextResponse.json(await enrichProjects(projects));
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   const parsed = createProjectSchema.safeParse(await req.json());
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return jsonError(parsed.error.flatten(), 400);
   }
 
-  const membership = await db.membership.findUnique({
-    where: {
-      userId_organizationId: {
-        userId: session.user.id,
-        organizationId: parsed.data.organizationId,
-      },
-    },
-  });
-  if (!membership || membership.role === "MEMBER") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const access = await requireOrgMembership(parsed.data.organizationId, "ADMIN");
+  if ("error" in access) return access.error;
 
   const project = await db.project.create({
     data: { ...parsed.data, apiKey: generateApiKey() },

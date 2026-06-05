@@ -51,213 +51,223 @@
   --color-content-secondary: var(--content-secondary);
   --color-content-tertiary: var(--content-tertiary);
   --color-subtle: var(--white-opacity-8);
+  --color-surface-elevated: var(--surface-elevated);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: calc(var(--radius) * 1.14);
+  --radius-2xl: calc(var(--radius) * 1.33);
+  --radius-3xl: calc(var(--radius) * 1.6);
+  --radius-4xl: calc(var(--radius) * 2);
   --spacing-67: 16.75rem;
 }
 
 :root {
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 
-  /* Core — cool gray canvas so white surfaces read clearly */
-  --background: #eceef1;
-  --foreground: #131517;
+  /* Core — soft green-tinted canvas */
+  --background: #f4f7f5;
+  --foreground: #111827;
 
-  /* Card */
+  /* Card / surfaces */
   --card: #ffffff;
-  --card-foreground: #131517;
+  --card-foreground: #111827;
+  --surface-elevated: #ffffff;
 
   /* Popover */
   --popover: #ffffff;
-  --popover-foreground: #131517;
+  --popover-foreground: #111827;
 
-  /* Primary — brand green (replaces azure blue) */
-  --primary: #3cbd2c;
+  /* Primary — Highlighter green */
+  --primary: #22c55e;
   --primary-foreground: #ffffff;
 
   /* Secondary */
-  --secondary: #e4e8ec;
-  --secondary-foreground: #131517;
+  --secondary: #ecfdf5;
+  --secondary-foreground: #111827;
 
-  /* Muted — table stripes, hovers, nested panels */
-  --muted: #f2f4f7;
-  --muted-foreground: #5c5f63;
+  /* Muted */
+  --muted: #f3f6f4;
+  --muted-foreground: #6b7280;
 
   /* Accent */
-  --accent: #e4e8ec;
-  --accent-foreground: #131517;
+  --accent: #ecfdf5;
+  --accent-foreground: #111827;
 
-  /* Destructive — red */
+  /* Destructive */
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
 
-  /* Success — green */
-  --success: #3cbd2c;
+  /* Success */
+  --success: #22c55e;
   --success-foreground: #ffffff;
 
-  /* Warning — yellow */
-  --warning: #eaab26;
+  /* Warning */
+  --warning: #f59e0b;
   --warning-foreground: #ffffff;
 
-  /* Info — green (replaces azure) */
-  --info: #3cbd2c;
+  /* Info */
+  --info: #22c55e;
   --info-foreground: #ffffff;
 
   /* Border / Input / Ring */
-  --border: #d1d6dc;
-  --input: #d1d6dc;
-  --ring: #3cbd2c;
+  --border: #e5ebe7;
+  --input: #e5e7eb;
+  --ring: #22c55e;
 
   /* Sidebar */
   --sidebar: #ffffff;
-  --sidebar-foreground: #131517;
-  --sidebar-primary: #3cbd2c;
+  --sidebar-foreground: #111827;
+  --sidebar-primary: #22c55e;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e8ecf0;
-  --sidebar-accent-foreground: #131517;
-  --sidebar-border: #d1d6dc;
-  --sidebar-ring: #3cbd2c;
+  --sidebar-accent: #dcfce7;
+  --sidebar-accent-foreground: #111827;
+  --sidebar-border: #e5ebe7;
+  --sidebar-ring: #22c55e;
 
   /* Chart */
-  --chart-1: #3cbd2c;
-  --chart-2: #54c546;
-  --chart-3: #eaab26;
-  --chart-4: #ab46dd;
-  --chart-5: #f8712b;
+  --chart-1: #22c55e;
+  --chart-2: #4ade80;
+  --chart-3: #f59e0b;
+  --chart-4: #a855f7;
+  --chart-5: #f97316;
 
   /* Component tokens */
-  --content-primary: #131517;
-  --content-secondary: #131517b8;
-  --content-tertiary: #13151785;
-  --transition-duration: 0.3s;
+  --content-primary: #111827;
+  --content-secondary: #111827b8;
+  --content-tertiary: #6b7280;
+  --transition-duration: 0.25s;
   --transition-fn: cubic-bezier(0.4, 0, 0.2, 1);
-  --card-border-radius: 0.75rem;
-  --button-border-radius-md: 10px;
-  --button-border-radius-lg: 12px;
+  --card-border-radius: 1rem;
+  --button-border-radius-md: 0.625rem;
+  --button-border-radius-lg: 0.75rem;
   --large-input-height: 44px;
-  --button-brand-bg: #3cbd2c;
+  --button-brand-bg: linear-gradient(135deg, #22c55e, #16a34a);
   --button-brand-color: #ffffff;
-  --button-brand-hover-bg: #31952a;
-  --white-opacity-8: #1315170d;
-  --white-opacity-16: #1315171f;
+  --button-brand-hover-bg: #16a34a;
+  --white-opacity-8: #1118270a;
+  --white-opacity-16: #11182714;
 
-  /* Palette tokens (used by components) */
-  --gray-50: #5c5f63;
-  --gray-80: #a8adb3;
-  --gray-90: #d1d6dc;
+  /* Elevation */
+  --shadow-surface: 0 4px 20px rgba(0, 0, 0, 0.04);
+  --shadow-surface-hover: 0 12px 32px rgba(0, 0, 0, 0.08);
+  --shadow-focus: 0 0 0 4px rgba(34, 197, 94, 0.15);
+  --shadow-button: 0 2px 8px rgba(34, 197, 94, 0.24);
+  --shadow-button-hover: 0 8px 24px rgba(34, 197, 94, 0.32);
+
+  /* Palette tokens */
+  --gray-50: #6b7280;
+  --gray-80: #9ca3af;
+  --gray-90: #e5e7eb;
   --gray-100: #ffffff;
-  --red-30: #ff766d;
+  --red-30: #fca5a5;
   --red-50: #ef4444;
-  --green-50: #3cbd2c;
+  --green-50: #22c55e;
+  --green-tint: #dcfce7;
 }
 
 .dark {
-  /* Core */
-  --background: #131517;
-  --foreground: #ffffff;
+  --background: #0f1110;
+  --foreground: #f9fafb;
 
-  /* Card */
   --card: #ffffff0a;
-  --card-foreground: #ffffff;
+  --card-foreground: #f9fafb;
+  --surface-elevated: #1a1d21;
 
-  /* Popover */
-  --popover: #212325;
-  --popover-foreground: #ffffff;
+  --popover: #1a1d21;
+  --popover-foreground: #f9fafb;
 
-  /* Primary — brand green (replaces azure blue) */
-  --primary: #3cbd2c;
+  --primary: #22c55e;
   --primary-foreground: #ffffff;
 
-  /* Secondary */
-  --secondary: #333537;
-  --secondary-foreground: #ffffff;
+  --secondary: #1f2421;
+  --secondary-foreground: #f9fafb;
 
-  /* Muted */
-  --muted: #212325;
-  --muted-foreground: #ffffff7a;
+  --muted: #1a1d21;
+  --muted-foreground: #9ca3af;
 
-  /* Accent */
-  --accent: #333537;
-  --accent-foreground: #ffffff;
+  --accent: #1f2421;
+  --accent-foreground: #f9fafb;
 
-  /* Destructive — red */
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
 
-  /* Success — green */
-  --success: #3cbd2c;
+  --success: #22c55e;
   --success-foreground: #ffffff;
 
-  /* Warning — yellow */
-  --warning: #eaab26;
+  --warning: #f59e0b;
   --warning-foreground: #ffffff;
 
-  /* Info — green (replaces azure) */
-  --info: #3cbd2c;
+  --info: #22c55e;
   --info-foreground: #ffffff;
 
-  /* Border / Input / Ring */
-  --border: #ffffff29;
-  --input: #ffffff29;
-  --ring: #3cbd2c;
+  --border: #ffffff1a;
+  --input: #ffffff1f;
+  --ring: #22c55e;
 
-  /* Sidebar */
-  --sidebar: #131517;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #3cbd2c;
+  --sidebar: #0f1110;
+  --sidebar-foreground: #f9fafb;
+  --sidebar-primary: #22c55e;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #ffffff0a;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #ffffff0a;
-  --sidebar-ring: #3cbd2c;
+  --sidebar-accent: #22c55e1a;
+  --sidebar-accent-foreground: #f9fafb;
+  --sidebar-border: #ffffff12;
+  --sidebar-ring: #22c55e;
 
-  /* Chart */
-  --chart-1: #54c546;
-  --chart-2: #3cbd2c;
-  --chart-3: #edb541;
-  --chart-4: #c350fd;
-  --chart-5: #f98346;
+  --chart-1: #4ade80;
+  --chart-2: #22c55e;
+  --chart-3: #fbbf24;
+  --chart-4: #c084fc;
+  --chart-5: #fb923c;
 
-  /* Component tokens */
-  --content-primary: #ffffff;
-  --content-secondary: #fffc;
-  --content-tertiary: #ffffff7a;
-  --transition-duration: 0.3s;
+  --content-primary: #f9fafb;
+  --content-secondary: #f9fafbcc;
+  --content-tertiary: #9ca3af;
+  --transition-duration: 0.25s;
   --transition-fn: cubic-bezier(0.4, 0, 0.2, 1);
-  --card-border-radius: 0.75rem;
-  --button-border-radius-md: 10px;
-  --button-border-radius-lg: 12px;
+  --card-border-radius: 1rem;
+  --button-border-radius-md: 0.625rem;
+  --button-border-radius-lg: 0.75rem;
   --large-input-height: 44px;
-  --button-brand-bg: #3cbd2c;
+  --button-brand-bg: linear-gradient(135deg, #22c55e, #16a34a);
   --button-brand-color: #ffffff;
-  --button-brand-hover-bg: #31952a;
+  --button-brand-hover-bg: #16a34a;
   --white-opacity-8: #ffffff14;
-  --white-opacity-16: #ffffff29;
+  --white-opacity-16: #ffffff24;
 
-  /* Palette tokens (used by components) */
-  --gray-50: #b3b5b7;
-  --gray-80: #535557;
-  --gray-90: #333537;
-  --gray-100: #212325;
-  --red-30: #ff766d;
+  --shadow-surface: 0 4px 20px rgba(0, 0, 0, 0.24);
+  --shadow-surface-hover: 0 12px 32px rgba(0, 0, 0, 0.32);
+  --shadow-focus: 0 0 0 4px rgba(34, 197, 94, 0.2);
+  --shadow-button: 0 2px 8px rgba(34, 197, 94, 0.2);
+  --shadow-button-hover: 0 8px 24px rgba(34, 197, 94, 0.28);
+
+  --gray-50: #9ca3af;
+  --gray-80: #4b5563;
+  --gray-90: #1f2421;
+  --gray-100: #1a1d21;
+  --red-30: #fca5a5;
   --red-50: #ef4444;
-  --green-50: #3cbd2c;
+  --green-50: #22c55e;
+  --green-tint: #14532d;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
     scrollbar-width: thin;
-    scrollbar-color: oklch(0.5 0 0 / 0.16) transparent;
+    scrollbar-color: oklch(0.5 0 0 / 0.12) transparent;
   }
+
   body {
     @apply bg-background text-foreground antialiased;
+    background-image: linear-gradient(180deg, #f8faf8 0%, #f4f7f5 100%);
+    background-attachment: fixed;
   }
+
+  .dark body {
+    background-image: linear-gradient(180deg, #0f1110 0%, #131517 100%);
+  }
+
   html {
     @apply font-sans;
   }
@@ -274,6 +284,43 @@
     border-radius: 10px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: oklch(0.5 0 0 / 0.2);
+    background: oklch(0.5 0 0 / 0.18);
+  }
+}
+
+@layer utilities {
+  .shadow-surface {
+    box-shadow: var(--shadow-surface);
+  }
+
+  .shadow-surface-hover {
+    box-shadow: var(--shadow-surface-hover);
+  }
+
+  .shadow-focus-ring {
+    box-shadow: var(--shadow-focus);
+  }
+
+  .bg-app-glow {
+    background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(34, 197, 94, 0.07), transparent 55%);
+  }
+
+  .bg-auth-panel {
+    background-image: linear-gradient(160deg, #f0fdf4 0%, #dcfce7 42%, #f8faf8 100%);
+  }
+
+  .dark .bg-auth-panel {
+    background-image: linear-gradient(160deg, #052e16 0%, #0f1110 55%, #131517 100%);
+  }
+
+  .surface-interactive {
+    transition:
+      transform var(--transition-duration) var(--transition-fn),
+      box-shadow var(--transition-duration) var(--transition-fn);
+  }
+
+  .surface-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-surface-hover);
   }
 }

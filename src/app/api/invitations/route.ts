@@ -1,35 +1,69 @@
-import { auth } from "@/lib/auth";
+import { jsonError, requireOrgMembership, requireSession } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { inviteMemberSchema } from "@/lib/validations";
 import { addDays } from "date-fns";
-import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
+export async function GET(req: NextRequest) {
+  const organizationId = req.nextUrl.searchParams.get("organizationId");
+  if (!organizationId) {
+    return jsonError("organizationId required", 400);
+  }
+
+  const access = await requireOrgMembership(organizationId, "ADMIN");
+  if ("error" in access) return access.error;
+
+  const invitations = await db.invitation.findMany({
+    where: { organizationId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return NextResponse.json(invitations);
+}
+
 export async function POST(req: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const authResult = await requireSession();
+  if ("error" in authResult) return authResult.error;
 
   const parsed = inviteMemberSchema.safeParse(await req.json());
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return jsonError(parsed.error.flatten(), 400);
   }
 
-  const membership = await db.membership.findUnique({
+  const access = await requireOrgMembership(parsed.data.organizationId, "ADMIN");
+  if ("error" in access) return access.error;
+
+  const email = parsed.data.email.toLowerCase();
+
+  const existingMember = await db.membership.findFirst({
     where: {
-      userId_organizationId: {
-        userId: session.user.id,
-        organizationId: parsed.data.organizationId,
-      },
+      organizationId: parsed.data.organizationId,
+      user: { email: { equals: email, mode: "insensitive" } },
     },
   });
-  if (!membership || membership.role === "MEMBER") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  if (existingMember) {
+    return jsonError("This user is already a workspace member.", 409);
+  }
+
+  const pendingInvite = await db.invitation.findFirst({
+    where: {
+      organizationId: parsed.data.organizationId,
+      email: { equals: email, mode: "insensitive" },
+      status: "PENDING",
+      expiresAt: { gt: new Date() },
+    },
+  });
+
+  if (pendingInvite) {
+    return jsonError("A pending invitation already exists for this email.", 409);
   }
 
   const invitation = await db.invitation.create({
     data: {
       ...parsed.data,
-      invitedById: session.user.id,
+      email,
+      invitedById: authResult.session.user.id,
       expiresAt: addDays(new Date(), 7),
     },
   });

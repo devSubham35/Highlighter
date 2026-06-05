@@ -28,7 +28,7 @@ export function MetadataPanel({ report }: { report: Metadata }) {
   ];
 
   return (
-    <Card className="border border-sidebar-border shadow-sm dark:bg-[#1a1d21]">
+    <Card className="border border-sidebar-border shadow-sm dark:bg-surface-elevated">
       <CardHeader>
         <CardTitle>Metadata</CardTitle>
       </CardHeader>

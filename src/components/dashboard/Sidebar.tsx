@@ -89,7 +89,7 @@ export function Sidebar({
 
       <aside
         className={cn(
-          "fixed left-0 top-14 z-40 flex h-[calc(100vh-56px)] w-67 -translate-x-full flex-col border-r border-sidebar-border bg-sidebar shadow-2xl transition-all duration-300 xl:translate-x-0 xl:shadow-none",
+          "fixed left-0 top-14 z-40 flex h-[calc(100vh-56px)] w-67 -translate-x-full flex-col border-r border-border/80 bg-sidebar/95 shadow-2xl backdrop-blur-md transition-all duration-300 xl:translate-x-0 xl:shadow-none",
           mobileOpen && "translate-x-0",
           collapsed ? "xl:w-16" : "xl:w-67",
         )}
@@ -136,11 +136,11 @@ export function Sidebar({
                 variant={active ? "secondary" : "ghost"}
                 onClick={() => navigate(item.href)}
                 className={cn(
-                  "h-10 w-full transition-colors",
+                  "h-10 w-full rounded-xl transition-all duration-200",
                   iconOnly ? "justify-center px-0" : "justify-start gap-2.5 px-2.5",
                   active
-                    ? "bg-sidebar-accent! text-foreground dark:bg-[#FFFFFF14]!"
-                    : "text-muted-foreground hover:bg-sidebar-accent! hover:text-foreground dark:hover:bg-[#FFFFFF14]!",
+                    ? "bg-sidebar-accent! text-foreground shadow-[0_1px_2px_rgba(34,197,94,0.08)] dark:bg-[#22C55E1A]!"
+                    : "text-muted-foreground hover:bg-sidebar-accent/80! hover:text-foreground dark:hover:bg-[#22C55E14]!",
                 )}
               >
                 <Icon className={cn("size-[18px] shrink-0", active && "text-primary")} />

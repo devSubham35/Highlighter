@@ -20,7 +20,7 @@ export default async function SettingsPage() {
         title="Settings"
         description="Account, organization, and team management."
       />
-      <Card className="border border-sidebar-border shadow-sm dark:bg-[#1a1d21]">
+      <Card className="border border-sidebar-border shadow-sm dark:bg-surface-elevated">
         <CardHeader>
           <CardTitle>Account</CardTitle>
         </CardHeader>
@@ -45,7 +45,7 @@ export default async function SettingsPage() {
       </Card>
       <CreateOrganizationForm />
       {organizations.map((org) => (
-        <Card key={org.id} className="border border-sidebar-border shadow-sm dark:bg-[#1a1d21]">
+        <Card key={org.id} className="border border-sidebar-border shadow-sm dark:bg-surface-elevated">
           <CardHeader>
             <CardTitle>{org.name}</CardTitle>
           </CardHeader>

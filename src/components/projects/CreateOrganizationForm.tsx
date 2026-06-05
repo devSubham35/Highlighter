@@ -42,7 +42,7 @@ export function CreateOrganizationForm() {
   }
 
   return (
-    <Card className="max-w-md border border-sidebar-border shadow-sm dark:bg-[#1a1d21]">
+    <Card className="max-w-md border border-sidebar-border shadow-sm dark:bg-surface-elevated">
       <CardHeader>
         <CardTitle>Create an organization</CardTitle>
         <CardDescription>Projects live inside an organization.</CardDescription>

@@ -14,7 +14,7 @@ export function StatsCard({
   className?: string;
 }) {
   return (
-    <Card className={cn("border border-sidebar-border shadow-sm dark:bg-[#1a1d21]", className)}>
+    <Card className={cn("border border-sidebar-border shadow-sm dark:bg-surface-elevated", className)}>
       <CardContent className="flex items-center justify-between p-4 lg:p-5">
         <div>
           <p className="text-sm text-muted-foreground">{label}</p>

@@ -1,0 +1,44 @@
+import { ProjectShell } from "@/components/projects/ProjectShell";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
+
+export default async function ProjectLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ projectId: string }>;
+}) {
+  const { projectId } = await params;
+  const session = await auth.api.getSession({ headers: await headers() });
+
+  const project = await db.project.findFirst({
+    where: {
+      id: projectId,
+      organization: { memberships: { some: { userId: session!.user.id } } },
+    },
+    select: {
+      id: true,
+      name: true,
+      websiteUrl: true,
+      organizationId: true,
+    },
+  });
+
+  if (!project) notFound();
+
+  return (
+    <div className="-mx-4 -mt-4 md:-mx-8 md:-mt-6">
+      <ProjectShell
+        projectId={project.id}
+        projectName={project.name}
+        websiteUrl={project.websiteUrl}
+        workspaceId={project.organizationId}
+      >
+        {children}
+      </ProjectShell>
+    </div>
+  );
+}

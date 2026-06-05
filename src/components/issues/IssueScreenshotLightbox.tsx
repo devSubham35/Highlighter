@@ -34,7 +34,7 @@ export function IssueScreenshotLightbox({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        overlayClassName="bg-black/50 backdrop-blur-[1px]"
+        overlayClassName="bg-black/70"
         className="flex h-[min(92vh,900px)] w-[min(96vw,1100px)] max-w-none flex-col overflow-hidden rounded-lg border-0 bg-black/95 p-0 shadow-2xl"
       >
         <div className="absolute top-3 right-3 z-10 flex items-center gap-1">

@@ -7,8 +7,7 @@ import { Input } from "@/components/ui/input";
 import { parseReportMetadata } from "@/lib/report-metadata";
 import type { OrgMember, ReportStatus } from "@/types";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, Search } from "lucide-react";
-import Link from "next/link";
+import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { memberComboboxOptions } from "@/components/issues/IssueRow";
@@ -124,35 +123,8 @@ export function ProjectDetailsView({
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="mt-0.5 shrink-0"
-          render={<Link href="/projects" />}
-          aria-label="Back to projects"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{project.name}</h1>
-          {project.websiteUrl ? (
-            <a
-              href={project.websiteUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-1 inline-block text-sm text-info hover:underline"
-            >
-              {project.websiteUrl}
-            </a>
-          ) : (
-            <p className="mt-1 text-sm text-muted-foreground">No website URL</p>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3 rounded-xl border border-sidebar-border bg-white p-4 dark:bg-[#1a1d21] lg:flex-row lg:items-center lg:justify-between">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 rounded-xl border border-sidebar-border bg-card p-4 dark:bg-surface-elevated lg:flex-row lg:items-center lg:justify-between">
         <div className="inline-flex flex-wrap rounded-lg border border-sidebar-border bg-muted/40 p-1">
           {filterButtons.map((item) => (
             <Button
@@ -180,7 +152,7 @@ export function ProjectDetailsView({
       </div>
 
       {filteredIssues.length === 0 ? (
-        <div className="rounded-xl border border-sidebar-border bg-card p-10 text-center dark:bg-[#1a1d21]">
+        <div className="rounded-xl border border-sidebar-border bg-card p-10 text-center dark:bg-surface-elevated">
           <p className="text-sm text-muted-foreground">No issues match your filters.</p>
         </div>
       ) : (

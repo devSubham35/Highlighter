@@ -116,7 +116,7 @@ export function IssueRow({
             onOpen();
           }
         }}
-        className="group flex cursor-pointer items-center gap-3 rounded-xl border border-sidebar-border bg-card px-3 py-3 transition-colors hover:border-border hover:bg-secondary/35 dark:hover:bg-secondary/55"
+        className="group flex cursor-pointer items-center gap-3 rounded-2xl border border-border/70 bg-card px-3 py-3 shadow-[var(--shadow-surface)] transition-all duration-200 hover:-translate-y-px hover:border-primary/15 hover:bg-[#F8FAF8] hover:shadow-[var(--shadow-surface-hover)] dark:hover:bg-secondary/40"
       >
         <div className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-sidebar-border bg-muted">
           {issue.screenshotUrl ? (

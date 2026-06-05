@@ -161,13 +161,13 @@ export function isIssuePriority(value: string): value is IssuePriority {
 }
 
 export const ISSUE_STATUS_TRIGGER_CLASS: Record<ReportStatus, string> = {
-  OPEN: "border-info/30 bg-info/10 text-info hover:!bg-info/20 dark:hover:!bg-info/20",
+  OPEN: "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D] hover:!bg-[#BBF7D0] dark:border-success/20 dark:bg-success/15 dark:text-[#4ADE80]",
   IN_PROGRESS:
-    "border-warning/30 bg-warning/10 text-warning hover:!bg-warning/20 dark:hover:!bg-warning/20",
+    "border-[#FDE68A] bg-[#FEF3C7] text-[#B45309] hover:!bg-[#FDE68A] dark:border-warning/20 dark:bg-warning/15 dark:text-[#FBBF24]",
   RESOLVED:
-    "border-success/30 bg-success/10 text-success hover:!bg-success/20 dark:hover:!bg-success/20",
+    "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D] hover:!bg-[#BBF7D0] dark:border-success/20 dark:bg-success/15 dark:text-[#4ADE80]",
   CLOSED:
-    "border-sidebar-border bg-muted text-muted-foreground hover:!bg-secondary dark:hover:!bg-secondary/90",
+    "border-border bg-muted text-muted-foreground hover:!bg-secondary dark:hover:!bg-secondary/90",
 };
 
 export const ISSUE_STATUS_LABELS: Record<ReportStatus, string> = {
@@ -178,8 +178,8 @@ export const ISSUE_STATUS_LABELS: Record<ReportStatus, string> = {
 };
 
 export const ISSUE_STATUS_BADGE_CLASS: Record<ReportStatus, string> = {
-  OPEN: "bg-sky-50 text-sky-700 border-sky-200",
-  IN_PROGRESS: "bg-amber-50 text-amber-800 border-amber-200",
-  RESOLVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  CLOSED: "bg-gray-100 text-gray-600 border-gray-200",
+  OPEN: "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D]",
+  IN_PROGRESS: "border-[#FDE68A] bg-[#FEF3C7] text-[#B45309]",
+  RESOLVED: "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D]",
+  CLOSED: "border-border bg-muted text-muted-foreground",
 };

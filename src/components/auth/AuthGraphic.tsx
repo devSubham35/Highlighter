@@ -1,0 +1,45 @@
+import { Highlighter, MousePointer2 } from "lucide-react";
+
+export function AuthGraphic() {
+  return (
+    <div className="w-full max-w-md">
+      <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-surface)]">
+        <div className="flex items-center gap-2 border-b border-border/70 bg-muted/50 px-4 py-2.5">
+          <div className="flex gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-[#ff5f57]" />
+            <span className="h-2 w-2 rounded-full bg-[#febc2e]" />
+            <span className="h-2 w-2 rounded-full bg-[#28c840]" />
+          </div>
+          <div className="mx-auto rounded-md bg-background px-3 py-0.5 text-[10px] text-muted-foreground">
+            yoursite.com
+          </div>
+        </div>
+
+        <div className="relative bg-muted/30 p-6">
+          <div className="space-y-2.5 rounded-xl bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+            <div className="h-2.5 w-1/3 rounded-full bg-muted-foreground/20" />
+            <div className="grid grid-cols-3 gap-2">
+              <div className="h-12 rounded-md bg-muted" />
+              <div className="h-12 rounded-md bg-muted" />
+              <div className="h-12 rounded-md bg-muted" />
+            </div>
+            <div className="h-14 rounded-md border border-dashed border-primary/40 bg-primary/5" />
+          </div>
+
+          <div className="absolute bottom-5 right-5 flex h-10 w-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#22C55E,#16A34A)] text-primary-foreground shadow-[var(--shadow-button)]">
+            <Highlighter className="h-4 w-4" />
+          </div>
+
+          <div className="absolute left-6 top-10 w-44 rounded-xl border border-border/70 bg-card p-2.5 shadow-[var(--shadow-surface)]">
+            <div className="flex items-center gap-1.5">
+              <MousePointer2 className="h-3 w-3 text-primary" />
+              <span className="text-[11px] font-medium">Report an issue</span>
+            </div>
+            <div className="mt-2 h-10 rounded border border-primary/30 bg-primary/5" />
+            <div className="mt-2 h-1.5 w-full rounded-full bg-muted" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

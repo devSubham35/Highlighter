@@ -1,8 +1,8 @@
+import { jsonError, requireSession } from "@/lib/api/helpers";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
 import { checkRateLimit, corsHeaders } from "@/lib/http";
+import { db } from "@/lib/db";
 import { createReportSchema } from "@/lib/validations";
-import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export function OPTIONS() {
@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const authResult = await requireSession();
+  if ("error" in authResult) return authResult.error;
 
   const status = req.nextUrl.searchParams.get("status") || undefined;
   const severity = req.nextUrl.searchParams.get("severity") || undefined;
@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
       ...(severity ? { severity: severity as never } : {}),
       ...(search ? { title: { contains: search, mode: "insensitive" } } : {}),
       project: {
-        organization: { memberships: { some: { userId: session.user.id } } },
+        organization: { memberships: { some: { userId: authResult.session.user.id } } },
       },
     },
     include: { project: true, _count: { select: { comments: true } } },

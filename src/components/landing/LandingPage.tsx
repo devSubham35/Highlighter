@@ -157,7 +157,7 @@ export function LandingPage() {
       <section className="relative overflow-hidden">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(60,189,44,0.18),transparent)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(34,197,94,0.12),transparent)]"
         />
         <div
           aria-hidden
@@ -234,7 +234,7 @@ export function LandingPage() {
           {features.map(({ icon: Icon, title, description }) => (
             <Card
               key={title}
-              className="border border-sidebar-border bg-card transition-shadow hover:shadow-md dark:bg-[#1a1d21]"
+              className="border border-sidebar-border bg-card transition-shadow hover:shadow-md dark:bg-surface-elevated"
             >
               <CardContent className="p-6">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -269,7 +269,7 @@ export function LandingPage() {
                     className="absolute top-8 left-[calc(50%+2rem)] hidden h-px w-[calc(100%-4rem)] bg-border md:block"
                   />
                 ) : null}
-                <Card className="relative h-full border border-sidebar-border bg-card dark:bg-[#1a1d21]">
+                <Card className="relative h-full border border-sidebar-border bg-card dark:bg-surface-elevated">
                   <CardContent className="p-6">
                     <span className="text-3xl font-semibold text-primary/30">{item.step}</span>
                     <h3 className="mt-3 text-lg font-semibold text-foreground">{item.title}</h3>
@@ -388,7 +388,7 @@ export function LandingPage() {
 
           <div className="mt-12 space-y-4">
             {faqs.map((faq) => (
-              <Card key={faq.question} className="border border-sidebar-border bg-card dark:bg-[#1a1d21]">
+              <Card key={faq.question} className="border border-sidebar-border bg-card dark:bg-surface-elevated">
                 <CardContent className="p-5">
                   <h3 className="text-base font-semibold text-foreground">{faq.question}</h3>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">{faq.answer}</p>
