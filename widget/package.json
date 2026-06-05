@@ -1,0 +1,15 @@
+{
+  "name": "highlighter-widget",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch"
+  },
+  "dependencies": {
+    "html2canvas": "^1.4.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vite": "^7.0.0"
+  }
+}
