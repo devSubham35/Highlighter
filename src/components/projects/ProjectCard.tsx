@@ -73,7 +73,7 @@ export function ProjectCard({
   }
 
   const timeBadge = (
-    <Badge className="h-6 rounded-md bg-primary px-2 text-[11px] font-medium text-white">
+    <Badge className="h-6 rounded-md bg-primary px-2 text-[11px] font-medium text-primary-foreground">
       {lastIssueBadge}
     </Badge>
   );
@@ -86,7 +86,7 @@ export function ProjectCard({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8 shrink-0 text-muted-foreground"
+            className="shrink-0 text-muted-foreground"
             onClick={(event) => event.stopPropagation()}
           >
             <MoreHorizontal className="h-4 w-4" />
@@ -158,7 +158,7 @@ export function ProjectCard({
       <Card
         onClick={navigateToProject}
         className={cn(
-          "cursor-pointer border border-border/60 shadow-[var(--shadow-surface)] surface-interactive dark:bg-surface-elevated dark:hover:bg-white/5",
+          "cursor-pointer border border-border/60 bg-muted/40 shadow-[var(--shadow-surface)] surface-interactive hover:bg-muted/40 dark:bg-muted/40 dark:hover:bg-muted/40",
           variant === "list" && "p-4",
           variant === "grid" && "gap-0 overflow-hidden p-0",
         )}

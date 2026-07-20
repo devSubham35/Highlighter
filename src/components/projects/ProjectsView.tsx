@@ -5,19 +5,14 @@ import { ProjectCard } from "@/components/projects/ProjectCard";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   INITIAL_PROJECT_FILTERS,
-  PROJECT_SORT_FIELD_OPTIONS,
   PROJECT_SORT_OPTIONS,
-  isDefaultProjectFilters,
   type ProjectSort,
-  type ProjectSortField,
   type ProjectViewMode,
 } from "@/lib/project-filters";
 import { cn } from "@/lib/utils";
-import { Filter, LayoutGrid, List, Search } from "lucide-react";
+import { LayoutGrid, List, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 export type ProjectListItem = {
@@ -44,13 +39,7 @@ export function ProjectsView({
   const [status, setStatus] = useState<StatusFilter>("active");
   const [viewMode, setViewMode] = useState<ProjectViewMode>("grid");
   const [search, setSearch] = useState("");
-  const [filterOpen, setFilterOpen] = useState(false);
   const [sortBy, setSortBy] = useState<ProjectSort>(INITIAL_PROJECT_FILTERS.sortBy);
-  const [sortField, setSortField] = useState<ProjectSortField>(INITIAL_PROJECT_FILTERS.sortField);
-  const [draftSortBy, setDraftSortBy] = useState<ProjectSort>(INITIAL_PROJECT_FILTERS.sortBy);
-  const [draftSortField, setDraftSortField] = useState<ProjectSortField>(
-    INITIAL_PROJECT_FILTERS.sortField,
-  );
 
   useEffect(() => {
     const stored = window.localStorage.getItem(PROJECT_VIEW_MODE_STORAGE_KEY);
@@ -62,31 +51,6 @@ export function ProjectsView({
   useEffect(() => {
     window.localStorage.setItem(PROJECT_VIEW_MODE_STORAGE_KEY, viewMode);
   }, [viewMode]);
-
-  useEffect(() => {
-    if (!filterOpen) return;
-    setDraftSortBy(sortBy);
-    setDraftSortField(sortField);
-  }, [filterOpen, sortBy, sortField]);
-
-  const filtersAreDefault = isDefaultProjectFilters({ sortBy, sortField });
-
-  const handleApplyFilters = () => {
-    setSortBy(draftSortBy);
-    setSortField(draftSortField);
-    setFilterOpen(false);
-  };
-
-  const handleCancelFilters = () => {
-    setFilterOpen(false);
-  };
-
-  const handleResetFilters = () => {
-    setSortBy(INITIAL_PROJECT_FILTERS.sortBy);
-    setSortField(INITIAL_PROJECT_FILTERS.sortField);
-    setDraftSortBy(INITIAL_PROJECT_FILTERS.sortBy);
-    setDraftSortField(INITIAL_PROJECT_FILTERS.sortField);
-  };
 
   const activeCount = projects.filter((project) => !project.archived).length;
   const archivedCount = projects.filter((project) => project.archived).length;
@@ -104,13 +68,11 @@ export function ProjectsView({
         );
       })
       .sort((a, b) => {
-        const aDate = sortField === "lastIssue" ? a.lastIssueAt ?? a.createdAt : a.createdAt;
-        const bDate = sortField === "lastIssue" ? b.lastIssueAt ?? b.createdAt : b.createdAt;
-        const aTime = new Date(aDate).getTime();
-        const bTime = new Date(bDate).getTime();
+        const aTime = new Date(a.createdAt).getTime();
+        const bTime = new Date(b.createdAt).getTime();
         return sortBy === "newest" ? bTime - aTime : aTime - bTime;
       });
-  }, [projects, search, sortBy, sortField, status]);
+  }, [projects, search, sortBy, status]);
 
   return (
     <div className="space-y-6">
@@ -121,7 +83,7 @@ export function ProjectsView({
               type="button"
               variant={status === "active" ? "secondary" : "ghost"}
               size="sm"
-              className={cn("h-7 rounded-md px-2.5", status === "active" && "bg-card text-primary shadow-sm")}
+              className={cn("text-xs", status === "active" && "bg-card text-primary shadow-sm")}
               onClick={() => setStatus("active")}
             >
               Active <span className="ml-1 text-muted-foreground">{activeCount}</span>
@@ -130,7 +92,7 @@ export function ProjectsView({
               type="button"
               variant={status === "archived" ? "secondary" : "ghost"}
               size="sm"
-              className={cn("h-7 rounded-md px-2.5", status === "archived" && "bg-card text-primary shadow-sm")}
+              className={cn("text-xs", status === "archived" && "bg-card text-primary shadow-sm")}
               onClick={() => setStatus("archived")}
             >
               Archived <span className="ml-1 text-muted-foreground">{archivedCount}</span>
@@ -155,87 +117,30 @@ export function ProjectsView({
               type="button"
               variant={viewMode === "grid" ? "secondary" : "ghost"}
               size="sm"
-              className={cn("h-7 rounded-md px-2.5", viewMode === "grid" && "bg-card text-primary shadow-sm")}
+              className={cn(viewMode === "grid" && "bg-card text-primary shadow-sm")}
               onClick={() => setViewMode("grid")}
             >
               <LayoutGrid className="h-4 w-4" />
-              Grid view
             </Button>
             <Button
               type="button"
               variant={viewMode === "list" ? "secondary" : "ghost"}
               size="sm"
-              className={cn("h-7 rounded-md px-2.5", viewMode === "list" && "bg-card text-primary shadow-sm")}
+              className={cn(viewMode === "list" && "bg-card text-primary shadow-sm")}
               onClick={() => setViewMode("list")}
             >
               <List className="h-4 w-4" />
-              List view
             </Button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-              <PopoverTrigger
-                className={cn(
-                  "inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-white px-3 text-sm font-medium dark:bg-background",
-                  "transition-colors hover:bg-muted/50",
-                )}
-              >
-                <Filter className="h-4 w-4" />
-                Filter
-              </PopoverTrigger>
-              <PopoverContent className="w-60 space-y-3 p-3">
-                <p className="text-sm font-semibold text-foreground">Filter projects</p>
-                <div className="space-y-1.5">
-                  <Label>Sort by</Label>
-                  <Combobox
-                    value={draftSortBy}
-                    onValueChange={(value) => setDraftSortBy(value as ProjectSort)}
-                    options={PROJECT_SORT_OPTIONS}
-                    searchable={false}
-                    aria-label="Sort by"
-                    className="h-9 min-w-0 text-sm"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Sort field</Label>
-                  <Combobox
-                    value={draftSortField}
-                    onValueChange={(value) => setDraftSortField(value as ProjectSortField)}
-                    options={PROJECT_SORT_FIELD_OPTIONS}
-                    searchable={false}
-                    aria-label="Sort field"
-                    className="h-9 min-w-0 text-sm"
-                  />
-                </div>
-                <div className="flex items-center justify-end gap-2 border-t border-sidebar-border pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3"
-                    onClick={handleCancelFilters}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="button" size="sm" className="h-8 px-3" onClick={handleApplyFilters}>
-                    Apply
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-9 rounded-lg px-3 text-muted-foreground hover:bg-muted/60 hover:text-foreground disabled:bg-muted/30 disabled:text-muted-foreground"
-              disabled={filtersAreDefault}
-              onClick={handleResetFilters}
-            >
-              Reset
-            </Button>
-          </div>
+          <Combobox
+            value={sortBy}
+            onValueChange={(value) => setSortBy(value as ProjectSort)}
+            options={PROJECT_SORT_OPTIONS}
+            searchable={false}
+            aria-label="Sort by"
+            className="h-9 w-36 text-sm"
+          />
 
           <CreateProjectDialog workspaceId={workspaceId} />
         </div>

@@ -12,9 +12,9 @@ export function HeroMockup() {
       <div className="relative overflow-hidden rounded-2xl border border-sidebar-border bg-card shadow-2xl shadow-primary/10">
         <div className="flex items-center gap-2 border-b border-sidebar-border bg-muted/60 px-4 py-3">
           <div className="flex gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
-            <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
-            <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[var(--traffic-close)]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[var(--traffic-minimize)]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[var(--traffic-maximize)]" />
           </div>
           <div className="mx-auto flex h-6 w-48 items-center justify-center rounded-md bg-background/80 px-3 text-[10px] text-muted-foreground">
             yoursite.com/checkout

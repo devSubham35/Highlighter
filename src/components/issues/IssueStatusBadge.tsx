@@ -24,7 +24,7 @@ export function IssueStatusBadge({
     <Popover>
       <PopoverTrigger
         className={cn(
-          "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-all duration-200 hover:opacity-90",
+          "inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-all duration-200 hover:opacity-90",
           ISSUE_STATUS_BADGE_CLASS[status],
         )}
         aria-label="Change status"
@@ -43,7 +43,7 @@ export function IssueStatusBadge({
               type="button"
               variant="ghost"
               className={cn(
-                "h-auto w-full justify-start gap-2 rounded-md px-2 py-2 pr-8 text-left text-sm font-normal",
+                "w-full justify-start gap-2 pr-8 text-left text-sm font-normal",
                 selected && ISSUE_STATUS_OPTION_CLASS[value],
               )}
               onClick={() => {

@@ -124,7 +124,7 @@ export function ProjectDetailsView({
               type="button"
               variant={filter === item.key ? "secondary" : "ghost"}
               size="sm"
-              className={cn("h-7 rounded-md px-2.5", filter === item.key && "bg-card text-primary shadow-sm")}
+              className={cn(filter === item.key && "bg-card text-primary shadow-sm")}
               onClick={() => setFilter(item.key)}
             >
               {item.label}

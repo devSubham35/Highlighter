@@ -234,7 +234,7 @@ export const openApiSchemas = {
       websiteUrl: { type: "string", format: "uri", nullable: true, example: "https://example.com" },
       archived: { type: "boolean", example: false },
       apiKey: { type: "string", example: "project_live_abc123xyz789" },
-      widgetColor: { type: "string", pattern: "^#[0-9a-f]{6}$", example: "#2563eb" },
+      widgetColor: { type: "string", pattern: "^#[0-9a-f]{6}$" },
       widgetPosition: {
         type: "string",
         enum: ["bottom-right", "bottom-left", "top-right", "top-left"],
@@ -255,7 +255,7 @@ export const openApiSchemas = {
       workspaceId: { type: "string", example: "clxws123abc456" },
       name: { type: "string", minLength: 1, maxLength: 100, example: "Marketing Site" },
       websiteUrl: { type: "string", format: "uri", example: "https://example.com" },
-      widgetColor: { type: "string", pattern: "^#[0-9a-f]{6}$", example: "#2563eb" },
+      widgetColor: { type: "string", pattern: "^#[0-9a-f]{6}$" },
       widgetPosition: {
         type: "string",
         enum: ["bottom-right", "bottom-left", "top-right", "top-left"],
@@ -269,7 +269,7 @@ export const openApiSchemas = {
       name: { type: "string", minLength: 1, maxLength: 100, example: "Marketing Site v2" },
       websiteUrl: { type: "string", format: "uri", example: "https://example.com" },
       archived: { type: "boolean", example: false },
-      widgetColor: { type: "string", pattern: "^#[0-9a-f]{6}$", example: "#dc2626" },
+      widgetColor: { type: "string", pattern: "^#[0-9a-f]{6}$" },
       widgetPosition: {
         type: "string",
         enum: ["bottom-right", "bottom-left", "top-right", "top-left"],

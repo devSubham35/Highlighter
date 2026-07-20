@@ -20,13 +20,13 @@ const badgeVariants = cva(
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
         success:
-          "border-success/10 bg-[#DCFCE7] text-[#15803D] focus-visible:ring-success/20 dark:border-success/20 dark:bg-success/15 dark:text-[#4ADE80] dark:focus-visible:ring-success/40",
+          "border-success/10 bg-[var(--status-resolved-bg)] text-[var(--status-resolved-fg)] focus-visible:ring-success/20 dark:border-success/20 dark:focus-visible:ring-success/40",
         warning:
-          "border-warning/10 bg-[#FEF3C7] text-[#B45309] focus-visible:ring-warning/20 dark:border-warning/20 dark:bg-warning/15 dark:text-[#FBBF24] dark:focus-visible:ring-warning/40",
+          "border-warning/10 bg-[var(--status-progress-bg)] text-[var(--status-progress-fg)] focus-visible:ring-warning/20 dark:border-warning/20 dark:focus-visible:ring-warning/40",
         info:
-          "border-info/10 bg-[#DCFCE7] text-[#15803D] focus-visible:ring-info/20 dark:border-info/20 dark:bg-info/15 dark:text-[#4ADE80] dark:focus-visible:ring-info/40",
+          "border-info/10 bg-[var(--status-resolved-bg)] text-[var(--status-resolved-fg)] focus-visible:ring-info/20 dark:border-info/20 dark:focus-visible:ring-info/40",
         purple:
-          "bg-[#ab46dd]/12 text-[#ab46dd] focus-visible:ring-[#ab46dd]/20",
+          "bg-[color-mix(in_srgb,var(--badge-purple)_12%,transparent)] text-[var(--badge-purple)] focus-visible:ring-[color-mix(in_srgb,var(--badge-purple)_20%,transparent)]",
       },
     },
     defaultVariants: {

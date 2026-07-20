@@ -21,7 +21,7 @@ interface RHFTextFieldProps {
 }
 
 const PREFIX_CHIP =
-  'inline-flex h-11 shrink-0 select-none items-center rounded-l-lg border border-r-0 border-input bg-gray-200 px-3 text-xs font-semibold text-foreground dark:bg-neutral-900';
+  'inline-flex h-11 shrink-0 select-none items-center rounded-l-lg border border-r-0 border-input bg-muted px-3 text-xs font-semibold text-foreground dark:bg-muted/50';
 
 function RHFTextField({
   name,

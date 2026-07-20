@@ -115,7 +115,6 @@ export function ProjectGeneralSettings({
               <Button
                 type="submit"
                 size="sm"
-                className="h-9 rounded-md px-3"
                 disabled={methods.formState.isSubmitting}
               >
                 {methods.formState.isSubmitting ? "Saving..." : "Save changes"}
@@ -132,7 +131,7 @@ export function ProjectGeneralSettings({
               type="button"
               variant="destructive"
               size="sm"
-              className="mt-3 h-9 rounded-md px-3"
+              className="mt-3"
               onClick={() => {
                 setConfirmName("");
                 setDeleteError("");
@@ -140,7 +139,7 @@ export function ProjectGeneralSettings({
               }}
             >
               <Trash2 className="h-4 w-4" />
-              Delete project
+              Delete Project
             </Button>
           </div>
         </CardContent>
@@ -149,7 +148,7 @@ export function ProjectGeneralSettings({
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent showCloseButton>
           <DialogHeader className="border-b-0 pb-4">
-            <DialogTitle>Delete project?</DialogTitle>
+            <DialogTitle>Delete Project?</DialogTitle>
             <DialogDescription>
               This will permanently delete <span className="font-medium text-foreground">{project.name}</span> and
               all of its reports. Type the project name to confirm.
@@ -175,7 +174,7 @@ export function ProjectGeneralSettings({
               onClick={deleteProject}
               disabled={deleting || !canDelete}
             >
-              {deleting ? "Deleting..." : "Delete project"}
+              {deleting ? "Deleting..." : "Delete Project"}
             </Button>
           </DialogFooter>
         </DialogContent>

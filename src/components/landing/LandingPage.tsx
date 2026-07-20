@@ -157,11 +157,11 @@ export function LandingPage() {
       <section className="relative overflow-hidden">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(34,197,94,0.12),transparent)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,color-mix(in_srgb,var(--primary)_12%,transparent),transparent)]"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#13151708_1px,transparent_1px),linear-gradient(to_bottom,#13151708_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_at_center,black,transparent_75%)]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--auth-grid-soft)_1px,transparent_1px),linear-gradient(to_bottom,var(--auth-grid-soft)_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_at_center,black,transparent_75%)]"
         />
 
         <div className="relative mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-2 md:items-center md:py-24 lg:gap-16">
@@ -280,7 +280,7 @@ export function LandingPage() {
             ))}
           </div>
 
-          <div className="mx-auto mt-10 max-w-2xl rounded-xl border border-sidebar-border bg-[#131517] p-5 font-mono text-xs text-[#e4e8ec]">
+          <div className="mx-auto mt-10 max-w-2xl rounded-xl border border-sidebar-border bg-[var(--code-bg)] p-5 font-mono text-xs text-[var(--code-fg)]">
             <pre className="overflow-x-auto whitespace-pre-wrap break-all">{`<script
   src="https://your-app.com/widget.js"
   data-project-key="your-project-key">
@@ -412,7 +412,7 @@ export function LandingPage() {
               <Button
                 type="button"
                 variant="secondary"
-                className="bg-white text-foreground hover:bg-white/90"
+                className="bg-card text-foreground hover:bg-card/90"
               >
                 Get started free
                 <ArrowRight className="h-4 w-4" />
@@ -422,7 +422,7 @@ export function LandingPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="border-white/30 bg-transparent text-primary-foreground hover:bg-white/10"
+                className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
               >
                 Log in
               </Button>

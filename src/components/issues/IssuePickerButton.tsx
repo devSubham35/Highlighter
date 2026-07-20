@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
 
 const ROW_ICON_BUTTON =
-  "h-10 w-10 shrink-0 rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground dark:hover:bg-secondary/90";
+  "size-9 shrink-0 rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground dark:hover:bg-secondary/90";
 
 export function IssueAssignPicker({
   assigneeIds,
@@ -252,7 +252,7 @@ export function IssueStatusPicker({
       <Popover>
         <PopoverTrigger
           className={cn(
-            "inline-flex h-8 cursor-pointer items-center gap-1 rounded-md border px-2.5 text-xs font-medium transition-colors hover:opacity-90",
+            "inline-flex h-9 cursor-pointer items-center gap-1 rounded-md border px-3 text-sm font-medium transition-colors hover:opacity-90",
             className,
           )}
           aria-label="Change status"

@@ -6,9 +6,9 @@ export function AuthGraphic() {
       <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-surface)]">
         <div className="flex items-center gap-2 border-b border-border/70 bg-muted/50 px-4 py-2.5">
           <div className="flex gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-[#ff5f57]" />
-            <span className="h-2 w-2 rounded-full bg-[#febc2e]" />
-            <span className="h-2 w-2 rounded-full bg-[#28c840]" />
+            <span className="h-2 w-2 rounded-full bg-[var(--traffic-close)]" />
+            <span className="h-2 w-2 rounded-full bg-[var(--traffic-minimize)]" />
+            <span className="h-2 w-2 rounded-full bg-[var(--traffic-maximize)]" />
           </div>
           <div className="mx-auto rounded-md bg-background px-3 py-0.5 text-[10px] text-muted-foreground">
             yoursite.com
@@ -16,7 +16,7 @@ export function AuthGraphic() {
         </div>
 
         <div className="relative bg-muted/30 p-7">
-          <div className="space-y-3 rounded-xl bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+          <div className="space-y-3 rounded-xl bg-card p-5 shadow-[var(--control-shadow)]">
             <div className="h-2.5 w-1/4 rounded-full bg-muted-foreground/20" />
             <div className="grid grid-cols-3 gap-3">
               <div className="h-12 rounded-md bg-muted" />
@@ -26,7 +26,7 @@ export function AuthGraphic() {
             <div className="h-16 rounded-md border border-dashed border-primary/40 bg-primary/5" />
           </div>
 
-          <div className="absolute bottom-6 right-6 flex h-11 w-11 items-center justify-center rounded-full bg-[linear-gradient(135deg,#22C55E,#16A34A)] text-primary-foreground shadow-[var(--shadow-button)]">
+          <div className="absolute bottom-6 right-6 flex h-11 w-11 items-center justify-center rounded-full [background:var(--button-brand-bg)] text-primary-foreground shadow-[var(--shadow-button)]">
             <Highlighter className="h-4 w-4" />
           </div>
 

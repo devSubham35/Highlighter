@@ -55,7 +55,6 @@ export function IssueDescriptionEditor({
               type="button"
               variant="outline"
               size="sm"
-              className="h-8"
               disabled={saving}
               onClick={() => {
                 setDraft(description ?? "");
@@ -64,7 +63,7 @@ export function IssueDescriptionEditor({
             >
               Cancel
             </Button>
-            <Button type="button" size="sm" className="h-8" disabled={saving} onClick={() => void handleSave()}>
+            <Button type="button" size="sm" disabled={saving} onClick={() => void handleSave()}>
               {saving ? "Saving…" : "Save"}
             </Button>
           </div>

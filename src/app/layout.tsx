@@ -2,9 +2,9 @@ import "./globals.css";
 import { Providers } from "@/app/providers";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Google_Sans, Roboto } from "next/font/google";
 
-const poppins = Inter({
+const poppins = Google_Sans({
   variable: '--font-poppins',
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],

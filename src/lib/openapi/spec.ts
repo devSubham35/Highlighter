@@ -489,7 +489,6 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
                   workspaceId: "clxws123abc456",
                   name: "Marketing Site",
                   websiteUrl: "https://example.com",
-                  widgetColor: "#2563eb",
                   widgetPosition: "bottom-right",
                 },
               },
@@ -541,7 +540,7 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/UpdateProjectRequest" },
-                example: { name: "Marketing Site v2", widgetColor: "#dc2626", archived: false },
+                example: { name: "Marketing Site v2", archived: false },
               },
             },
           },

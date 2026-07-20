@@ -19,7 +19,7 @@ export function SnippetCopier({ apiKey }: { apiKey: string }) {
   }
 
   return (
-    <div className="relative rounded-lg border border-sidebar-border bg-[#131517] p-4 pr-12 font-mono text-xs text-[#e4e8ec]">
+    <div className="relative rounded-lg border border-sidebar-border bg-[var(--code-bg)] p-4 pr-12 font-mono text-xs text-[var(--code-fg)]">
       <pre className="overflow-x-auto whitespace-pre-wrap break-all">{snippet}</pre>
       <Button
         type="button"

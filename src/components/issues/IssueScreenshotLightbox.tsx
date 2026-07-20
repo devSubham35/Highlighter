@@ -74,7 +74,7 @@ export function IssueScreenshotLightbox({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground"
               aria-label="Zoom out"
               onClick={() => updateZoom(zoom - ZOOM_STEP)}
               disabled={zoom <= MIN_ZOOM}
@@ -88,7 +88,7 @@ export function IssueScreenshotLightbox({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground"
               aria-label="Zoom in"
               onClick={() => updateZoom(zoom + ZOOM_STEP)}
               disabled={zoom >= MAX_ZOOM}
@@ -99,7 +99,7 @@ export function IssueScreenshotLightbox({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground"
               aria-label="Reset zoom"
               onClick={() => updateZoom(MIN_ZOOM)}
               disabled={zoom === MIN_ZOOM && position.x === 0 && position.y === 0}
@@ -111,7 +111,7 @@ export function IssueScreenshotLightbox({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground"
               aria-label="Download screenshot"
               onClick={() => void handleDownload()}
             >
@@ -121,7 +121,7 @@ export function IssueScreenshotLightbox({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground"
               aria-label="Close"
               onClick={() => onOpenChange(false)}
             >

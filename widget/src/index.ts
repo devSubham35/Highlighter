@@ -15,7 +15,7 @@ const FeedbackWidget = {
   config: null as WidgetConfig | null,
 
   init(config: WidgetConfig) {
-    this.config = { position: "bottom-right", color: "#2563eb", apiBaseUrl: "", ...config };
+    this.config = { position: "bottom-right", color: "var(--highlighter-primary)", apiBaseUrl: "", ...config };
     injectStyles();
     createButton(this.config.color!, this.config.position!, () => this.open());
   },
@@ -29,8 +29,8 @@ const FeedbackWidget = {
     overlay.innerHTML = `
       <div id="__highlighter-modal">
         <h2 style="margin:0 0 12px;font-size:20px">Report an issue</h2>
-        <p id="__highlighter-status" style="margin:0 0 12px;color:#64748b">Capturing screenshot...</p>
-        <canvas id="__highlighter-canvas" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;cursor:crosshair"></canvas>
+        <p id="__highlighter-status" style="margin:0 0 12px;color:var(--highlighter-muted)">Capturing screenshot...</p>
+        <canvas id="__highlighter-canvas" style="width:100%;border:1px solid var(--highlighter-canvas-border);border-radius:8px;cursor:crosshair"></canvas>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
           <button data-tool="rectangle" type="button">Rectangle</button>
           <button data-tool="arrow" type="button">Arrow</button>
@@ -44,7 +44,7 @@ const FeedbackWidget = {
         </div>
         <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
           <button id="__highlighter-cancel" type="button">Cancel</button>
-          <button id="__highlighter-submit" type="button" style="background:#2563eb;color:white;border:0;border-radius:8px;padding:10px 14px">Submit report</button>
+          <button id="__highlighter-submit" type="button" style="background:var(--highlighter-primary);color:var(--highlighter-icon);border:0;border-radius:8px;padding:10px 14px">Submit report</button>
         </div>
       </div>
     `;
@@ -105,7 +105,7 @@ const FeedbackWidget = {
 
   toast(message: string) {
     const toast = document.createElement("div");
-    toast.style.cssText = "position:fixed;right:24px;bottom:24px;background:#16a34a;color:white;padding:12px 16px;border-radius:8px;z-index:1000001;font-family:system-ui,sans-serif";
+    toast.style.cssText = "position:fixed;right:24px;bottom:24px;background:var(--highlighter-primary);color:var(--highlighter-icon);padding:12px 16px;border-radius:8px;z-index:1000001;font-family:system-ui,sans-serif";
     toast.textContent = message;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3500);
@@ -125,7 +125,7 @@ if (projectKey) {
     projectKey,
     apiBaseUrl: currentScript?.getAttribute("data-api-base-url") ?? "",
     position: (currentScript?.getAttribute("data-position") as WidgetConfig["position"]) ?? "bottom-right",
-    color: currentScript?.getAttribute("data-color") ?? "#2563eb",
+    color: currentScript?.getAttribute("data-color") ?? "var(--highlighter-primary)",
   });
 }
 

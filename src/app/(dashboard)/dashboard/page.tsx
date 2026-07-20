@@ -24,7 +24,7 @@ export default async function DashboardPage() {
           title="Dashboard"
           description="A quick look at your visual feedback pipeline."
         />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid max-w-2xl gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <StatsCard label="Projects" value={projects} icon={FolderKanban} />
           <StatsCard label="Active projects" value={activeProjects} icon={LayoutGrid} />
         </div>

@@ -15,7 +15,7 @@ export class AnnotationCanvas {
   private ctx: CanvasRenderingContext2D;
   private annotations: Annotation[] = [];
   private currentTool: AnnotationTool = "rectangle";
-  private color = "#dc2626";
+  private color = widgetColor("--highlighter-annotation-stroke");
   private image: HTMLImageElement | null = null;
   private drawing = false;
   private startX = 0;
@@ -104,12 +104,12 @@ export class AnnotationCanvas {
     this.ctx.lineWidth = 3;
     this.ctx.strokeStyle = annotation.color;
     if (annotation.tool === "highlight") {
-      this.ctx.fillStyle = "rgba(250, 204, 21, .35)";
+      this.ctx.fillStyle = widgetColor("--highlighter-annotation-highlight");
       this.ctx.fillRect(annotation.x, annotation.y, annotation.width, annotation.height);
       return;
     }
     if (annotation.tool === "rectangle") {
-      this.ctx.fillStyle = "rgba(220, 38, 38, .12)";
+      this.ctx.fillStyle = widgetColor("--highlighter-annotation-fill");
       this.ctx.strokeRect(annotation.x, annotation.y, annotation.width, annotation.height);
       return;
     }
@@ -122,4 +122,8 @@ export class AnnotationCanvas {
     this.ctx.lineTo(annotation.endX - 14 * Math.cos(angle + Math.PI / 6), annotation.endY - 14 * Math.sin(angle + Math.PI / 6));
     this.ctx.stroke();
   }
+}
+
+function widgetColor(name: string) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }

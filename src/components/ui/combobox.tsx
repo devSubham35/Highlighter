@@ -71,7 +71,7 @@ function Combobox({
         disabled={disabled}
         aria-label={ariaLabel}
         className={cn(
-          "flex h-11 w-full min-w-40 cursor-pointer items-center justify-between gap-2 rounded-md border border-input bg-card px-3 text-sm font-medium whitespace-nowrap transition-colors outline-none select-none",
+          "flex h-9 w-full min-w-40 cursor-pointer items-center justify-between gap-2 rounded-md border border-input bg-card px-3 text-sm font-medium whitespace-nowrap transition-colors outline-none select-none",
           "hover:opacity-95 focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:opacity-100",
           !selected && "text-muted-foreground",
           className,
@@ -117,7 +117,7 @@ function Combobox({
                       variant="ghost"
                       onClick={() => handleSelect(option.value)}
                       className={cn(
-                        "relative h-auto w-full cursor-pointer justify-start gap-2 rounded-md px-2 py-2 pr-8 text-left text-sm font-normal",
+                        "relative w-full cursor-pointer justify-start gap-2 pr-8 text-left text-sm font-normal",
                         "hover:!bg-secondary hover:!text-secondary-foreground dark:hover:!bg-secondary/90",
                         isSelected && "bg-primary/10 font-semibold text-primary hover:bg-primary/15",
                         optionClassName?.(option, isSelected),

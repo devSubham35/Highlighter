@@ -24,7 +24,7 @@ export const ISSUE_TYPE_OPTIONS: ComboboxOption[] = [
   {
     value: "IMPROVEMENT",
     label: "Improvement",
-    icon: <ArrowUpCircle className="h-4 w-4 text-emerald-600" />,
+    icon: <ArrowUpCircle className="h-4 w-4 text-success" />,
   },
 ];
 
@@ -32,30 +32,30 @@ export const ISSUE_PRIORITY_OPTIONS: ComboboxOption[] = [
   {
     value: "URGENT",
     label: "Urgent",
-    icon: <AlertCircle className="h-4 w-4 text-red-600" />,
+    icon: <AlertCircle className="h-4 w-4 text-destructive" />,
   },
   {
     value: "HIGH",
     label: "High",
-    icon: <ChevronsUp className="h-4 w-4 text-orange-600" />,
+    icon: <ChevronsUp className="h-4 w-4 text-warning" />,
   },
   {
     value: "MEDIUM",
     label: "Medium",
-    icon: <Equal className="h-4 w-4 text-sky-600" />,
+    icon: <Equal className="h-4 w-4 text-info" />,
   },
   {
     value: "LOW",
     label: "Low",
-    icon: <Minus className="h-4 w-4 text-[#80868b]" />,
+    icon: <Minus className="h-4 w-4 text-muted-foreground" />,
   },
   {
     value: "NONE",
     label: "No priority",
     icon: (
       <span className="relative flex h-4 w-4 items-center justify-center">
-        <Circle className="h-4 w-4 text-sky-400" strokeDasharray="3 2" />
-        <Minus className="absolute h-2.5 w-2.5 text-sky-500" />
+        <Circle className="h-4 w-4 text-info/70" strokeDasharray="3 2" />
+        <Minus className="absolute h-2.5 w-2.5 text-info" />
       </span>
     ),
   },
@@ -78,7 +78,7 @@ export function issueTypeIcon(type: IssueType) {
   return type === "BUG" ? (
     <Bug className="h-4 w-4 text-destructive" />
   ) : (
-    <Lightbulb className="h-4 w-4 text-emerald-600" />
+    <Lightbulb className="h-4 w-4 text-success" />
   );
 }
 
@@ -98,7 +98,7 @@ export function issueUnassignedIcon(size: keyof typeof ASSIGNEE_ICON_SIZE = "sm"
 
   return (
     <span className={cn("relative flex items-center justify-center", box)}>
-      <UserRound className={cn(icon, "text-[#80868b]")} strokeDasharray="3 2" />
+      <UserRound className={cn(icon, "text-muted-foreground")} strokeDasharray="3 2" />
     </span>
   );
 }
@@ -118,27 +118,27 @@ export function reportStatusIcon(status: ReportStatus, iconSize = 16) {
     return (
       <SpinnerGapIcon
         size={iconSize}
-        className="shrink-0 text-amber-600"
+        className="shrink-0 text-warning"
         aria-hidden
       />
     );
   }
   if (status === "CLOSED") {
     return (
-      <XCircleIcon size={iconSize} className="shrink-0 text-gray-500" aria-hidden />
+      <XCircleIcon size={iconSize} className="shrink-0 text-muted-foreground" aria-hidden />
     );
   }
   if (status === "RESOLVED") {
     return (
       <CircleCheck
-        className="shrink-0 text-emerald-600"
+        className="shrink-0 text-success"
         style={{ width: iconSize, height: iconSize }}
       />
     );
   }
   return (
     <Circle
-      className="shrink-0 text-sky-600"
+      className="shrink-0 text-info"
       style={{ width: iconSize, height: iconSize }}
     />
   );
@@ -153,11 +153,11 @@ export function isIssuePriority(value: string): value is IssuePriority {
 }
 
 export const ISSUE_STATUS_TRIGGER_CLASS: Record<ReportStatus, string> = {
-  OPEN: "border-sky-200 bg-sky-50 text-sky-700 hover:!bg-sky-100 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300 dark:hover:!bg-sky-500/15",
+  OPEN: "border-[var(--status-open-border)] bg-[var(--status-open-bg)] text-[var(--status-open-fg)] hover:!bg-[var(--status-open-bg-hover)]",
   IN_PROGRESS:
-    "border-[#FDE68A] bg-[#FEF3C7] text-[#B45309] hover:!bg-[#FDE68A] dark:border-warning/20 dark:bg-warning/15 dark:text-[#FBBF24]",
+    "border-[var(--status-progress-border)] bg-[var(--status-progress-bg)] text-[var(--status-progress-fg)] hover:!bg-[var(--status-progress-bg-hover)]",
   RESOLVED:
-    "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D] hover:!bg-[#BBF7D0] dark:border-success/20 dark:bg-success/15 dark:text-success dark:hover:!bg-success/25",
+    "border-[var(--status-resolved-border)] bg-[var(--status-resolved-bg)] text-[var(--status-resolved-fg)] hover:!bg-[var(--status-resolved-bg-hover)]",
   CLOSED:
     "border-border bg-muted text-muted-foreground hover:!bg-secondary dark:hover:!bg-secondary/90",
 };
@@ -170,18 +170,18 @@ export const ISSUE_STATUS_LABELS: Record<ReportStatus, string> = {
 };
 
 export const ISSUE_STATUS_BADGE_CLASS: Record<ReportStatus, string> = {
-  OPEN: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300 dark:hover:bg-sky-500/15",
-  IN_PROGRESS: "border-[#FDE68A] bg-[#FEF3C7] text-[#B45309]",
-  RESOLVED: "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D] dark:border-success/20 dark:bg-success/15 dark:text-success dark:hover:bg-success/25",
+  OPEN: "border-[var(--status-open-border)] bg-[var(--status-open-bg)] text-[var(--status-open-fg)]",
+  IN_PROGRESS: "border-[var(--status-progress-border)] bg-[var(--status-progress-bg)] text-[var(--status-progress-fg)]",
+  RESOLVED: "border-[var(--status-resolved-border)] bg-[var(--status-resolved-bg)] text-[var(--status-resolved-fg)]",
   CLOSED: "border-border bg-muted text-muted-foreground",
 };
 
 export const ISSUE_STATUS_OPTION_CLASS: Record<ReportStatus, string> = {
-  OPEN: "bg-sky-50 text-sky-700 hover:!bg-sky-100 dark:bg-sky-500/10 dark:text-sky-300 dark:hover:!bg-sky-500/15",
+  OPEN: "bg-[var(--status-open-bg)] text-[var(--status-open-fg)] hover:!bg-[var(--status-open-bg-hover)]",
   IN_PROGRESS:
-    "bg-amber-50 text-amber-700 hover:!bg-amber-100 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:!bg-amber-500/15",
+    "bg-[var(--status-progress-bg)] text-[var(--status-progress-fg)] hover:!bg-[var(--status-progress-bg-hover)]",
   RESOLVED:
-    "bg-emerald-50 text-emerald-700 hover:!bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:!bg-emerald-500/15",
+    "bg-[var(--status-resolved-bg)] text-[var(--status-resolved-fg)] hover:!bg-[var(--status-resolved-bg-hover)]",
   CLOSED:
-    "bg-muted text-muted-foreground hover:!bg-muted/80 dark:bg-white/5 dark:text-muted-foreground dark:hover:!bg-white/10",
+    "bg-muted text-muted-foreground hover:!bg-muted/80 dark:bg-muted/50 dark:text-muted-foreground dark:hover:!bg-muted/70",
 };

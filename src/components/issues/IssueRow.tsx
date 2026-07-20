@@ -118,7 +118,7 @@ export function IssueRow({
     <>
       <article
         onClick={onOpen}
-        className="group flex cursor-pointer items-center gap-3 rounded-2xl border border-border/70 bg-card px-3 py-3 shadow-[var(--shadow-surface)] transition-[background-color,box-shadow] duration-200 hover:bg-[#F8FAF8] hover:shadow-[var(--shadow-surface-hover)] dark:hover:bg-secondary/40"
+        className="group flex cursor-pointer items-center gap-3 rounded-2xl border border-border/70 bg-card px-3 py-3 shadow-[var(--shadow-surface)] transition-[background-color,box-shadow] duration-200 hover:bg-muted/40 dark:hover:bg-secondary/40"
       >
         <div className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-sidebar-border bg-muted">
           {issue.screenshotUrl ? (
@@ -196,7 +196,7 @@ export function IssueRow({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground hover:bg-secondary hover:text-foreground dark:hover:bg-secondary/90"
+            className="text-muted-foreground hover:bg-secondary hover:text-foreground dark:hover:bg-secondary/90"
             aria-label="Copy issue link"
             onClick={copyLink}
           >
@@ -209,7 +209,7 @@ export function IssueRow({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:bg-secondary hover:text-foreground dark:hover:bg-secondary/90"
+                  className="text-muted-foreground hover:bg-secondary hover:text-foreground dark:hover:bg-secondary/90"
                 >
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>

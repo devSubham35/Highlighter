@@ -3,31 +3,41 @@
 import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { signOut } from "@/lib/auth-client";
+import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import {
   ChevronDown,
-  CreditCard,
-  FileText,
+  Check,
   FolderKanban,
   LayoutDashboard,
   LogOut,
   MessageSquare,
+  Plus,
   Puzzle,
-  ScrollText,
   Settings,
   User,
   Users,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -60,12 +70,6 @@ const navItems: NavItem[] = [
       workspaceId !== null && pathname === `/workspaces/${workspaceId}`,
   },
   {
-    label: "Reports",
-    icon: FileText,
-    href: "/dashboard",
-    match: () => false,
-  },
-  {
     label: "Members",
     icon: Users,
     href: "/settings",
@@ -76,18 +80,6 @@ const navItems: NavItem[] = [
     icon: Settings,
     href: "/settings",
     match: (pathname) => pathname === "/settings" || pathname === "/profile",
-  },
-  {
-    label: "Billing",
-    icon: CreditCard,
-    href: "/settings",
-    match: () => false,
-  },
-  {
-    label: "Audit log",
-    icon: ScrollText,
-    href: "/settings",
-    match: () => false,
   },
 ];
 
@@ -135,6 +127,178 @@ function getProjectIdFromPath(pathname: string) {
   return match?.[1] ?? null;
 }
 
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function InviteMembersDialog({
+  workspace,
+  open,
+  onOpenChange,
+}: {
+  workspace: SidebarWorkspace | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [emails, setEmails] = useState<string[]>([]);
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  function reset() {
+    setEmail("");
+    setEmails([]);
+    setError("");
+    setSubmitting(false);
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    onOpenChange(nextOpen);
+    if (!nextOpen) reset();
+  }
+
+  function addEmail() {
+    const nextEmail = email.trim().toLowerCase();
+    setError("");
+
+    if (!nextEmail) return;
+    if (!isValidEmail(nextEmail)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+    if (emails.includes(nextEmail)) {
+      setError("This email is already in the invite list.");
+      return;
+    }
+
+    setEmails((current) => [...current, nextEmail]);
+    setEmail("");
+  }
+
+  async function sendInvites() {
+    if (!workspace) return;
+    if (emails.length === 0) {
+      setError("Add at least one email address.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+
+    const failed: string[] = [];
+
+    for (const inviteEmail of emails) {
+      const response = await fetch("/api/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workspaceId: workspace.id, email: inviteEmail }),
+      });
+
+      if (!response.ok) {
+        failed.push(inviteEmail);
+      }
+    }
+
+    setSubmitting(false);
+
+    if (failed.length > 0) {
+      setEmails(failed);
+      toast.error(
+        "Some invites failed",
+        `${failed.length} ${failed.length === 1 ? "email" : "emails"} could not be invited.`,
+      );
+      return;
+    }
+
+    toast.success(
+      "Invites sent",
+      `${emails.length} ${emails.length === 1 ? "member was" : "members were"} invited to ${workspace.name}.`,
+    );
+    router.refresh();
+    handleOpenChange(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent showCloseButton className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Invite members</DialogTitle>
+          <DialogDescription>
+            Add teammates to {workspace?.name ?? "this workspace"} by email.
+          </DialogDescription>
+        </DialogHeader>
+
+        <DialogBody className="space-y-5">
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-foreground" htmlFor="invite-member-email">
+              Email address
+            </label>
+            <div className="flex gap-2">
+              <Input
+                id="invite-member-email"
+                type="email"
+                value={email}
+                placeholder="teammate@example.com"
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  if (error) setError("");
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    addEmail();
+                  }
+                }}
+              />
+              <Button type="button" size="icon" onClick={addEmail} aria-label="Add email">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            {error ? <p className="text-xs text-destructive">{error}</p> : null}
+          </div>
+
+          <div className="max-h-44 overflow-y-auto rounded-lg border border-sidebar-border bg-muted/30 p-3">
+            {emails.length === 0 ? (
+              <div className="flex min-h-24 items-center justify-center px-3 text-center text-sm text-muted-foreground">
+                Added email addresses will appear here.
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {emails.map((inviteEmail) => (
+                  <span
+                    key={inviteEmail}
+                    className="inline-flex max-w-full items-center gap-2 rounded-md bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary"
+                  >
+                    <span className="min-w-0 truncate">{inviteEmail}</span>
+                    <button
+                      type="button"
+                      className="inline-flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/15 hover:text-primary"
+                      onClick={() => setEmails((current) => current.filter((item) => item !== inviteEmail))}
+                      aria-label={`Remove ${inviteEmail}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogBody>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="button" onClick={sendInvites} disabled={submitting || emails.length === 0}>
+            {submitting ? "Sending..." : "Send invites"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function Sidebar({
   mobileOpen,
   onCloseMobile,
@@ -151,6 +315,7 @@ export function Sidebar({
   const workspaceId = getWorkspaceIdFromPath(pathname);
   const projectId = getProjectIdFromPath(pathname);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [inviteMembersOpen, setInviteMembersOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const profileTriggerRef = useRef<HTMLButtonElement | null>(null);
 
@@ -222,22 +387,7 @@ export function Sidebar({
     <div className="flex h-full flex-col">
       <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-sidebar-border px-4">
         <Link href="/workspaces" className="flex min-w-0 items-center">
-          <Image
-            src="/assets/logo_light.png"
-            alt="Highlighter_logo_light"
-            width={1136}
-            height={160}
-            priority
-            className="h-10 w-auto max-w-35 object-contain dark:hidden"
-          />
-          <Image
-            src="/assets/logo_dark.png"
-            alt="Highlighter_logo_dark"
-            width={1136}
-            height={160}
-            priority
-            className="hidden h-10 w-auto max-w-35 object-contain dark:block"
-          />
+          <span className="text-lg font-semibold text-foreground">Highlighter</span>
         </Link>
       </div>
 
@@ -247,7 +397,7 @@ export function Sidebar({
             render={
               <button
                 type="button"
-                className="flex h-10 w-full cursor-pointer items-center gap-2.5 rounded-md border border-sidebar-border bg-card px-2.5 text-left transition-colors hover:bg-muted/40"
+                className="flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-md border border-sidebar-border bg-card px-3 py-2 text-left transition-colors hover:bg-muted/40"
               >
                 {currentWorkspace ? (
                   <>
@@ -287,6 +437,9 @@ export function Sidebar({
                     </AvatarFallback>
                   </Avatar>
                   <span className="truncate">{workspace.name}</span>
+                  {workspace.id === currentWorkspace?.id ? (
+                    <Check className="ml-auto h-4 w-4 shrink-0 text-primary" />
+                  ) : null}
                 </DropdownMenuItem>
               ))
             )}
@@ -353,9 +506,9 @@ export function Sidebar({
 
       <div className="shrink-0 space-y-3 p-3">
         <div className="rounded-md border border-sidebar-border bg-card p-3">
-          <p className="text-xs font-semibold text-foreground">Invite your team</p>
-          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-            Collaborate on projects and triage feedback together.
+          <p className="text-sm font-semibold text-foreground">Invite your team</p>
+          <p className="mt-1 text-[11px] leading-tight text-muted-foreground">
+            Collaborate on projects and get feedback together.
           </p>
           <AvatarGroup className="mt-3">
             {[0, 1, 2].map((index) => (
@@ -374,8 +527,9 @@ export function Sidebar({
             type="button"
             variant="outline"
             size="sm"
-            className="mt-3 h-8 w-full rounded-md text-xs"
-            onClick={() => router.push("/settings")}
+            className="mt-3 w-full"
+            onClick={() => setInviteMembersOpen(true)}
+            disabled={!currentWorkspace}
           >
             Invite members
           </Button>
@@ -386,7 +540,7 @@ export function Sidebar({
             ref={profileTriggerRef}
             type="button"
             aria-expanded={profileMenuOpen}
-            className="flex w-full cursor-pointer items-center gap-2.5 rounded-md border border-sidebar-border px-1 py-1.5 text-left transition-colors hover:bg-muted/40"
+            className="flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-md border border-sidebar-border px-3 py-2 text-left transition-colors hover:bg-muted/40"
             onClick={() => setProfileMenuOpen((open) => !open)}
           >
             <Avatar className="size-8">
@@ -411,7 +565,7 @@ export function Sidebar({
             >
               <button
                 type="button"
-                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-muted"
+                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                 onClick={() => {
                   setProfileMenuOpen(false);
                   router.push("/profile");
@@ -422,7 +576,7 @@ export function Sidebar({
               </button>
               <button
                 type="button"
-                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-muted"
+                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                 onClick={() => {
                   setProfileMenuOpen(false);
                   router.push("/settings");
@@ -434,7 +588,7 @@ export function Sidebar({
               <div className="-mx-1 my-1 h-px bg-border" />
               <button
                 type="button"
-                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-destructive outline-none transition-colors hover:bg-muted"
+                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-destructive outline-none transition-colors hover:bg-accent"
                 onClick={handleLogout}
               >
                 <LogOut className="h-4 w-4" />
@@ -444,6 +598,11 @@ export function Sidebar({
           ) : null}
         </div>
       </div>
+      <InviteMembersDialog
+        workspace={currentWorkspace}
+        open={inviteMembersOpen}
+        onOpenChange={setInviteMembersOpen}
+      />
     </div>
   );
 

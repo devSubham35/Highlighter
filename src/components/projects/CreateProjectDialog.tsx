@@ -79,16 +79,16 @@ export function CreateProjectDialog({ workspaceId }: { workspaceId: string }) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button type="button" size="sm" className="h-9 rounded-md px-3">
+          <Button type="button" size="sm">
             <Plus className="h-4 w-4" />
-            New project
+            New Project
           </Button>
         }
       />
       <DialogContent showCloseButton>
         <FormProvider methods={methods} onSubmit={methods.handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Add project</DialogTitle>
+            <DialogTitle>Add Project</DialogTitle>
             <DialogDescription>Connect a website to start collecting visual feedback.</DialogDescription>
           </DialogHeader>
           <DialogBody className="space-y-4">

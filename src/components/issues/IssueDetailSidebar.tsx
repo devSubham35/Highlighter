@@ -93,19 +93,34 @@ function PropertyRow({
   label,
   children,
   interactive = false,
+  onOpen,
 }: {
   label: string;
   children: React.ReactNode;
   interactive?: boolean;
+  onOpen?: () => void;
 }) {
   return (
     <div className="grid grid-cols-[84px_1fr] items-center gap-3 text-[12px] leading-5">
       <span className="text-[11px] font-semibold text-muted-foreground">{label}</span>
       <div
+        role={interactive ? "button" : undefined}
+        tabIndex={interactive ? 0 : undefined}
+        onClick={interactive ? onOpen : undefined}
+        onKeyDown={
+          interactive
+            ? (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onOpen?.();
+                }
+              }
+            : undefined
+        }
         className={cn(
-          "group/property flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-medium leading-5 text-foreground",
+          "group/property flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-medium leading-5 text-foreground outline-none",
           interactive &&
-            "cursor-pointer border border-transparent bg-muted/45 pr-1.5 text-foreground transition-colors hover:border-border hover:bg-muted/70 dark:bg-white/5 dark:hover:bg-white/10",
+            "cursor-pointer border border-transparent bg-muted/45 pr-1.5 text-foreground transition-colors hover:border-border hover:bg-muted/70 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25 dark:bg-white/5 dark:hover:bg-white/10",
         )}
       >
         {children}
@@ -188,7 +203,6 @@ export function IssueDetailSidebar({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
             disabled={currentIndex <= 0}
             onClick={onPrev}
           >
@@ -201,14 +215,13 @@ export function IssueDetailSidebar({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
             disabled={currentIndex >= totalCount - 1}
             onClick={onNext}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={onClose}>
+        <Button type="button" variant="ghost" size="icon" className="text-muted-foreground" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -237,7 +250,7 @@ export function IssueDetailSidebar({
             </span>
             <span className="min-w-0 truncate text-[12px] font-medium leading-5">{issueKey}</span>
           </PropertyRow>
-          <PropertyRow label="Type" interactive>
+          <PropertyRow label="Type" interactive onOpen={() => setTypeOpen(true)}>
             <span className={PROPERTY_ICON_SLOT}>{issueTypeIcon(issueType)}</span>
             <div className="min-w-0 flex-1">
               <Popover open={typeOpen} onOpenChange={setTypeOpen}>
@@ -263,7 +276,7 @@ export function IssueDetailSidebar({
               </Popover>
             </div>
           </PropertyRow>
-          <PropertyRow label="Assignee" interactive>
+          <PropertyRow label="Assignee" interactive onOpen={() => setAssigneeOpen(true)}>
             <span className={PROPERTY_ICON_SLOT}>
               {primaryAssignee ? (
                 <IssueUserAvatar
@@ -301,7 +314,7 @@ export function IssueDetailSidebar({
               </Popover>
             </div>
           </PropertyRow>
-          <PropertyRow label="Priority" interactive>
+          <PropertyRow label="Priority" interactive onOpen={() => setPriorityOpen(true)}>
             <span className={PROPERTY_ICON_SLOT}>{issuePriorityIcon(priority)}</span>
             <div className="min-w-0 flex-1">
               <Popover open={priorityOpen} onOpenChange={setPriorityOpen}>

@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { signOut } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { LogOut, Menu, Moon, Search, Settings, Sun, User } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -89,7 +88,7 @@ export function TopNav({
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 flex h-14 shrink-0 items-center border-b border-border/80 bg-card/95 px-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-md md:px-6",
+        "sticky top-0 z-30 flex h-14 shrink-0 items-center border-b border-border/80 bg-card/95 px-4 shadow-[var(--control-shadow)] backdrop-blur-md md:px-6",
         className,
       )}
     >
@@ -109,22 +108,7 @@ export function TopNav({
 
         {showLogo ? (
           <Link href="/workspaces" className="flex min-w-0 items-center">
-            <Image
-              src="/assets/logo_light.png"
-              alt="Highlighter_logo_light"
-              width={1136}
-              height={160}
-              priority
-              className="h-10 w-auto max-w-35 object-contain dark:hidden"
-            />
-            <Image
-              src="/assets/logo_dark.png"
-              alt="Highlighter_logo_dark"
-              width={1136}
-              height={160}
-              priority
-              className="hidden h-10 w-auto max-w-35 object-contain dark:block"
-            />
+            <span className="text-lg font-semibold text-foreground">Highlighter</span>
           </Link>
         ) : null}
 
@@ -175,7 +159,7 @@ export function TopNav({
                 type="button"
                 aria-label="Open profile menu"
                 aria-expanded={profileMenuOpen}
-                className="flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-card transition-colors hover:bg-muted/60"
+                className="flex size-9 cursor-pointer items-center justify-center rounded-md border border-border bg-card transition-colors hover:bg-muted/60"
                 onClick={() => setProfileMenuOpen((open) => !open)}
               >
                 <Avatar className="size-7">
@@ -193,7 +177,7 @@ export function TopNav({
                 >
                   <button
                     type="button"
-                    className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-muted"
+                    className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                     onClick={() => {
                       setProfileMenuOpen(false);
                       router.push("/profile");
@@ -204,7 +188,7 @@ export function TopNav({
                   </button>
                   <button
                     type="button"
-                    className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-muted"
+                    className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                     onClick={() => {
                       setProfileMenuOpen(false);
                       router.push("/settings");
@@ -216,7 +200,7 @@ export function TopNav({
                   <div className="-mx-1 my-1 h-px bg-border" />
                   <button
                     type="button"
-                    className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-destructive outline-none transition-colors hover:bg-muted"
+                    className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-destructive outline-none transition-colors hover:bg-accent"
                     onClick={handleLogout}
                   >
                     <LogOut className="h-4 w-4" />

@@ -111,7 +111,7 @@ export default function RegisterPage() {
 
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-        <Button type="submit" className="h-11 w-full rounded-lg" disabled={methods.formState.isSubmitting}>
+        <Button type="submit" className="w-full" disabled={methods.formState.isSubmitting}>
           <span>{methods.formState.isSubmitting ? "Creating account..." : "Create account"}</span>
           <ArrowRight className="h-4 w-4" />
         </Button>
@@ -122,7 +122,7 @@ export default function RegisterPage() {
           <div className="h-px flex-1 bg-border" />
         </div>
 
-        <Button type="button" variant="outline" className="h-11 w-full rounded-lg font-medium">
+        <Button type="button" variant="outline" className="w-full font-medium">
           <span className="text-base leading-none">G</span>
           Continue with Google
         </Button>

@@ -4,12 +4,12 @@ import { ContentContainer } from "@/components/common/ContentContainer";
 import { PageHeader } from "@/components/common/PageHeader";
 import { CreateWorkspaceDialog } from "@/components/workspaces/CreateWorkspaceDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowRight, CalendarDays, FolderKanban, Plus, Users } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -34,15 +34,39 @@ function workspaceInitial(name: string) {
   return name.trim().charAt(0).toUpperCase() || "W";
 }
 
+function WorkspaceStatChip({
+  icon: Icon,
+  count,
+  singular,
+  plural,
+}: {
+  icon: LucideIcon;
+  count: number;
+  singular: string;
+  plural: string;
+}) {
+  return (
+    <span className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-border/80 bg-muted/45 px-2.5 text-xs font-medium text-muted-foreground">
+      <Icon className="h-3.5 w-3.5 text-primary" />
+      <span className="tabular-nums text-foreground">{count}</span>
+      <span>{count === 1 ? singular : plural}</span>
+    </span>
+  );
+}
+
 function WorkspaceCard({ workspace }: { workspace: WorkspaceListItem }) {
   return (
     <Link href={`/workspaces/${workspace.id}`} className="group block h-full">
       <Card
         className={cn(
-          "flex h-full min-h-[11.75rem] flex-col gap-0 rounded-xl border border-border/80 bg-card p-5 shadow-none",
+          "relative flex h-full min-h-[11.75rem] flex-col gap-0 rounded-xl border border-border/80 bg-card p-5 shadow-none",
           "dark:border-sidebar-border/70 dark:bg-surface-elevated",
         )}
       >
+        <span className="absolute top-5 right-5 inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-muted/55 text-foreground transition-colors group-hover:border-primary/20 group-hover:bg-primary/10">
+          <ArrowRight className="h-4 w-4" />
+        </span>
+
         <div className="flex items-start">
           <Avatar className="size-9 rounded-lg">
             <AvatarImage src={DEFAULT_AVATAR_IMAGE} alt={workspace.name} />
@@ -60,20 +84,21 @@ function WorkspaceCard({ workspace }: { workspace: WorkspaceListItem }) {
           </p>
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/80 pt-4">
-          <div className="flex min-w-0 items-center gap-2 overflow-hidden">
-            <Badge variant="info" className="h-6 shrink-0 gap-1.5 rounded-full px-2 text-[11px]">
-              <FolderKanban className="h-3.5 w-3.5" />
-              {workspace.projectCount} {workspace.projectCount === 1 ? "project" : "projects"}
-            </Badge>
-            <Badge variant="info" className="h-6 shrink-0 gap-1.5 rounded-full px-2 text-[11px]">
-              <Users className="h-3.5 w-3.5" />
-              {workspace.memberCount} {workspace.memberCount === 1 ? "member" : "members"}
-            </Badge>
+        <div className="mt-3 border-t border-border/80 pt-4">
+          <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
+            <WorkspaceStatChip
+              icon={FolderKanban}
+              count={workspace.projectCount}
+              singular="project"
+              plural="projects"
+            />
+            <WorkspaceStatChip
+              icon={Users}
+              count={workspace.memberCount}
+              singular="member"
+              plural="members"
+            />
           </div>
-          <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-primary/10 bg-primary/10 text-foreground">
-            <ArrowRight className="h-4 w-4" />
-          </span>
         </div>
       </Card>
     </Link>
@@ -93,7 +118,6 @@ export function WorkspacesView({ workspaces }: { workspaces: WorkspaceListItem[]
             <Button
               type="button"
               size="sm"
-              className="h-9 rounded-md px-3"
               onClick={() => setCreateOpen(true)}
             >
               <Plus className="h-4 w-4" />

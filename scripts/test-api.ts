@@ -319,7 +319,7 @@ async function main() {
   // --- Cleanup ---
   if (projectId) {
     const { status } = await request("DELETE", `/api/projects/${projectId}`, undefined, { auth: true });
-    assertStatus("Delete project", "DELETE", `/api/projects/${projectId}`, status, 200);
+    assertStatus("Delete Project", "DELETE", `/api/projects/${projectId}`, status, 200);
   }
   {
     const { status } = await request("DELETE", `/api/workspaces/${workspaceId}`, undefined, { auth: true });

@@ -62,7 +62,7 @@ export function MultiSelectCombobox({
       <PopoverTrigger
         aria-label={ariaLabel}
         className={cn(
-          "flex h-10 w-full min-w-36 items-center justify-between gap-2 rounded-lg border border-input bg-card px-3 text-sm font-medium transition-colors outline-none hover:bg-muted/50",
+          "flex h-9 w-full min-w-36 items-center justify-between gap-2 rounded-md border border-input bg-card px-3 text-sm font-medium transition-colors outline-none hover:bg-muted/50",
           !selectedLabels.length && "text-muted-foreground",
           triggerClassName,
           className,
@@ -94,7 +94,7 @@ export function MultiSelectCombobox({
                   variant="ghost"
                   onClick={() => toggle(option.value)}
                   className={cn(
-                    "relative h-auto w-full justify-start rounded-md px-2 py-2 pr-8 text-left text-sm font-normal",
+                    "relative w-full justify-start pr-8 text-left text-sm font-normal",
                     isSelected && "bg-primary/10 font-semibold text-primary hover:bg-primary/15",
                   )}
                 >
