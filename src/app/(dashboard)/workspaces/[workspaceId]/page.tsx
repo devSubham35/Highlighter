@@ -94,17 +94,21 @@ export default async function WorkspaceOverviewPage({
   });
 
   const projectStats = visibleProjects.map((project) => {
-    const openTickets = project.reports.filter((report) => report.status === "OPEN").length;
-    const resolvedTickets = project.reports.filter(
-      (report) => report.status === "RESOLVED" || report.status === "CLOSED",
-    ).length;
+    const statusCounts = {
+      OPEN: 0,
+      IN_PROGRESS: 0,
+      RESOLVED: 0,
+      CLOSED: 0,
+    };
+    project.reports.forEach((report) => {
+      statusCounts[report.status] += 1;
+    });
 
     return {
       id: project.id,
       name: project.name,
-      openTickets,
-      resolvedTickets,
       totalTickets: project.reports.length,
+      statusCounts,
     };
   });
 

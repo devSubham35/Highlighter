@@ -1,14 +1,15 @@
 "use client";
 
 import { ContentContainer } from "@/components/common/ContentContainer";
-import { StatsCard } from "@/components/dashboard/StatsCard";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ISSUE_STATUS_LABELS } from "@/lib/issue-options";
 import type { IssueRealtimeEvent } from "@/lib/realtime";
 import { useIssueRealtime } from "@/lib/use-issue-realtime";
 import type { ReportStatus } from "@/types";
-import { CheckCircle2, FileText, FolderKanban, MoreHorizontal, Users } from "lucide-react";
+import { FileText, FolderKanban, Users } from "lucide-react";
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 
 export type WorkspaceOverviewStats = {
   activeProjects: number;
@@ -27,10 +28,20 @@ export type WorkspaceIssueGraphPoint = {
 export type WorkspaceProjectStats = {
   id: string;
   name: string;
-  openTickets: number;
-  resolvedTickets: number;
   totalTickets: number;
+  statusCounts: Record<ReportStatus, number>;
 };
+
+const STATUS_SEGMENTS: Array<{
+  status: ReportStatus;
+  className: string;
+  dotClassName: string;
+}> = [
+  { status: "OPEN", className: "bg-info", dotClassName: "bg-info" },
+  { status: "IN_PROGRESS", className: "bg-warning", dotClassName: "bg-warning" },
+  { status: "RESOLVED", className: "bg-success", dotClassName: "bg-success" },
+  { status: "CLOSED", className: "bg-muted-foreground", dotClassName: "bg-muted-foreground" },
+];
 
 export function WorkspaceOverviewView({
   workspaceName,
@@ -91,7 +102,7 @@ export function WorkspaceOverviewView({
           : current.resolvedReports,
       }));
       setLiveIssueGraph((current) => incrementGraphBucket(current, event.issue.createdAt, event.issue.status));
-      setLiveProjectStats((current) => incrementProjectStats(current, event.projectId, event.issue.status));
+      setLiveProjectStats((current) => incrementProjectStatus(current, event.projectId, event.issue.status));
       return;
     }
 
@@ -118,8 +129,11 @@ export function WorkspaceOverviewView({
           if (project.id !== event.projectId) return project;
           return {
             ...project,
-            openTickets: applyStatusDelta(project.openTickets, event.previousStatus, event.status, "OPEN"),
-            resolvedTickets: applyResolvedDelta(project.resolvedTickets, event.previousStatus, event.status),
+            statusCounts: moveProjectStatusCount(
+              project.statusCounts,
+              event.previousStatus,
+              event.status,
+            ),
           };
         }),
       );
@@ -127,44 +141,19 @@ export function WorkspaceOverviewView({
   }
 
   const roleLabel = role.charAt(0) + role.slice(1).toLowerCase();
-  const openReports = Math.max(liveStats.totalReports - liveStats.resolvedReports, 0);
-  const resolutionRate =
-    liveStats.totalReports > 0 ? Math.round((liveStats.resolvedReports / liveStats.totalReports) * 100) : 0;
-  const activityItems = [
-    {
-      label: "Open feedback",
-      value: openReports,
-      detail: "Reports awaiting review",
-      tone: "text-primary",
-      bg: "bg-primary/10",
-      icon: FileText,
-    },
-    {
-      label: "Resolved reports",
-      value: liveStats.resolvedReports,
-      detail: `${resolutionRate}% resolution rate`,
-      tone: "text-primary",
-      bg: "bg-primary/10",
-      icon: CheckCircle2,
-    },
-    {
-      label: "Team members",
-      value: liveStats.memberCount,
-      detail: "Available collaborators",
-      tone: "text-primary",
-      bg: "bg-primary/10",
-      icon: Users,
-    },
-  ];
   const maxGraphValue = Math.max(...liveIssueGraph.map((item) => item.reported), 1);
   const totalRecentReports = liveIssueGraph.reduce((sum, item) => sum + item.reported, 0);
   const totalRecentResolved = liveIssueGraph.reduce((sum, item) => sum + item.resolved, 0);
-  const maxProjectTickets = Math.max(
-    ...liveProjectStats.map((project) => Math.max(project.openTickets, project.resolvedTickets)),
-    1,
+  const totalProjectTickets = liveProjectStats.reduce((sum, project) => sum + project.totalTickets, 0);
+  const totalStatusCounts = liveProjectStats.reduce<Record<ReportStatus, number>>(
+    (totals, project) => {
+      STATUS_SEGMENTS.forEach((segment) => {
+        totals[segment.status] += project.statusCounts[segment.status];
+      });
+      return totals;
+    },
+    { OPEN: 0, IN_PROGRESS: 0, RESOLVED: 0, CLOSED: 0 },
   );
-  const totalProjectOpenTickets = liveProjectStats.reduce((sum, project) => sum + project.openTickets, 0);
-  const totalProjectResolvedTickets = liveProjectStats.reduce((sum, project) => sum + project.resolvedTickets, 0);
 
   return (
     <ContentContainer>
@@ -194,74 +183,28 @@ export function WorkspaceOverviewView({
         </div>
 
         <div>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <StatsCard
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <OverviewKpiCard
               label="Projects"
               value={liveStats.activeProjects}
-              subtitle="Active projects"
-              trend="+12%"
+              description="Active projects"
               icon={FolderKanban}
-              iconBgClassName="bg-primary/10"
-              iconClassName="text-primary"
             />
-            <StatsCard
+            <OverviewKpiCard
               label="Reports"
               value={liveStats.totalReports}
-              subtitle="Total reports"
-              trend="+25%"
+              description="Total reports"
               icon={FileText}
-              iconBgClassName="bg-primary/10"
-              iconClassName="text-primary"
             />
-            <StatsCard
+            <OverviewKpiCard
               label="Members"
               value={liveStats.memberCount}
-              subtitle="Team members"
-              trend="+8%"
+              description="Team members"
               icon={Users}
-              iconBgClassName="bg-primary/10"
-              iconClassName="text-primary"
-            />
-            <StatsCard
-              label="Resolved"
-              value={liveStats.resolvedReports}
-              subtitle="Reports resolved"
-              trend={`${resolutionRate}%`}
-              icon={CheckCircle2}
-              iconBgClassName="bg-primary/10"
-              iconClassName="text-primary"
             />
           </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(280px,0.85fr)_1.4fr]">
-            <section className="rounded-2xl border border-sidebar-border bg-card py-0 dark:bg-surface-elevated">
-              <div className="flex items-center justify-between border-b border-sidebar-border px-4 py-3">
-                <h2 className="text-sm font-semibold text-foreground">Workspace activity</h2>
-                <Button type="button" variant="ghost" size="icon-xs" className="text-muted-foreground">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="divide-y divide-sidebar-border">
-                {activityItems.map((item) => {
-                  const Icon = item.icon;
-
-                  return (
-                    <div key={item.label} className="flex items-center gap-3 px-4 py-3">
-                      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${item.bg}`}>
-                        <Icon className={`h-4.5 w-4.5 ${item.tone}`} />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground">{item.label}</p>
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{item.detail}</p>
-                      </div>
-                      <p className="text-lg font-semibold text-foreground">{item.value}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-
+          <div className="mt-4">
             <section className="rounded-2xl border border-sidebar-border bg-card p-4 dark:bg-surface-elevated">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -303,15 +246,21 @@ export function WorkspaceOverviewView({
                         return (
                           <div key={item.key} className="flex h-full flex-1 flex-col justify-end gap-2">
                             <div className="flex h-full items-end justify-center gap-1.5">
-                              <div
-                                className="w-4 rounded-t-md bg-primary"
-                                title={`${item.reported} reported`}
-                                style={{ height: `${reportedHeight}%` }}
+                              <GraphTooltip
+                                title={item.label}
+                                label="Reported"
+                                value={item.reported}
+                                dotClassName="bg-primary"
+                                triggerClassName="w-4 rounded-t-md bg-primary transition-opacity hover:opacity-85"
+                                triggerStyle={{ height: `${reportedHeight}%` }}
                               />
-                              <div
-                                className="w-4 rounded-t-md bg-success"
-                                title={`${item.resolved} resolved`}
-                                style={{ height: `${resolvedHeight}%` }}
+                              <GraphTooltip
+                                title={item.label}
+                                label="Resolved"
+                                value={item.resolved}
+                                dotClassName="bg-success"
+                                triggerClassName="w-4 rounded-t-md bg-success transition-opacity hover:opacity-85"
+                                triggerStyle={{ height: `${resolvedHeight}%` }}
                               />
                             </div>
                             <span className="text-center text-[11px] text-muted-foreground">{item.label}</span>
@@ -325,23 +274,41 @@ export function WorkspaceOverviewView({
             </section>
           </div>
 
-          <section className="mt-4 rounded-2xl border border-sidebar-border bg-card p-4 dark:bg-surface-elevated">
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {STATUS_SEGMENTS.map((segment) => (
+              <div
+                key={segment.status}
+                className="rounded-2xl border border-sidebar-border bg-card p-4 dark:bg-surface-elevated"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {ISSUE_STATUS_LABELS[segment.status]}
+                  </p>
+                  <span className={`h-2.5 w-2.5 rounded-full ${segment.dotClassName}`} />
+                </div>
+                <p className="mt-3 text-2xl font-semibold text-foreground">
+                  {totalStatusCounts[segment.status]}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">Across all projects</p>
+              </div>
+            ))}
+          </div>
+
+          <section className="mt-4 rounded-2xl border border-sidebar-border bg-card p-4 dark:bg-surface-elevated lg:w-1/2">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-sm font-semibold text-foreground">Project ticket stats</h2>
+                <h2 className="text-sm font-semibold text-foreground">Project status overview</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {totalProjectOpenTickets} open, {totalProjectResolvedTickets} resolved across visible projects
+                  {totalProjectTickets} tickets across all visible projects
                 </p>
               </div>
-              <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-primary" />
-                  Open
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-success" />
-                  Resolved
-                </span>
+              <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+                {STATUS_SEGMENTS.map((segment) => (
+                  <span key={segment.status} className="inline-flex items-center gap-1.5">
+                    <span className={`h-2 w-2 rounded-full ${segment.dotClassName}`} />
+                    {ISSUE_STATUS_LABELS[segment.status]}
+                  </span>
+                ))}
               </div>
             </div>
 
@@ -351,64 +318,16 @@ export function WorkspaceOverviewView({
                   No projects available.
                 </div>
               ) : (
-                <div className="overflow-x-auto rounded-xl bg-muted/20 px-4 py-4">
-                  <div className="grid h-64 min-w-[44rem] grid-cols-[2rem_1fr] gap-3">
-                    <div className="flex flex-col justify-between text-right text-[10px] text-muted-foreground">
-                      <span>{maxProjectTickets}</span>
-                      <span>{Math.ceil(maxProjectTickets / 2)}</span>
-                      <span>0</span>
-                    </div>
-                    <div className="relative">
-                      <div className="absolute inset-0 flex flex-col justify-between pb-9">
-                        {[0, 1, 2].map((line) => (
-                          <span key={line} className="h-px w-full bg-border/70" />
-                        ))}
-                      </div>
-
-                      <div className="relative z-10 grid h-full grid-flow-col auto-cols-fr gap-4">
-                        {liveProjectStats.map((project) => {
-                          const openHeight = Math.max(
-                            (project.openTickets / maxProjectTickets) * 100,
-                            project.openTickets > 0 ? 8 : 0,
-                          );
-                          const resolvedHeight = Math.max(
-                            (project.resolvedTickets / maxProjectTickets) * 100,
-                            project.resolvedTickets > 0 ? 8 : 0,
-                          );
-
-                          return (
-                            <div key={project.id} className="flex min-w-28 flex-col justify-end gap-2">
-                              <div className="flex h-full items-end justify-center gap-2 pb-2">
-                                <div className="flex min-w-8 flex-col items-center gap-1">
-                                  <span className="text-[10px] font-semibold text-primary">{project.openTickets}</span>
-                                  <div
-                                    className="w-5 rounded-t-md bg-primary transition-[height] duration-300"
-                                    title={`${project.name}: ${project.openTickets} open`}
-                                    style={{ height: `${openHeight}%` }}
-                                  />
-                                </div>
-                                <div className="flex min-w-8 flex-col items-center gap-1">
-                                  <span className="text-[10px] font-semibold text-success">{project.resolvedTickets}</span>
-                                  <div
-                                    className="w-5 rounded-t-md bg-success transition-[height] duration-300"
-                                    title={`${project.name}: ${project.resolvedTickets} resolved`}
-                                    style={{ height: `${resolvedHeight}%` }}
-                                  />
-                                </div>
-                              </div>
-                              <div className="min-h-9 text-center">
-                                <p className="truncate text-[11px] font-medium text-foreground" title={project.name}>
-                                  {project.name}
-                                </p>
-                                <p className="mt-0.5 text-[10px] text-muted-foreground">
-                                  {project.totalTickets} total
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                <div className="overflow-hidden rounded-xl border border-sidebar-border">
+                  <div className="grid grid-cols-[minmax(12rem,1.1fr)_minmax(18rem,2fr)_4.5rem] border-b border-sidebar-border bg-muted/30 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <span>Project</span>
+                    <span>Status distribution</span>
+                    <span className="text-right">Total</span>
+                  </div>
+                  <div className="divide-y divide-sidebar-border">
+                    {liveProjectStats.map((project) => (
+                      <ProjectStatusRow key={project.id} project={project} />
+                    ))}
                   </div>
                 </div>
               )}
@@ -436,6 +355,31 @@ function WorkspaceOverviewRealtimeBridge({
   return null;
 }
 
+function OverviewKpiCard({
+  label,
+  value,
+  description,
+  icon: Icon,
+}: {
+  label: string;
+  value: number;
+  description: string;
+  icon: typeof FolderKanban;
+}) {
+  return (
+    <div className="rounded-2xl border border-sidebar-border bg-card p-4 dark:bg-surface-elevated">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Icon className="h-4 w-4" />
+        </span>
+      </div>
+      <p className="mt-3 text-2xl font-semibold text-foreground">{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+    </div>
+  );
+}
+
 function isResolvedStatus(status: ReportStatus) {
   return status === "RESOLVED" || status === "CLOSED";
 }
@@ -450,22 +394,6 @@ function applyResolvedDelta(
     return Math.max(current - 1, 0);
   }
   if (!isResolvedStatus(previousStatus) && isResolvedStatus(nextStatus)) {
-    return current + 1;
-  }
-  return current;
-}
-
-function applyStatusDelta(
-  current: number,
-  previousStatus: ReportStatus,
-  nextStatus: ReportStatus,
-  watchedStatus: ReportStatus,
-) {
-  if (previousStatus === nextStatus) return current;
-  if (previousStatus === watchedStatus && nextStatus !== watchedStatus) {
-    return Math.max(current - 1, 0);
-  }
-  if (previousStatus !== watchedStatus && nextStatus === watchedStatus) {
     return current + 1;
   }
   return current;
@@ -487,18 +415,125 @@ function incrementGraphBucket(
   });
 }
 
-function incrementProjectStats(
+function ProjectStatusRow({ project }: { project: WorkspaceProjectStats }) {
+  return (
+    <div className="grid grid-cols-[minmax(12rem,1.1fr)_minmax(18rem,2fr)_4.5rem] items-center gap-4 px-4 py-3">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium text-foreground">{project.name}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          {project.totalTickets === 0 ? "No tickets yet" : "All project tickets"}
+        </p>
+      </div>
+
+      <div className="min-w-0">
+        <div className="flex h-3 overflow-hidden rounded-full bg-muted">
+          {project.totalTickets === 0 ? (
+            <span className="h-full w-full bg-muted" />
+          ) : (
+            STATUS_SEGMENTS.map((segment) => {
+              const count = project.statusCounts[segment.status];
+              if (count === 0) return null;
+
+              return (
+                <GraphTooltip
+                  key={segment.status}
+                  title={project.name}
+                  label={ISSUE_STATUS_LABELS[segment.status]}
+                  value={count}
+                  dotClassName={segment.dotClassName}
+                  triggerClassName={`${segment.className} h-full transition-[width,opacity] duration-300 hover:opacity-85`}
+                  triggerStyle={{ width: `${(count / project.totalTickets) * 100}%` }}
+                />
+              );
+            })
+          )}
+        </div>
+        <div className="mt-2 grid grid-cols-4 gap-2 text-[11px] text-muted-foreground">
+          {STATUS_SEGMENTS.map((segment) => (
+            <span key={segment.status} className="min-w-0 truncate">
+              <span className="font-medium text-foreground">{project.statusCounts[segment.status]}</span>{" "}
+              {ISSUE_STATUS_LABELS[segment.status]}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <p className="text-right text-sm font-semibold text-foreground">{project.totalTickets}</p>
+    </div>
+  );
+}
+
+function GraphTooltip({
+  title,
+  label,
+  value,
+  dotClassName,
+  triggerClassName,
+  triggerStyle,
+}: {
+  title: string;
+  label: string;
+  value: number;
+  dotClassName: string;
+  triggerClassName: string;
+  triggerStyle: CSSProperties;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <span
+            className={`block shrink-0 ${triggerClassName}`}
+            style={triggerStyle}
+          />
+        }
+      />
+      <TooltipContent
+        side="top"
+        sideOffset={8}
+        className="block rounded-lg border border-sidebar-border bg-popover px-3 py-2 text-popover-foreground shadow-xl"
+      >
+        <div className="min-w-32">
+          <p className="truncate text-xs font-semibold text-foreground">{title}</p>
+          <div className="mt-1.5 flex items-center justify-between gap-4 text-xs">
+            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+              <span className={`h-2 w-2 rounded-full ${dotClassName}`} />
+              {label}
+            </span>
+            <span className="font-semibold text-foreground">{value}</span>
+          </div>
+        </div>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+function incrementProjectStatus(
   projectStats: WorkspaceProjectStats[],
   projectId: string,
   status: ReportStatus,
 ) {
   return projectStats.map((project) => {
     if (project.id !== projectId) return project;
+    const statusCounts = { ...project.statusCounts };
+    statusCounts[status] += 1;
+
     return {
       ...project,
       totalTickets: project.totalTickets + 1,
-      openTickets: status === "OPEN" ? project.openTickets + 1 : project.openTickets,
-      resolvedTickets: isResolvedStatus(status) ? project.resolvedTickets + 1 : project.resolvedTickets,
+      statusCounts,
     };
   });
+}
+
+function moveProjectStatusCount(
+  counts: Record<ReportStatus, number>,
+  previousStatus: ReportStatus,
+  nextStatus: ReportStatus,
+) {
+  if (previousStatus === nextStatus) return counts;
+  const nextCounts = { ...counts };
+  nextCounts[previousStatus] = Math.max(nextCounts[previousStatus] - 1, 0);
+  nextCounts[nextStatus] += 1;
+  return nextCounts;
 }
