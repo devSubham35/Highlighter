@@ -1,66 +1,83 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { signOut } from "@/lib/auth-client";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Highlighter, LayoutDashboard, LogOut, Moon, Sun, User } from "lucide-react";
+import { Bell, CircleHelp, Menu, Moon, Plus, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export function TopNav({ user }: { user: { name?: string | null; email?: string | null } }) {
-  const router = useRouter();
+export function TopNav({
+  onMenuClick,
+  compact = false,
+}: {
+  onMenuClick?: () => void;
+  compact?: boolean;
+}) {
+  const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
-  const initials = (user.name ?? user.email ?? "U")
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  function handleLogout() {
-    signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          window.location.href = "/login";
-        },
-      },
-    });
-  }
+  const workspaceMatch = pathname.match(/^\/workspaces\/([^/]+)/);
+  const workspaceId = workspaceMatch?.[1];
 
   return (
-    <header className="fixed top-0 left-0 z-50 flex h-14 w-full items-center border-b border-border/80 bg-card/95 px-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-md md:px-6">
-      <Link href="/workspaces" className="flex min-w-0 items-center gap-2.5">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Highlighter className="h-4 w-4" />
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-border/80 bg-card/95 px-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-md md:px-6">
+      {!compact && onMenuClick ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="md:hidden"
+          onClick={onMenuClick}
+          aria-label="Open navigation menu"
+        >
+          <Menu className="h-4 w-4" />
+        </Button>
+      ) : null}
+
+      {!compact ? (
+        <div className="relative hidden min-w-0 flex-1 sm:block sm:max-w-xl">
+          <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search anything..."
+            className="h-9 rounded-md bg-muted/30 pl-9 text-sm"
+          />
+          <kbd className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 rounded border border-border bg-card px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground lg:inline">
+            ⌘ K
+          </kbd>
         </div>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold leading-none text-foreground">Highlighter</p>
-          <p className="mt-0.5 hidden truncate text-[11px] text-muted-foreground sm:block">
-            Visual feedback
-          </p>
-        </div>
-      </Link>
+      ) : (
+        <div className="min-w-0 flex-1" />
+      )}
 
       <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-        <div className="mr-1 hidden text-right lg:block">
-          <p className="text-sm font-medium leading-none text-foreground">{user.name ?? "User"}</p>
-          <p className="mt-0.5 max-w-[180px] truncate text-[11px] text-muted-foreground">
-            {user.email}
-          </p>
-        </div>
+        {!compact ? (
+          <>
+            <Button type="button" variant="outline" size="icon" className="relative hidden sm:inline-flex">
+              <Bell className="h-4 w-4 text-muted-foreground" />
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
+            </Button>
+            <Button type="button" variant="outline" size="icon" className="hidden sm:inline-flex">
+              <CircleHelp className="h-4 w-4 text-muted-foreground" />
+            </Button>
+            {workspaceId ? (
+              <Button
+                render={<Link href={`/workspaces/${workspaceId}/projects`} />}
+                size="sm"
+                className="hidden rounded-md sm:inline-flex"
+              >
+                <Plus className="h-4 w-4" />
+                New project
+              </Button>
+            ) : null}
+          </>
+        ) : null}
 
         <Button
           type="button"
@@ -84,43 +101,6 @@ export function TopNav({ user }: { user: { name?: string | null; email?: string 
             )}
           />
         </Button>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <button
-                type="button"
-                aria-label="Open profile menu"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary transition-colors hover:bg-primary/25"
-              >
-                {initials}
-              </button>
-            }
-          />
-          <DropdownMenuContent align="end" className="min-w-48">
-            <div className="px-2 py-1.5 lg:hidden">
-              <p className="text-sm font-medium text-foreground">{user.name ?? "User"}</p>
-              <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-            </div>
-            <DropdownMenuSeparator className="lg:hidden" />
-            <DropdownMenuItem onClick={() => router.push("/dashboard")} className="gap-2">
-              <LayoutDashboard className="h-4 w-4" />
-              Dashboard
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/profile")} className="gap-2">
-              <User className="h-4 w-4" />
-              Profile
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={handleLogout}
-              className="gap-2 text-destructive data-highlighted:text-destructive"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </header>
   );

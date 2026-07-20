@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/common/PageHeader";
-import { CreateOrganizationForm } from "@/components/projects/CreateOrganizationForm";
+import { CreateWorkspaceForm } from "@/components/projects/CreateWorkspaceForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,7 +43,7 @@ export default async function SettingsPage() {
           </div>
         </CardContent>
       </Card>
-      <CreateOrganizationForm />
+      <CreateWorkspaceForm />
       {workspaces.map((workspace) => (
         <Card key={workspace.id} className="border border-sidebar-border shadow-sm dark:bg-surface-elevated">
           <CardHeader>

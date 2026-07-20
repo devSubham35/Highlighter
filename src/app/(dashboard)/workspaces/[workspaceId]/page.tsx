@@ -1,12 +1,10 @@
-import { ContentContainer } from "@/components/common/ContentContainer";
-import { PageHeader } from "@/components/common/PageHeader";
-import { ProjectsView } from "@/components/projects/ProjectsView";
+import { WorkspaceOverviewView } from "@/components/workspaces/WorkspaceOverviewView";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
-export default async function WorkspaceProjectsPage({
+export default async function WorkspaceOverviewPage({
   params,
 }: {
   params: Promise<{ workspaceId: string }>;
@@ -19,55 +17,39 @@ export default async function WorkspaceProjectsPage({
       id: workspaceId,
       memberships: { some: { userId: session!.user.id } },
     },
-    include: {
-      projects: {
-        include: {
-          _count: {
-            select: {
-              reports: { where: { status: "OPEN" } },
-            },
-          },
-          reports: {
-            orderBy: { createdAt: "desc" },
-            take: 1,
-            select: { createdAt: true },
-          },
-        },
-        orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      memberships: {
+        where: { userId: session!.user.id },
+        select: { role: true },
+        take: 1,
       },
     },
   });
 
   if (!workspace) notFound();
 
-  const imageCounts = await db.report.groupBy({
-    by: ["projectId"],
-    where: {
-      screenshotUrl: { not: null },
-      project: { workspaceId: workspace.id },
-    },
-    _count: { _all: true },
-  });
+  const workspaceFilter = { project: { workspaceId: workspace.id } };
 
-  const imageCountMap = new Map(imageCounts.map((row) => [row.projectId, row._count._all]));
-
-  const projects = workspace.projects.map((project) => ({
-    id: project.id,
-    name: project.name,
-    websiteUrl: project.websiteUrl,
-    archived: project.archived,
-    createdAt: project.createdAt.toISOString(),
-    openCount: project._count.reports,
-    imageCount: imageCountMap.get(project.id) ?? 0,
-    lastIssueAt: project.reports[0]?.createdAt.toISOString() ?? null,
-  }));
+  const [activeProjects, totalReports, memberCount, resolvedReports] = await Promise.all([
+    db.project.count({ where: { workspaceId: workspace.id, archived: false } }),
+    db.report.count({ where: workspaceFilter }),
+    db.membership.count({ where: { workspaceId: workspace.id } }),
+    db.report.count({ where: { ...workspaceFilter, status: "RESOLVED" } }),
+  ]);
 
   return (
-    <ContentContainer>
-      <div className="space-y-6">
-        <PageHeader title="Projects" description={workspace.name} backHref="/workspaces" />
-        <ProjectsView workspaceId={workspaceId} projects={projects} />
-      </div>
-    </ContentContainer>
+    <WorkspaceOverviewView
+      workspaceId={workspace.id}
+      workspaceName={workspace.name}
+      role={workspace.memberships[0]?.role ?? "MEMBER"}
+      stats={{
+        activeProjects,
+        totalReports,
+        memberCount,
+        resolvedReports,
+      }}
+    />
   );
 }

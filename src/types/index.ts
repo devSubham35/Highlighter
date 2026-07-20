@@ -3,7 +3,7 @@ export type Severity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 export type IssueType = "BUG" | "IMPROVEMENT";
 export type IssuePriority = "NONE" | "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
-export type OrgMember = {
+export type WorkspaceMember = {
   id: string;
   name: string;
   email: string;

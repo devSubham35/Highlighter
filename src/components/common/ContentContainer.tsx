@@ -7,5 +7,5 @@ export function ContentContainer({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={cn("mx-auto w-full max-w-6xl", className)}>{children}</div>;
+  return <div className={cn("mx-auto w-full", className)}>{children}</div>;
 }

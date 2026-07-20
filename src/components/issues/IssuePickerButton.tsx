@@ -18,7 +18,7 @@ import {
   isIssueType,
 } from "@/lib/issue-options";
 import type { IssuePriority, IssueType } from "@/types";
-import type { OrgMember } from "@/types";
+import type { WorkspaceMember } from "@/types";
 import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
 
@@ -31,7 +31,7 @@ export function IssueAssignPicker({
   onAssigneeIdsChange,
 }: {
   assigneeIds: string[];
-  members: OrgMember[];
+  members: WorkspaceMember[];
   onAssigneeIdsChange: (ids: string[]) => void;
 }) {
   const [open, setOpen] = useState(false);

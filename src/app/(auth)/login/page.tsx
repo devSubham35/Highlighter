@@ -57,7 +57,7 @@ export default function LoginPage() {
               type="email"
               placeholder="Enter your email"
               autoComplete="email"
-              className="h-11 rounded-lg pl-10"
+              className="h-11 rounded-md pl-10"
               {...methods.register("email")}
             />
           </div>
@@ -77,7 +77,7 @@ export default function LoginPage() {
               type="password"
               placeholder="Enter your password"
               autoComplete="current-password"
-              className="h-11 rounded-lg px-10"
+              className="h-11 rounded-md px-10"
               {...methods.register("password")}
             />
             <EyeOff className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

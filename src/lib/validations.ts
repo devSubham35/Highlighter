@@ -54,7 +54,10 @@ export type RegisterFormData = z.infer<typeof registerFormSchema>;
 export type CreateWorkspaceFormData = z.infer<typeof createWorkspaceFormSchema>;
 export type CreateProjectFormData = z.infer<typeof createProjectFormSchema>;
 
-export const createWorkspaceSchema = createWorkspaceFormSchema;
+export const createWorkspaceSchema = z.object({
+  name: createWorkspaceFormSchema.shape.name,
+  inviteEmail: createWorkspaceFormSchema.shape.inviteEmail.optional(),
+});
 
 export const createProjectSchema = createProjectFormSchema.extend({
   workspaceId: z.string().cuid(),

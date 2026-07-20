@@ -5,7 +5,7 @@ import { IssueRow } from "@/components/issues/IssueRow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { parseReportMetadata } from "@/lib/report-metadata";
-import type { OrgMember, ReportStatus } from "@/types";
+import type { WorkspaceMember, ReportStatus } from "@/types";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -43,7 +43,7 @@ export function ProjectDetailsView({
     websiteUrl: string | null;
   };
   issues: IssueItem[];
-  members: OrgMember[];
+  members: WorkspaceMember[];
   currentUserId: string;
   currentUserName: string;
 }) {

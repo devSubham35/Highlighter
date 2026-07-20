@@ -7,7 +7,8 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(spec, {
     headers: {
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+      Pragma: "no-cache",
     },
   });
 }

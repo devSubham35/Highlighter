@@ -76,7 +76,7 @@ export function ProjectGeneralSettings({
       return;
     }
 
-    router.push(`/workspaces/${workspaceId}`);
+    router.push(`/workspaces/${workspaceId}/projects`);
     router.refresh();
   }
 

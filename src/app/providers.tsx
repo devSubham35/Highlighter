@@ -9,7 +9,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
       <TooltipProvider>
         {children}
-        <Toaster />
+        <Toaster position="bottom-right" />
       </TooltipProvider>
     </ThemeProvider>
   );

@@ -41,8 +41,22 @@ if (extra.length) {
   failed = true;
 }
 
-const badRefs = JSON.stringify(spec).match(/Workspacesummary|createWorkspaceRequest|\/api\/Workspaces|Comment/g);
-if (badRefs) {
+const stalePatterns = [
+  /Workspacesummary/,
+  /createWorkspaceRequest/,
+  /\/api\/Workspaces/,
+  /OrganizationSummary/,
+  /CreateOrganizationRequest/,
+  /UpdateOrganizationRequest/,
+  /\/api\/organizations/,
+  /organizationId/,
+  /\bComment\b/,
+  /createCommentSchema/,
+  /\/api\/reports\/\{reportId\}\/comments/,
+];
+const specJson = JSON.stringify(spec);
+const badRefs = stalePatterns.flatMap((pattern) => specJson.match(pattern) ?? []);
+if (badRefs.length > 0) {
   console.error("Stale references in spec:", [...new Set(badRefs)]);
   failed = true;
 }

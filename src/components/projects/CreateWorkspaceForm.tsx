@@ -13,13 +13,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-export function CreateOrganizationForm() {
+export function CreateWorkspaceForm() {
   const router = useRouter();
   const [serverError, setServerError] = useState("");
 
   const methods = useForm<CreateWorkspaceFormData>({
     resolver: zodResolver(createWorkspaceFormSchema),
-    defaultValues: { name: "" },
+    defaultValues: { name: "", inviteEmail: "" },
     mode: "onSubmit",
   });
 

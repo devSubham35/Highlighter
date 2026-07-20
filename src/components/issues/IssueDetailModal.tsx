@@ -12,7 +12,7 @@ import {
   parseReportMetadata,
 } from "@/lib/report-metadata";
 import type { ActivityEntry } from "@/lib/report-metadata";
-import type { IssuePriority, IssueType, OrgMember, ReportStatus } from "@/types";
+import type { IssuePriority, IssueType, WorkspaceMember, ReportStatus } from "@/types";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -43,7 +43,7 @@ export function IssueDetailModal({
   issue: IssueItem | null;
   issues: IssueItem[];
   projectName: string;
-  members: OrgMember[];
+  members: WorkspaceMember[];
   currentUserName: string;
   onNavigate: (issueId: string) => void;
   onUpdated: (issue: IssueItem) => void;

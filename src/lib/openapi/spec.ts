@@ -14,12 +14,14 @@ function jsonResponse(description: string, schema: object, example?: unknown) {
   };
 }
 
+export const OPENAPI_VERSION = "1.1.0";
+
 export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
   return {
     openapi: "3.0.3",
     info: {
       title: "Highlighter API",
-      version: "1.0.0",
+      version: OPENAPI_VERSION,
       description:
         "REST API for Highlighter — visual bug reporting SaaS. Authenticated dashboard routes use session cookies from Better Auth. Widget routes accept public project API keys and support CORS.",
       contact: { name: "Highlighter" },

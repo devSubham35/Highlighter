@@ -17,7 +17,7 @@ import {
 } from "@/lib/issue-options";
 import { formatIssueKey, parseReportMetadata } from "@/lib/report-metadata";
 import type { IssueItem } from "@/components/projects/ProjectDetailsView";
-import type { IssuePriority, IssueType, OrgMember } from "@/types";
+import type { IssuePriority, IssueType, WorkspaceMember } from "@/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -128,7 +128,7 @@ export function IssueDetailSidebar({
 }: {
   detail: IssueItem;
   projectName: string;
-  members: OrgMember[];
+  members: WorkspaceMember[];
   reporterName: string;
   reporterImage?: string | null;
   currentIndex: number;

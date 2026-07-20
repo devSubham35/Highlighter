@@ -42,7 +42,7 @@ export function ProjectShell({
       <aside className="sticky top-14 z-10 hidden h-[calc(100vh-3.5rem)] w-52 shrink-0 flex-col border-r border-border/80 bg-sidebar/95 backdrop-blur-md md:flex">
         <div className="border-b border-border/70 px-3 py-3">
           <Link
-            href={`/workspaces/${workspaceId}`}
+            href={`/workspaces/${workspaceId}/projects`}
             className="flex items-center gap-2 rounded-xl px-2 py-1.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-sidebar-accent hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4 shrink-0" />
@@ -126,7 +126,7 @@ export function ProjectShell({
             </div>
 
             <Link
-              href={`/workspaces/${workspaceId}`}
+              href={`/workspaces/${workspaceId}/projects`}
               className="mt-0.5 inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-sidebar-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
             >
               <ArrowLeft className="h-3.5 w-3.5" />

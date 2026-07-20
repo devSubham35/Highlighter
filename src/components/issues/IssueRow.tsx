@@ -35,7 +35,7 @@ import {
 import { REPORT_STATUS_OPTIONS, isReportStatus } from "@/lib/report-options";
 import type { IssueItem } from "@/components/projects/ProjectDetailsView";
 import type { ComboboxOption } from "@/components/ui/combobox";
-import type { IssuePriority, IssueType, OrgMember, ReportStatus } from "@/types";
+import type { IssuePriority, IssueType, WorkspaceMember, ReportStatus } from "@/types";
 import { cn } from "@/lib/utils";
 import { Copy, ExternalLink, MoreHorizontal, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -51,7 +51,7 @@ export function IssueRow({
 }: {
   issue: IssueItem;
   projectName: string;
-  members: OrgMember[];
+  members: WorkspaceMember[];
   onOpen: () => void;
   onUpdated: (issue: IssueItem) => void;
   onDeleted: (issueId: string) => void;
@@ -248,7 +248,7 @@ export function IssueRow({
   );
 }
 
-export function memberComboboxOptions(members: OrgMember[]): ComboboxOption[] {
+export function memberComboboxOptions(members: WorkspaceMember[]): ComboboxOption[] {
   return members.map((member) => ({
     value: member.id,
     label: member.name || member.email,

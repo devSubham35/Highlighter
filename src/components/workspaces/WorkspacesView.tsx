@@ -29,16 +29,7 @@ export type WorkspaceListItem = {
   members: WorkspaceMemberPreview[];
 };
 
-const MAX_VISIBLE_MEMBERS = 3;
-
-function workspaceInitials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
+const MAX_VISIBLE_MEMBERS = 4;
 
 function MemberAvatar({
   member,
@@ -53,7 +44,7 @@ function MemberAvatar({
   return (
     <Avatar className={className}>
       {member.image ? <AvatarImage src={member.image} alt={member.name} /> : null}
-      <AvatarFallback className={cn("text-[10px] font-semibold", colors.bg, colors.text)}>
+      <AvatarFallback className={cn("text-xs font-semibold", colors.bg, colors.text)}>
         {initial}
       </AvatarFallback>
     </Avatar>
@@ -78,15 +69,18 @@ function MemberAvatarStack({
         <MemberAvatar
           key={member.id}
           member={member}
-          className={cn("size-7 ring-2 ring-card dark:ring-surface-elevated", index > 0 && "-ml-2.5")}
+          className={cn(
+            "size-10 border border-border",
+            index > 0 && "-ml-3.5",
+          )}
         />
       ))}
       {overflow > 0 ? (
         <div
           className={cn(
-            "relative flex size-7 shrink-0 items-center justify-center rounded-full",
-            "bg-muted text-[10px] font-semibold text-muted-foreground ring-2 ring-card dark:ring-surface-elevated",
-            visible.length > 0 && "-ml-2.5",
+            "relative flex size-10 shrink-0 items-center justify-center rounded-full border border-border",
+            "bg-muted text-xs font-semibold text-muted-foreground",
+            visible.length > 0 && "-ml-3.5",
           )}
         >
           +{overflow}
@@ -97,9 +91,6 @@ function MemberAvatarStack({
 }
 
 function WorkspaceCard({ workspace }: { workspace: WorkspaceListItem }) {
-  const initials = workspaceInitials(workspace.name);
-  const colors = avatarColor(workspace.id);
-
   return (
     <Link href={`/workspaces/${workspace.id}`} className="group block h-full">
       <Card
@@ -109,24 +100,9 @@ function WorkspaceCard({ workspace }: { workspace: WorkspaceListItem }) {
           "dark:bg-surface-elevated dark:hover:border-primary/20 dark:hover:bg-white/5",
         )}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div
-            className={cn(
-              "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-semibold",
-              colors.bg,
-              colors.text,
-            )}
-          >
-            {initials}
-          </div>
-          <div className="flex items-center gap-2">
-            {workspace.memberCount > 1 ? (
-              <MemberAvatarStack members={workspace.members} totalCount={workspace.memberCount} />
-            ) : workspace.memberCount === 1 && workspace.members[0] ? (
-              <MemberAvatar member={workspace.members[0]} className="size-7" />
-            ) : null}
-            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
-          </div>
+        <div className="flex items-center justify-between gap-3">
+          <MemberAvatarStack members={workspace.members} totalCount={workspace.memberCount} />
+          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
         </div>
 
         <div className="min-w-0 flex-1">

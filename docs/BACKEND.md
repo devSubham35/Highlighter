@@ -51,7 +51,7 @@ This document describes the current backend implementation for **Highlighter** �
 
 - All backend logic lives in **Next.js Route Handlers** under `src/app/api/`.
 - **Better Auth** handles sign-up, sign-in, sessions, and password changes at `/api/auth/[...all]`.
-- **Dashboard routes** require a valid session cookie and enforce organization membership.
+- **Dashboard routes** require a valid session cookie and enforce workspace membership.
 - **Widget routes** (`POST /api/reports`, `POST /api/upload`) are public, CORS-enabled, and authenticated via a per-project API key (`project_live_*`).
 - Business data is stored in **PostgreSQL**; screenshot binaries go to **R2** via presigned upload URLs.
 
@@ -126,8 +126,8 @@ Defined in `prisma/schema.prisma`. All IDs use **CUID** unless noted.
 
 | Model | Table | Description |
 |-------|-------|-------------|
-| `Organization` | `organizations` | Workspace (name, unique slug, ownerId) |
-| `Membership` | `memberships` | User ↔ organization link with role |
+| `Workspace` | `workspaces` | Workspace (name, unique slug, ownerId) |
+| `Membership` | `memberships` | User ↔ workspace link with role |
 | `Invitation` | `invitations` | Pending workspace invites with token + expiry |
 
 **Member roles** (`MemberRole` enum):
@@ -165,7 +165,7 @@ Invitation.expiresAt   = 7 days from creation
 
 ### Cascade deletes
 
-Deleting an `Organization` cascades to memberships, projects, and invitations. Deleting a `Project` cascades to reports. Deleting a `Report` cascades to comments.
+Deleting a `Workspace` cascades to memberships, projects, and invitations. Deleting a `Project` cascades to reports. Deleting a `Report` cascades to comments.
 
 ---
 
@@ -239,20 +239,20 @@ const roleRank = { MEMBER: 1, ADMIN: 2, OWNER: 3 };
 |----------|---------|----------|
 | `getSession()` | Session or null | Reads current session |
 | `requireSession()` | `{ session }` or `{ error: 401 }` | Requires authenticated user |
-| `requireOrgMembership(orgId, minRole?)` | `{ session, membership }` or error | Requires org membership; default min role = `MEMBER` |
+| `requireWorkspaceMembership(workspaceId, minRole?)` | `{ session, membership }` or error | Requires workspace membership; default min role = `MEMBER` |
 | `jsonError(message, status)` | `NextResponse` | Standard error JSON `{ error: ... }` |
 
 ### Access patterns by resource
 
 | Resource | Access rule |
 |----------|-------------|
-| Organization list | User must be a member |
-| Organization detail | Member of that org |
-| Organization update | `ADMIN` or `OWNER` |
-| Organization delete | `OWNER` only |
+| Workspace list | User must be a member |
+| Workspace detail | Member of that workspace |
+| Workspace update | `ADMIN` or `OWNER` |
+| Workspace delete | `OWNER` only |
 | Project list/create | Member to list; `ADMIN`+ to create |
-| Project detail/update/delete | Any member of the project's organization |
-| Report list/detail/update/delete | Member of the report's project's organization |
+| Project detail/update/delete | Any member of the project's workspace |
+| Report list/detail/update/delete | Member of the report's project's workspace |
 | Report create (widget) | Valid `projectApiKey` only — no session |
 | Invitations | `ADMIN`+ to create/list/revoke |
 | Member role change | `OWNER` only |
@@ -263,12 +263,12 @@ const roleRank = { MEMBER: 1, ADMIN: 2, OWNER: 3 };
 `requireProjectAccess()` in `/api/projects/[projectId]` checks:
 
 ```typescript
-project.organization.memberships.some({ userId: session.user.id })
+project.workspace.memberships.some({ userId: session.user.id })
 ```
 
 ### Report access (inline)
 
-`requireReport()` in `/api/reports/[reportId]` uses the same org-membership chain through `project.organization`.
+`requireReport()` in `/api/reports/[reportId]` uses the same workspace-membership chain through `project.workspace`.
 
 ---
 
@@ -331,15 +331,15 @@ Returns `{ "ok": true }` or `400` if current password is wrong.
 
 ---
 
-### Organizations (Workspaces)
+### Workspaces
 
-#### `GET /api/organizations`
+#### `GET /api/workspaces`
 
 Lists all workspaces the current user belongs to, with counts.
 
 **Response item fields:** `id`, `name`, `slug`, `ownerId`, `role`, `projectCount`, `memberCount`, `createdAt`, `updatedAt`
 
-#### `POST /api/organizations`
+#### `POST /api/workspaces`
 
 Creates a workspace. Creator becomes `OWNER`.
 
@@ -354,21 +354,21 @@ Creates a workspace. Creator becomes `OWNER`.
 
 - Generates a unique slug: `{slugified-name}-{random5}`
 - Optionally creates a pending invitation if `inviteEmail` is provided
-- Returns `201` with organization + counts
+- Returns `201` with workspace + counts
 
 **Errors:** `409` if workspace name already exists for this user
 
-#### `GET /api/organizations/:organizationId`
+#### `GET /api/workspaces/:workspaceId`
 
 Full workspace detail including members. Pending invitations included only for `ADMIN`/`OWNER`.
 
-#### `PATCH /api/organizations/:organizationId`
+#### `PATCH /api/workspaces/:workspaceId`
 
 **Requires:** `ADMIN`+
 
 **Body:** `{ "name": "string" }`
 
-#### `DELETE /api/organizations/:organizationId`
+#### `DELETE /api/workspaces/:workspaceId`
 
 **Requires:** `OWNER`
 
@@ -378,11 +378,11 @@ Permanently deletes the workspace and all related data (cascade).
 
 ### Members
 
-#### `GET /api/organizations/:organizationId/members`
+#### `GET /api/workspaces/:workspaceId/members`
 
 Lists all members with user profile fields.
 
-#### `PATCH /api/organizations/:organizationId/members/:userId`
+#### `PATCH /api/workspaces/:workspaceId/members/:userId`
 
 **Requires:** `OWNER`
 
@@ -390,7 +390,7 @@ Lists all members with user profile fields.
 
 Cannot change the workspace owner's role.
 
-#### `DELETE /api/organizations/:organizationId/members/:userId`
+#### `DELETE /api/workspaces/:workspaceId/members/:userId`
 
 Two paths:
 
@@ -401,9 +401,9 @@ Two paths:
 
 ### Invitations
 
-#### `GET /api/invitations?organizationId=`
+#### `GET /api/invitations?workspaceId=`
 
-**Requires:** `ADMIN`+ for the organization
+**Requires:** `ADMIN`+ for the workspace
 
 #### `POST /api/invitations`
 
@@ -415,7 +415,7 @@ Two paths:
 {
   "email": "user@example.com",
   "role": "ADMIN" | "MEMBER",
-  "organizationId": "cuid"
+  "workspaceId": "cuid"
 }
 ```
 
@@ -438,19 +438,19 @@ Creates membership and marks invitation `ACCEPTED` in a transaction.
 
 #### `DELETE /api/invitations/:invitationId`
 
-**Requires:** `ADMIN`+ for the invitation's organization
+**Requires:** `ADMIN`+ for the invitation's workspace
 
 ---
 
 ### Projects
 
-#### `GET /api/projects?organizationId=&enriched=`
+#### `GET /api/projects?workspaceId=&enriched=`
 
-**Requires:** org membership
+**Requires:** workspace membership
 
 | Query | Description |
 |-------|-------------|
-| `organizationId` | Required |
+| `workspaceId` | Required |
 | `enriched` | Default `true`; set `false` for raw project rows |
 
 When enriched, each project includes:
@@ -467,7 +467,7 @@ When enriched, each project includes:
 
 ```json
 {
-  "organizationId": "cuid",
+  "workspaceId": "cuid",
   "name": "Marketing Site",
   "websiteUrl": "https://example.com",
   "widgetColor": "#22c55e",
@@ -536,7 +536,7 @@ Deletes project and all reports (cascade).
 | `severity` | `LOW`, `MEDIUM`, etc. |
 | `search` | Case-insensitive title search |
 
-Limited to reports in organizations the user belongs to. Max **50** results, newest first.
+Limited to reports in workspaces the user belongs to. Max **50** results, newest first.
 
 Includes `project` relation and `_count.comments`.
 
@@ -731,8 +731,8 @@ All API input is validated with **Zod** schemas in `src/lib/validations.ts`.
 
 | Schema | Used by |
 |--------|---------|
-| `createOrganizationSchema` | `POST /organizations` |
-| `updateOrganizationSchema` | `PATCH /organizations/:id` |
+| `createWorkspaceSchema` | `POST /workspaces` |
+| `updateWorkspaceSchema` | `PATCH /workspaces/:id` |
 | `createProjectSchema` | `POST /projects` |
 | `updateProjectSchema` | `PATCH /projects/:id` |
 | `createReportSchema` | `POST /reports` (widget) |
@@ -768,11 +768,11 @@ Aggregates per-project stats in batch (avoids N+1 queries):
 - Screenshot count
 - Last issue timestamp
 
-### `getOrganizationCounts(organizationId)`
+### `getWorkspaceCounts(workspaceId)`
 
 Returns `{ projectCount, memberCount, pendingInvites }`.
 
-### `isOrganizationNameTaken(userId, name, excludeId?)`
+### `isWorkspaceNameTaken(userId, name, excludeId?)`
 
 Case-insensitive duplicate name check scoped to workspaces the user belongs to.
 
@@ -827,7 +827,7 @@ Used on widget-facing routes and the `json()` helper.
 | `400` | Bad request | Zod validation failure |
 | `401` | Unauthorized | Missing or invalid session |
 | `403` | Forbidden | Insufficient role or wrong invite email |
-| `404` | Not found | Resource missing or no access (intentionally vague for org membership) |
+| `404` | Not found | Resource missing or no access (intentionally vague for workspace membership) |
 | `409` | Conflict | Duplicate name, existing member, duplicate invite |
 | `429` | Too many requests | Widget rate limit exceeded |
 | `201` | Created | Successful POST for resources |
@@ -840,7 +840,7 @@ Used on widget-facing routes and the `json()` helper.
 { "error": { "formErrors": [], "fieldErrors": {} } }
 ```
 
-Org membership failures return **404** (not 403) to avoid leaking organization existence.
+Workspace membership failures return **404** (not 403) to avoid leaking workspace existence.
 
 ---
 
@@ -850,8 +850,8 @@ Org membership failures return **404** (not 403) to avoid leaking organization e
 
 ```
 POST /api/auth/sign-up/email
-GET  /api/organizations          (empty)
-POST /api/organizations          → OWNER membership created
+GET  /api/workspaces          (empty)
+POST /api/workspaces          → OWNER membership created
 POST /api/projects             → apiKey generated
 ```
 
@@ -878,9 +878,9 @@ POST /api/reports/:id/comments   → discussion
 ### 4. Leave or manage workspace
 
 ```
-DELETE /api/organizations/:orgId/members/:userId   (self or admin)
-PATCH  /api/organizations/:orgId/members/:userId   (owner changes role)
-DELETE /api/organizations/:orgId                   (owner deletes workspace)
+DELETE /api/workspaces/:workspaceId/members/:userId   (self or admin)
+PATCH  /api/workspaces/:workspaceId/members/:userId   (owner changes role)
+DELETE /api/workspaces/:workspaceId                   (owner deletes workspace)
 ```
 
 ---
