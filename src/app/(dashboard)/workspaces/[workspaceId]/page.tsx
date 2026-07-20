@@ -41,7 +41,6 @@ export default async function WorkspaceOverviewPage({
 
   return (
     <WorkspaceOverviewView
-      workspaceId={workspace.id}
       workspaceName={workspace.name}
       role={workspace.memberships[0]?.role ?? "MEMBER"}
       stats={{

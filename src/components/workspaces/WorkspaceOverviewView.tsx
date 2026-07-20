@@ -1,9 +1,7 @@
 import { ContentContainer } from "@/components/common/ContentContainer";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { CheckCircle2, FileText, FolderKanban, Plus, Users } from "lucide-react";
-import Link from "next/link";
+import { CheckCircle2, FileText, FolderKanban, Users } from "lucide-react";
 
 export type WorkspaceOverviewStats = {
   activeProjects: number;
@@ -13,12 +11,10 @@ export type WorkspaceOverviewStats = {
 };
 
 export function WorkspaceOverviewView({
-  workspaceId,
   workspaceName,
   role,
   stats,
 }: {
-  workspaceId: string;
   workspaceName: string;
   role: string;
   stats: WorkspaceOverviewStats;
@@ -42,14 +38,6 @@ export function WorkspaceOverviewView({
               Customer support and product feedback management.
             </p>
           </div>
-          <Button
-            render={<Link href={`/workspaces/${workspaceId}/projects`} />}
-            size="sm"
-            className="rounded-md"
-          >
-            <Plus className="h-4 w-4" />
-            New project
-          </Button>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
