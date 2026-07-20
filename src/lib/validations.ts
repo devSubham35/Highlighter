@@ -116,7 +116,7 @@ export const updateReportSchema = z.object({
         .array(
           z.object({
             id: z.string(),
-            kind: z.enum(["reported", "title_ai", "status", "priority"]),
+            kind: z.enum(["reported", "title_ai", "status", "priority", "assignment"]),
             at: z.string(),
             actorName: z.string().optional(),
             issueType: z.enum(["BUG", "IMPROVEMENT"]).optional(),
@@ -124,6 +124,9 @@ export const updateReportSchema = z.object({
             toStatus: z.enum(["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"]).optional(),
             fromPriority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
             toPriority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+            fromAssigneeIds: z.array(z.string().cuid()).optional(),
+            toAssigneeIds: z.array(z.string().cuid()).optional(),
+            toAssigneeNames: z.array(z.string()).optional(),
           }),
         )
         .optional(),

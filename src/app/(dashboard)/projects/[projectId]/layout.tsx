@@ -30,15 +30,13 @@ export default async function ProjectLayout({
   if (!project) notFound();
 
   return (
-    <div className="-mx-4 -mt-4 md:-mx-8 md:-mt-6">
-      <ProjectShell
-        projectId={project.id}
-        projectName={project.name}
-        websiteUrl={project.websiteUrl}
-        workspaceId={project.workspaceId}
-      >
-        {children}
-      </ProjectShell>
-    </div>
+    <ProjectShell
+      projectId={project.id}
+      projectName={project.name}
+      websiteUrl={project.websiteUrl}
+      workspaceId={project.workspaceId}
+    >
+      {children}
+    </ProjectShell>
   );
 }

@@ -2,9 +2,9 @@ import "./globals.css";
 import { Providers } from "@/app/providers";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
 
-const poppins = Poppins({
+const poppins = Inter({
   variable: '--font-poppins',
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],

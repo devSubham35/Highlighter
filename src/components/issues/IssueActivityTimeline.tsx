@@ -96,6 +96,14 @@ function ActivityRow({
             at={entry.at}
           />
         ) : null}
+        {entry.kind === "assignment" ? (
+          <AssignmentLine
+            you={you}
+            actor={actor}
+            assigneeNames={entry.toAssigneeNames ?? []}
+            at={entry.at}
+          />
+        ) : null}
       </div>
     </div>
   );
@@ -173,6 +181,36 @@ function PriorityLine({
         ) : null}
         <PriorityPill priority={toPriority} />
       </p>
+    </>
+  );
+}
+
+function AssignmentLine({
+  you,
+  actor,
+  assigneeNames,
+  at,
+}: {
+  you: boolean;
+  actor: string;
+  assigneeNames: string[];
+  at: string;
+}) {
+  const target =
+    assigneeNames.length === 0
+      ? "unassigned this issue"
+      : assigneeNames.length === 1
+        ? `assigned this issue to ${assigneeNames[0]}`
+        : `assigned this issue to ${assigneeNames.slice(0, -1).join(", ")} and ${
+            assigneeNames[assigneeNames.length - 1]
+          }`;
+
+  return (
+    <>
+      <p>
+        <span className="font-medium text-foreground">{you ? "You" : actor}</span> {target}
+      </p>
+      <p className="mt-0.5 text-xs text-[#80868b]">{relativeTime(at)}</p>
     </>
   );
 }

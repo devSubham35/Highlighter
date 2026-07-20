@@ -20,6 +20,8 @@ import {
   Highlighter,
   LayoutDashboard,
   LogOut,
+  MessageSquare,
+  Puzzle,
   ScrollText,
   Settings,
   User,
@@ -90,12 +92,45 @@ const navItems: NavItem[] = [
   },
 ];
 
+type ProjectNavItem = {
+  label: string;
+  icon: LucideIcon;
+  href: (projectId: string) => string;
+  match: (pathname: string, projectId: string) => boolean;
+};
+
+const projectNavItems: ProjectNavItem[] = [
+  {
+    label: "Feedbacks",
+    icon: MessageSquare,
+    href: (projectId) => `/projects/${projectId}`,
+    match: (pathname, projectId) => pathname === `/projects/${projectId}`,
+  },
+  {
+    label: "Widgets",
+    icon: Puzzle,
+    href: (projectId) => `/projects/${projectId}/widgets`,
+    match: (pathname, projectId) => pathname.startsWith(`/projects/${projectId}/widgets`),
+  },
+  {
+    label: "Settings",
+    icon: Settings,
+    href: (projectId) => `/projects/${projectId}/settings`,
+    match: (pathname, projectId) => pathname.startsWith(`/projects/${projectId}/settings`),
+  },
+];
+
 function workspaceInitial(name: string) {
   return name.trim().charAt(0).toUpperCase() || "W";
 }
 
 function getWorkspaceIdFromPath(pathname: string) {
   const match = pathname.match(/^\/workspaces\/([^/]+)/);
+  return match?.[1] ?? null;
+}
+
+function getProjectIdFromPath(pathname: string) {
+  const match = pathname.match(/^\/projects\/([^/]+)/);
   return match?.[1] ?? null;
 }
 
@@ -113,6 +148,7 @@ export function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
   const workspaceId = getWorkspaceIdFromPath(pathname);
+  const projectId = getProjectIdFromPath(pathname);
 
   const currentWorkspace = useMemo(
     () => workspaces.find((workspace) => workspace.id === workspaceId) ?? workspaces[0] ?? null,
@@ -226,28 +262,56 @@ export function Sidebar({
       </div>
 
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3">
-        {navItems.map((item) => {
-          const href =
-            typeof item.href === "function" ? item.href(workspaceId) : item.href;
-          const active = item.match(pathname, workspaceId);
-          const Icon = item.icon;
+        {projectId ? (
+          <>
+            <p className="px-2.5 pb-1 text-[10px] font-semibold tracking-wider text-muted-foreground/70">
+              Project
+            </p>
+            {projectNavItems.map((item) => {
+              const active = item.match(pathname, projectId);
+              const Icon = item.icon;
 
-          return (
-            <Link
-              key={item.label}
-              href={href}
-              className={cn(
-                "flex h-9 items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium transition-colors",
-                active
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href(projectId)}
+                  className={cn(
+                    "flex h-9 items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium transition-colors",
+                    active
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </>
+        ) : (
+          navItems.map((item) => {
+            const href =
+              typeof item.href === "function" ? item.href(workspaceId) : item.href;
+            const active = item.match(pathname, workspaceId);
+            const Icon = item.icon;
+
+            return (
+              <Link
+                key={item.label}
+                href={href}
+                className={cn(
+                  "flex h-9 items-center gap-2.5 rounded-md px-2.5 text-[13px] font-medium transition-colors",
+                  active
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })
+        )}
       </nav>
 
       <div className="shrink-0 space-y-3 p-3">

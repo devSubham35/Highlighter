@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { mergeReportMetadata, parseReportMetadata } from "@/lib/report-metadata";
+import { appendActivityLog, mergeReportMetadata, parseReportMetadata } from "@/lib/report-metadata";
 import { updateReportSchema, updateReportStatusSchema } from "@/lib/validations";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
@@ -52,9 +52,37 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/reports/[r
   }
 
   const existingMetadata = parseReportMetadata(access.report.metadata);
-  const nextMetadata = parsed.data.metadata
+  let nextMetadata = parsed.data.metadata
     ? mergeReportMetadata(existingMetadata, parsed.data.metadata)
     : undefined;
+
+  const nextAssigneeIds = parsed.data.metadata?.assigneeIds;
+  if (nextMetadata && nextAssigneeIds) {
+    const previousAssigneeIds = existingMetadata.assigneeIds ?? [];
+    const assignmentChanged =
+      previousAssigneeIds.length !== nextAssigneeIds.length ||
+      previousAssigneeIds.some((id) => !nextAssigneeIds.includes(id));
+
+    if (assignmentChanged) {
+      const assignees = await db.user.findMany({
+        where: { id: { in: nextAssigneeIds } },
+        select: { id: true, name: true, email: true },
+      });
+      const assigneeNameById = new Map(
+        assignees.map((assignee) => [assignee.id, assignee.name || assignee.email]),
+      );
+
+      nextMetadata = appendActivityLog(nextMetadata, {
+        kind: "assignment",
+        actorName: access.session.user.name ?? access.session.user.email,
+        fromAssigneeIds: previousAssigneeIds,
+        toAssigneeIds: nextAssigneeIds,
+        toAssigneeNames: nextAssigneeIds
+          .map((id) => assigneeNameById.get(id))
+          .filter((name): name is string => Boolean(name)),
+      });
+    }
+  }
 
   const report = await db.report.update({
     where: { id: reportId },

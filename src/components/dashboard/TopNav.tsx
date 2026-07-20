@@ -1,9 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { NotificationsDrawer } from "@/components/dashboard/NotificationsDrawer";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Bell, CircleHelp, Menu, Moon, Plus, Search, Sun } from "lucide-react";
+import { CircleHelp, Menu, Moon, Plus, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -59,10 +60,7 @@ export function TopNav({
       <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
         {!compact ? (
           <>
-            <Button type="button" variant="outline" size="icon" className="relative hidden sm:inline-flex">
-              <Bell className="h-4 w-4 text-muted-foreground" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
-            </Button>
+            <NotificationsDrawer />
             <Button type="button" variant="outline" size="icon" className="hidden sm:inline-flex">
               <CircleHelp className="h-4 w-4 text-muted-foreground" />
             </Button>
