@@ -2,7 +2,6 @@
 
 import { ContentContainer } from "@/components/common/ContentContainer";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ISSUE_STATUS_LABELS } from "@/lib/issue-options";
 import type { IssueRealtimeEvent } from "@/lib/realtime";
 import { useIssueRealtime } from "@/lib/use-issue-realtime";
@@ -226,47 +225,53 @@ export function WorkspaceOverviewView({
               </div>
 
               <div className="mt-6 rounded-xl bg-muted/20 px-4 py-4">
-                <div className="grid h-44 grid-cols-[2rem_1fr] gap-3">
+                <div className="grid h-48 grid-cols-[2rem_1fr] gap-3">
                   <div className="flex flex-col justify-between text-right text-[10px] text-muted-foreground">
                     <span>{maxGraphValue}</span>
                     <span>{Math.ceil(maxGraphValue / 2)}</span>
                     <span>0</span>
                   </div>
-                  <div className="relative">
-                    <div className="absolute inset-0 flex flex-col justify-between">
-                      {[0, 1, 2].map((line) => (
-                        <span key={line} className="h-px w-full bg-border/70" />
-                      ))}
-                    </div>
-                    <div className="relative z-10 flex h-full items-end gap-4">
-                      {liveIssueGraph.map((item) => {
-                        const reportedHeight = Math.max((item.reported / maxGraphValue) * 100, item.reported > 0 ? 8 : 0);
-                        const resolvedHeight = Math.max((item.resolved / maxGraphValue) * 100, item.resolved > 0 ? 8 : 0);
+                  <div className="grid grid-rows-[1fr_1.5rem]">
+                    <div className="relative">
+                      <div className="absolute inset-0 flex flex-col justify-between">
+                        {[0, 1, 2].map((line) => (
+                          <span key={line} className="h-px w-full bg-border/70" />
+                        ))}
+                      </div>
+                      <div className="relative z-10 flex h-full items-end gap-4">
+                        {liveIssueGraph.map((item) => {
+                          const reportedHeight = Math.max((item.reported / maxGraphValue) * 100, item.reported > 0 ? 8 : 0);
+                          const resolvedHeight = Math.max((item.resolved / maxGraphValue) * 100, item.resolved > 0 ? 8 : 0);
 
-                        return (
-                          <div key={item.key} className="flex h-full flex-1 flex-col justify-end gap-2">
-                            <div className="flex h-full items-end justify-center gap-1.5">
-                              <GraphTooltip
-                                title={item.label}
-                                label="Reported"
-                                value={item.reported}
-                                dotClassName="bg-primary"
-                                triggerClassName="w-4 rounded-t-md bg-primary transition-opacity hover:opacity-85"
-                                triggerStyle={{ height: `${reportedHeight}%` }}
-                              />
-                              <GraphTooltip
-                                title={item.label}
-                                label="Resolved"
-                                value={item.resolved}
-                                dotClassName="bg-success"
-                                triggerClassName="w-4 rounded-t-md bg-success transition-opacity hover:opacity-85"
-                                triggerStyle={{ height: `${resolvedHeight}%` }}
-                              />
+                          return (
+                            <div key={item.key} className="flex h-full flex-1 items-end justify-center gap-1.5">
+                                <GraphTooltip
+                                  title={item.label}
+                                  label="Reported"
+                                  value={item.reported}
+                                  dotClassName="bg-primary"
+                                  triggerClassName="w-4 rounded-t-md bg-primary"
+                                  triggerStyle={{ height: `${reportedHeight}%` }}
+                                />
+                                <GraphTooltip
+                                  title={item.label}
+                                  label="Resolved"
+                                  value={item.resolved}
+                                  dotClassName="bg-success"
+                                  triggerClassName="w-4 rounded-t-md bg-success"
+                                  triggerStyle={{ height: `${resolvedHeight}%` }}
+                                />
                             </div>
-                            <span className="text-center text-[11px] text-muted-foreground">{item.label}</span>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="flex gap-4 border-t border-border/70 pt-2">
+                      {liveIssueGraph.map((item) => (
+                        <span key={item.key} className="flex-1 text-center text-[11px] text-muted-foreground">
+                          {item.label}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -318,7 +323,7 @@ export function WorkspaceOverviewView({
                   No projects available.
                 </div>
               ) : (
-                <div className="overflow-hidden rounded-xl border border-sidebar-border">
+                <div className="overflow-visible rounded-xl border border-sidebar-border bg-card">
                   <div className="grid grid-cols-[minmax(12rem,1.1fr)_minmax(18rem,2fr)_4.5rem] border-b border-sidebar-border bg-muted/30 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                     <span>Project</span>
                     <span>Status distribution</span>
@@ -416,6 +421,10 @@ function incrementGraphBucket(
 }
 
 function ProjectStatusRow({ project }: { project: WorkspaceProjectStats }) {
+  const visibleSegments = STATUS_SEGMENTS.filter(
+    (segment) => project.statusCounts[segment.status] > 0,
+  );
+
   return (
     <div className="grid grid-cols-[minmax(12rem,1.1fr)_minmax(18rem,2fr)_4.5rem] items-center gap-4 px-4 py-3">
       <div className="min-w-0">
@@ -426,13 +435,14 @@ function ProjectStatusRow({ project }: { project: WorkspaceProjectStats }) {
       </div>
 
       <div className="min-w-0">
-        <div className="flex h-3 overflow-hidden rounded-full bg-muted">
+        <div className="flex h-3 rounded-full bg-muted">
           {project.totalTickets === 0 ? (
-            <span className="h-full w-full bg-muted" />
+            <span className="h-full w-full rounded-full bg-muted" />
           ) : (
-            STATUS_SEGMENTS.map((segment) => {
+            visibleSegments.map((segment, index) => {
               const count = project.statusCounts[segment.status];
-              if (count === 0) return null;
+              const first = index === 0;
+              const last = index === visibleSegments.length - 1;
 
               return (
                 <GraphTooltip
@@ -441,7 +451,7 @@ function ProjectStatusRow({ project }: { project: WorkspaceProjectStats }) {
                   label={ISSUE_STATUS_LABELS[segment.status]}
                   value={count}
                   dotClassName={segment.dotClassName}
-                  triggerClassName={`${segment.className} h-full transition-[width,opacity] duration-300 hover:opacity-85`}
+                  triggerClassName={`${segment.className} h-full transition-[width] duration-300 ${first ? "rounded-l-full" : ""} ${last ? "rounded-r-full" : ""}`}
                   triggerStyle={{ width: `${(count / project.totalTickets) * 100}%` }}
                 />
               );
@@ -450,16 +460,52 @@ function ProjectStatusRow({ project }: { project: WorkspaceProjectStats }) {
         </div>
         <div className="mt-2 grid grid-cols-4 gap-2 text-[11px] text-muted-foreground">
           {STATUS_SEGMENTS.map((segment) => (
-            <span key={segment.status} className="min-w-0 truncate">
-              <span className="font-medium text-foreground">{project.statusCounts[segment.status]}</span>{" "}
-              {ISSUE_STATUS_LABELS[segment.status]}
-            </span>
+            <StatusCountTooltip
+              key={segment.status}
+              projectName={project.name}
+              status={segment.status}
+              count={project.statusCounts[segment.status]}
+              dotClassName={segment.dotClassName}
+            />
           ))}
         </div>
       </div>
 
       <p className="text-right text-sm font-semibold text-foreground">{project.totalTickets}</p>
     </div>
+  );
+}
+
+function StatusCountTooltip({
+  projectName,
+  status,
+  count,
+  dotClassName,
+}: {
+  projectName: string;
+  status: ReportStatus;
+  count: number;
+  dotClassName: string;
+}) {
+  return (
+    <span className="group relative min-w-0">
+      <span className="block cursor-default truncate">
+        <span className="font-medium text-foreground">{count}</span>{" "}
+        {ISSUE_STATUS_LABELS[status]}
+      </span>
+      <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-max max-w-48 -translate-x-1/2 rounded-lg border border-sidebar-border bg-white px-3 py-2 text-foreground shadow-xl dark:bg-surface-elevated group-hover:block">
+        <span className="block min-w-32">
+          <span className="block truncate text-xs font-semibold text-foreground">{projectName}</span>
+          <span className="mt-1.5 flex items-center justify-between gap-4 text-xs">
+            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+              <span className={`h-2 w-2 rounded-full ${dotClassName}`} />
+              {ISSUE_STATUS_LABELS[status]}
+            </span>
+            <span className="font-semibold text-foreground">{count}</span>
+          </span>
+        </span>
+      </span>
+    </span>
   );
 }
 
@@ -479,19 +525,13 @@ function GraphTooltip({
   triggerStyle: CSSProperties;
 }) {
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <span
-            className={`block shrink-0 ${triggerClassName}`}
-            style={triggerStyle}
-          />
-        }
-      />
-      <TooltipContent
-        side="top"
-        sideOffset={8}
-        className="block rounded-lg border border-sidebar-border bg-popover px-3 py-2 text-popover-foreground shadow-xl"
+    <span
+      className={`group relative block shrink-0 outline-none ${triggerClassName}`}
+      style={triggerStyle}
+      tabIndex={0}
+    >
+      <span
+        className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden w-max max-w-48 -translate-x-1/2 rounded-lg border border-sidebar-border bg-white px-3 py-2 text-foreground opacity-100 shadow-xl dark:bg-surface-elevated group-hover:block group-focus-visible:block"
       >
         <div className="min-w-32">
           <p className="truncate text-xs font-semibold text-foreground">{title}</p>
@@ -503,8 +543,8 @@ function GraphTooltip({
             <span className="font-semibold text-foreground">{value}</span>
           </div>
         </div>
-      </TooltipContent>
-    </Tooltip>
+      </span>
+    </span>
   );
 }
 
