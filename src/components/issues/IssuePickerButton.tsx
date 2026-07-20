@@ -10,7 +10,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import {
   ISSUE_PRIORITY_LABELS,
   ISSUE_PRIORITY_OPTIONS,
-  ISSUE_PRIORITY_SHORTCUTS,
   ISSUE_TYPE_LABELS,
   ISSUE_TYPE_OPTIONS,
   issueUnassignedIcon,
@@ -93,7 +92,6 @@ export function IssueAssignPicker({
         >
           <IssuePickerPanel
             searchPlaceholder="Assign to…"
-            commandShortcut="A"
             items={items}
             values={assigneeIds}
             multiple
@@ -189,7 +187,6 @@ export function IssuePriorityPicker({
         value: option.value,
         label: option.label,
         icon: option.icon,
-        shortcut: ISSUE_PRIORITY_SHORTCUTS[option.value as IssuePriority],
       })),
     [],
   );
@@ -222,7 +219,6 @@ export function IssuePriorityPicker({
         >
           <IssuePickerPanel
             searchPlaceholder="Change priority…"
-            commandShortcut="P"
             items={items}
             value={priority}
             onSelect={(value) => {
@@ -256,7 +252,7 @@ export function IssueStatusPicker({
       <Popover>
         <PopoverTrigger
           className={cn(
-            "inline-flex h-8 items-center gap-1 rounded-md border px-2.5 text-xs font-medium transition-colors hover:opacity-90",
+            "inline-flex h-8 cursor-pointer items-center gap-1 rounded-md border px-2.5 text-xs font-medium transition-colors hover:opacity-90",
             className,
           )}
           aria-label="Change status"

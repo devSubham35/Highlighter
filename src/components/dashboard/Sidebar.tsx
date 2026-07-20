@@ -197,17 +197,17 @@ export function Sidebar({
             src="/assets/logo_light.png"
             alt="Highlighter_logo_light"
             width={1136}
-            height={260}
+            height={160}
             priority
-            className="h-9 w-auto max-w-43 object-contain dark:hidden"
+            className="h-10 w-auto max-w-35 object-contain dark:hidden"
           />
           <Image
             src="/assets/logo_dark.png"
             alt="Highlighter_logo_dark"
             width={1136}
-            height={260}
+            height={160}
             priority
-            className="hidden h-9 w-auto max-w-43 object-contain dark:block"
+            className="hidden h-10 w-auto max-w-35 object-contain dark:block"
           />
         </Link>
       </div>

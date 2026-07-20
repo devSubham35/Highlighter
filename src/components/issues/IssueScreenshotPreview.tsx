@@ -15,8 +15,8 @@ export function IssueScreenshotPreview({
 
   if (!screenshotUrl) {
     return (
-      <section className="border-b border-[#e8eaed] bg-white px-5 py-5">
-        <div className="flex min-h-[200px] items-center justify-center rounded-lg border border-dashed border-[#dadce0] bg-[#f8f9fa] text-sm text-[#80868b]">
+      <section className="border-b border-sidebar-border bg-card px-5 py-5 dark:bg-background">
+        <div className="flex min-h-[200px] items-center justify-center rounded-lg border border-dashed border-border bg-muted/60 text-sm text-muted-foreground">
           No screenshot
         </div>
       </section>
@@ -25,12 +25,12 @@ export function IssueScreenshotPreview({
 
   return (
     <>
-      <section className="border-b border-[#e8eaed] bg-white px-5 py-4">
+      <section className="border-b border-sidebar-border bg-card px-5 py-4 dark:bg-background">
         <div className="flex gap-3">
           <button
             type="button"
             onClick={() => setLightboxOpen(true)}
-            className="h-[72px] w-[96px] shrink-0 overflow-hidden rounded-md border-2 border-[#1a73e8] bg-[#f8f9fa] cursor-pointer"
+            className="h-[72px] w-[96px] shrink-0 cursor-pointer overflow-hidden rounded-md border-2 border-primary bg-muted"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={screenshotUrl} alt="" className="h-full w-full object-cover object-top" />
@@ -39,7 +39,7 @@ export function IssueScreenshotPreview({
             type="button"
             onClick={() => setLightboxOpen(true)}
             className={cn(
-              "min-h-[min(36vh,280px)] flex-1 overflow-hidden rounded-lg border border-[#e8eaed] bg-[#f8f9fa]",
+              "min-h-[min(36vh,280px)] flex-1 overflow-hidden rounded-lg border border-border bg-muted/60 dark:bg-surface-elevated",
               "cursor-pointer transition-opacity hover:opacity-95",
             )}
           >

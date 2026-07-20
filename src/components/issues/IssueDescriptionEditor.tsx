@@ -29,15 +29,15 @@ export function IssueDescriptionEditor({
   }
 
   return (
-    <section className="border-b border-[#e8eaed] bg-white px-5 py-4">
+    <section className="border-b border-sidebar-border bg-card px-5 py-4 dark:bg-surface-elevated">
       <h3 className="text-sm font-semibold text-foreground">Description</h3>
       {!editing ? (
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="mt-2 w-full cursor-text rounded-md text-left text-sm transition-colors bg-[#f1f3f4] px-2 py-1.5"
+          className="mt-2 w-full cursor-text rounded-md bg-muted/70 px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted dark:bg-white/5 dark:hover:bg-white/10"
         >
-          <span className={cn(!description?.trim() && "italic text-[#80868b]")}>
+          <span className={cn(!description?.trim() && "italic text-muted-foreground")}>
             {description?.trim() ? description : "No description"}
           </span>
         </button>
@@ -46,7 +46,7 @@ export function IssueDescriptionEditor({
           <Textarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            className="h-32 resize-none border-[#dadce0] bg-white text-sm"
+            className="h-32 resize-none text-sm"
             placeholder="Add a description…"
             autoFocus
           />

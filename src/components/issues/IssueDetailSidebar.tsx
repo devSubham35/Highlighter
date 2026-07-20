@@ -6,7 +6,6 @@ import { formatIssueReportedAt } from "@/lib/issue-format";
 import {
   ISSUE_PRIORITY_LABELS,
   ISSUE_PRIORITY_OPTIONS,
-  ISSUE_PRIORITY_SHORTCUTS,
   ISSUE_TYPE_LABELS,
   ISSUE_TYPE_OPTIONS,
   issuePriorityIcon,
@@ -25,6 +24,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronRight as ChevronRightIcon,
   Globe,
   Laptop,
   Monitor,
@@ -68,7 +68,7 @@ function CollapsibleSection({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-sidebar-border bg-card">
+    <div className="overflow-hidden rounded-xl border border-sidebar-border bg-card dark:bg-surface-elevated">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -99,15 +99,19 @@ function PropertyRow({
   interactive?: boolean;
 }) {
   return (
-    <div className="grid grid-cols-[84px_1fr] items-center gap-3 text-sm">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+    <div className="grid grid-cols-[84px_1fr] items-center gap-3 text-[12px] leading-5">
+      <span className="text-[11px] font-semibold text-muted-foreground">{label}</span>
       <div
         className={cn(
-          "flex min-h-9 w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-foreground",
-          interactive && "cursor-pointer transition-colors hover:bg-muted/60",
+          "group/property flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-medium leading-5 text-foreground",
+          interactive &&
+            "cursor-pointer border border-transparent bg-primary/5 pr-1.5 text-foreground transition-colors hover:border-primary/20 hover:bg-primary/10",
         )}
       >
         {children}
+        {interactive ? (
+          <ChevronRightIcon className="ml-auto h-3.5 w-3.5 shrink-0 text-primary/70 opacity-70 transition-transform group-hover/property:translate-x-0.5 group-hover/property:opacity-100" />
+        ) : null}
       </div>
     </div>
   );
@@ -158,7 +162,6 @@ export function IssueDetailSidebar({
         value: option.value,
         label: option.label,
         icon: option.icon,
-        shortcut: ISSUE_PRIORITY_SHORTCUTS[option.value as IssuePriority],
       })),
     [],
   );
@@ -175,11 +178,11 @@ export function IssueDetailSidebar({
   );
 
   const pickerTriggerClass =
-    "inline-flex min-w-0 flex-1 items-center gap-2 text-left outline-none";
+    "inline-flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left outline-none";
 
   return (
-    <aside className="sticky top-0 flex h-full w-[min(340px,32vw)] min-w-[280px] shrink-0 flex-col border-l border-sidebar-border bg-muted/30">
-      <div className="flex shrink-0 items-center justify-between border-b border-sidebar-border bg-card/80 px-4 py-3 backdrop-blur-sm">
+    <aside className="sticky top-0 flex h-full w-[min(340px,32vw)] min-w-[280px] shrink-0 flex-col border-l border-sidebar-border bg-muted/30 dark:bg-background">
+      <div className="flex shrink-0 items-center justify-between border-b border-sidebar-border bg-card/80 px-4 py-3 backdrop-blur-sm dark:bg-surface-elevated">
         <div className="flex items-center gap-0.5 text-sm text-muted-foreground">
           <Button
             type="button"
@@ -211,7 +214,7 @@ export function IssueDetailSidebar({
       </div>
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
-        <div className="rounded-xl border border-sidebar-border bg-card p-3.5 shadow-sm">
+        <div className="rounded-xl border border-sidebar-border bg-card p-3.5 dark:bg-surface-elevated">
           <div className="flex items-start gap-3">
             <IssueUserAvatar
               name={reporterName}
@@ -227,12 +230,12 @@ export function IssueDetailSidebar({
           </div>
         </div>
 
-        <div className="space-y-0.5 rounded-xl border border-sidebar-border bg-card px-3.5 py-2.5 shadow-sm">
+        <div className="space-y-1.5 rounded-xl border border-sidebar-border bg-card px-3.5 py-3 dark:bg-surface-elevated">
           <PropertyRow label="ID">
             <span className={PROPERTY_ICON_SLOT}>
               <span className="text-sm font-semibold text-primary">#</span>
             </span>
-            <span className="min-w-0 truncate font-mono text-xs">{issueKey}</span>
+            <span className="min-w-0 truncate text-[12px] font-medium leading-5">{issueKey}</span>
           </PropertyRow>
           <PropertyRow label="Type" interactive>
             <span className={PROPERTY_ICON_SLOT}>{issueTypeIcon(issueType)}</span>
@@ -289,7 +292,6 @@ export function IssueDetailSidebar({
                 <PopoverContent className="w-auto border-0 bg-transparent p-0 shadow-none" align="start">
                   <IssuePickerPanel
                     searchPlaceholder="Assign to…"
-                    commandShortcut="A"
                     items={assigneeItems}
                     values={assigneeIds}
                     multiple
@@ -309,7 +311,6 @@ export function IssueDetailSidebar({
                 <PopoverContent className="w-auto border-0 bg-transparent p-0 shadow-none" align="start">
                   <IssuePickerPanel
                     searchPlaceholder="Change priority…"
-                    commandShortcut="P"
                     items={priorityItems}
                     value={priority}
                     onSelect={(value) => {

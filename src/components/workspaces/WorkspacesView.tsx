@@ -95,9 +95,9 @@ function WorkspaceCard({ workspace }: { workspace: WorkspaceListItem }) {
     <Link href={`/workspaces/${workspace.id}`} className="group block h-full">
       <Card
         className={cn(
-          "flex h-full flex-col gap-4 border border-sidebar-border/50 p-5 shadow-none transition-all",
-          "hover:border-primary/30 hover:bg-muted/30 hover:shadow-sm",
-          "dark:bg-surface-elevated dark:hover:border-primary/20 dark:hover:bg-white/5",
+          "flex h-full flex-col gap-4 border border-sidebar-border/50 p-5 shadow-none transition-[background-color,box-shadow]",
+          "hover:bg-muted/30 hover:shadow-sm",
+          "dark:bg-surface-elevated dark:hover:bg-white/5",
         )}
       >
         <div className="flex items-center justify-between gap-3">

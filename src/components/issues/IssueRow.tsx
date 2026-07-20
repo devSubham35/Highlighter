@@ -116,16 +116,8 @@ export function IssueRow({
   return (
     <>
       <article
-        role="button"
-        tabIndex={0}
         onClick={onOpen}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            onOpen();
-          }
-        }}
-        className="group flex cursor-pointer items-center gap-3 rounded-2xl border border-border/70 bg-card px-3 py-3 shadow-[var(--shadow-surface)] transition-all duration-200 hover:-translate-y-px hover:border-primary/15 hover:bg-[#F8FAF8] hover:shadow-[var(--shadow-surface-hover)] dark:hover:bg-secondary/40"
+        className="group flex cursor-pointer items-center gap-3 rounded-2xl border border-border/70 bg-card px-3 py-3 shadow-[var(--shadow-surface)] transition-[background-color,box-shadow] duration-200 hover:bg-[#F8FAF8] hover:shadow-[var(--shadow-surface-hover)] dark:hover:bg-secondary/40"
       >
         <div className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-sidebar-border bg-muted">
           {issue.screenshotUrl ? (
@@ -189,7 +181,7 @@ export function IssueRow({
               aria-label="Issue status"
               popoverClassName="min-w-[9.5rem]"
               className={cn(
-                "h-8 min-w-[8.75rem] gap-1.5 border px-2.5 text-xs",
+                "h-8 w-fit min-w-0 gap-1.5 rounded-lg border px-2.5 text-xs font-medium",
                 ISSUE_STATUS_TRIGGER_CLASS[issue.status],
               )}
             />

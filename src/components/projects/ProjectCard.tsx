@@ -156,15 +156,7 @@ export function ProjectCard({
   return (
     <>
       <Card
-        role="button"
-        tabIndex={0}
         onClick={navigateToProject}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            navigateToProject();
-          }
-        }}
         className={cn(
           "cursor-pointer border border-border/60 shadow-[var(--shadow-surface)] surface-interactive dark:bg-surface-elevated dark:hover:bg-white/5",
           variant === "list" && "p-4",

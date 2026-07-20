@@ -10,7 +10,6 @@ export type IssuePickerItem = {
   value: string;
   label: string;
   icon?: React.ReactNode;
-  shortcut?: string;
   subtitle?: string;
   avatarName?: string;
   avatarImage?: string | null;
@@ -18,7 +17,6 @@ export type IssuePickerItem = {
 
 export function IssuePickerPanel({
   searchPlaceholder,
-  commandShortcut,
   items,
   value,
   values,
@@ -28,7 +26,6 @@ export function IssuePickerPanel({
   emptyMessage = "No results found",
 }: {
   searchPlaceholder: string;
-  commandShortcut?: string;
   items: IssuePickerItem[];
   value?: string;
   values?: string[];
@@ -73,11 +70,6 @@ export function IssuePickerPanel({
           className="h-8 flex-1 border-0 bg-transparent px-0 text-sm text-popover-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
           autoFocus
         />
-        {commandShortcut ? (
-          <kbd className="hidden shrink-0 rounded border border-sidebar-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline">
-            {commandShortcut}
-          </kbd>
-        ) : null}
       </div>
       <div className="max-h-64 overflow-y-auto p-1">
         {filtered.length === 0 ? (
@@ -91,7 +83,7 @@ export function IssuePickerPanel({
                 type="button"
                 onClick={() => handleClick(item.value)}
                 className={cn(
-                  "grid w-full grid-cols-[1rem_1.5rem_minmax(0,1fr)_auto] items-center gap-x-2 rounded-md px-2 py-2 text-left text-sm transition-colors",
+                  "grid w-full cursor-pointer grid-cols-[1rem_1.5rem_minmax(0,1fr)_auto] items-center gap-x-2 rounded-md px-2 py-2 text-left text-sm transition-colors",
                   "hover:bg-secondary hover:text-secondary-foreground dark:hover:bg-secondary/90",
                   isSelected && "bg-primary/10 font-medium text-primary hover:bg-primary/15",
                   !item.avatarName && !item.icon && "grid-cols-[1rem_minmax(0,1fr)_auto]",
@@ -117,13 +109,7 @@ export function IssuePickerPanel({
                   <span aria-hidden />
                 )}
                 <span className="min-w-0 truncate font-medium">{item.label}</span>
-                {item.shortcut ? (
-                  <kbd className="shrink-0 rounded border border-sidebar-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                    {item.shortcut}
-                  </kbd>
-                ) : (
-                  <span aria-hidden />
-                )}
+                <span aria-hidden />
               </button>
             );
           })

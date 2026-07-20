@@ -115,7 +115,7 @@ function Combobox({
                       variant="ghost"
                       onClick={() => handleSelect(option.value)}
                       className={cn(
-                        "relative h-auto w-full justify-start gap-2 rounded-md px-2 py-2 pr-8 text-left text-sm font-normal",
+                        "relative h-auto w-full cursor-pointer justify-start gap-2 rounded-md px-2 py-2 pr-8 text-left text-sm font-normal",
                         "hover:!bg-secondary hover:!text-secondary-foreground dark:hover:!bg-secondary/90",
                         isSelected && "bg-primary/10 font-semibold text-primary hover:bg-primary/15",
                       )}

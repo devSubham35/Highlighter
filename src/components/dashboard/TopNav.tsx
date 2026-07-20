@@ -45,11 +45,8 @@ export function TopNav({
               <Input
                 type="search"
                 placeholder="Search anything..."
-                className="h-9 rounded-md bg-muted/30 pl-9 pr-16 text-sm"
+                className="h-9 rounded-md bg-muted/30 pl-9 text-sm"
               />
-              <kbd className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 rounded border border-border bg-card px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground lg:inline">
-                Cmd K
-              </kbd>
             </div>
             <NotificationsDrawer />
           </>

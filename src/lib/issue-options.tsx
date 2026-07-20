@@ -28,14 +28,6 @@ export const ISSUE_TYPE_OPTIONS: ComboboxOption[] = [
   },
 ];
 
-export const ISSUE_PRIORITY_SHORTCUTS: Record<IssuePriority, string | undefined> = {
-  URGENT: "U",
-  HIGH: "1",
-  MEDIUM: "2",
-  LOW: "3",
-  NONE: "4",
-};
-
 export const ISSUE_PRIORITY_OPTIONS: ComboboxOption[] = [
   {
     value: "URGENT",
@@ -161,11 +153,11 @@ export function isIssuePriority(value: string): value is IssuePriority {
 }
 
 export const ISSUE_STATUS_TRIGGER_CLASS: Record<ReportStatus, string> = {
-  OPEN: "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D] hover:!bg-[#BBF7D0] dark:border-success/20 dark:bg-success/15 dark:text-[#4ADE80]",
+  OPEN: "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D] hover:!bg-[#BBF7D0] dark:border-success/20 dark:bg-success/15 dark:text-success dark:hover:!bg-success/25",
   IN_PROGRESS:
     "border-[#FDE68A] bg-[#FEF3C7] text-[#B45309] hover:!bg-[#FDE68A] dark:border-warning/20 dark:bg-warning/15 dark:text-[#FBBF24]",
   RESOLVED:
-    "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D] hover:!bg-[#BBF7D0] dark:border-success/20 dark:bg-success/15 dark:text-[#4ADE80]",
+    "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D] hover:!bg-[#BBF7D0] dark:border-success/20 dark:bg-success/15 dark:text-success dark:hover:!bg-success/25",
   CLOSED:
     "border-border bg-muted text-muted-foreground hover:!bg-secondary dark:hover:!bg-secondary/90",
 };
@@ -178,8 +170,8 @@ export const ISSUE_STATUS_LABELS: Record<ReportStatus, string> = {
 };
 
 export const ISSUE_STATUS_BADGE_CLASS: Record<ReportStatus, string> = {
-  OPEN: "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D]",
+  OPEN: "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D] dark:border-success/20 dark:bg-success/15 dark:text-success dark:hover:bg-success/25",
   IN_PROGRESS: "border-[#FDE68A] bg-[#FEF3C7] text-[#B45309]",
-  RESOLVED: "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D]",
+  RESOLVED: "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D] dark:border-success/20 dark:bg-success/15 dark:text-success dark:hover:bg-success/25",
   CLOSED: "border-border bg-muted text-muted-foreground",
 };

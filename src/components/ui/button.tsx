@@ -10,7 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'inline-flex items-center justify-center gap-2 font-semibold text-sm leading-[20px] transition-all duration-200 ease-[var(--transition-fn)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] cursor-pointer select-none whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none overflow-hidden h-[var(--large-input-height)] px-[1.125rem] py-3 rounded-[var(--button-border-radius-lg)] bg-[linear-gradient(135deg,#22C55E,#16A34A)] text-[var(--button-brand-color)] shadow-[var(--shadow-button)] hover:-translate-y-px hover:shadow-[var(--shadow-button-hover)] active:translate-y-0',
+          'inline-flex items-center justify-center gap-2 font-semibold text-sm leading-[20px] transition-all duration-200 ease-[var(--transition-fn)] focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] cursor-pointer select-none whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none overflow-hidden h-[var(--large-input-height)] px-[1.125rem] py-3 rounded-[var(--button-border-radius-lg)] [background:var(--button-brand-bg)] text-[var(--button-brand-color)] shadow-[var(--shadow-button)] hover:-translate-y-px hover:shadow-[var(--shadow-button-hover)] active:translate-y-0',
         outline:
           '!border-border/80 bg-card shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:bg-muted/60 dark:hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 text-foreground hover:border-primary/20',
         secondary:

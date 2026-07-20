@@ -35,7 +35,7 @@ export function IssueActivityTimeline({
   reporterName: string;
 }) {
   return (
-    <div className="divide-y divide-[#e8eaed]">
+    <div className="divide-y divide-sidebar-border">
       {entries.map((entry) => (
         <ActivityRow
           key={entry.id}
@@ -43,6 +43,22 @@ export function IssueActivityTimeline({
           currentUserName={currentUserName}
           reporterName={reporterName}
         />
+      ))}
+    </div>
+  );
+}
+
+export function IssueActivityTimelineSkeleton() {
+  return (
+    <div className="divide-y divide-sidebar-border">
+      {[0, 1, 2, 3].map((index) => (
+        <div key={index} className="flex gap-3 py-3">
+          <div className="h-6 w-6 shrink-0 animate-pulse rounded-full bg-muted" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-3 w-3/4 animate-pulse rounded bg-muted" />
+            <div className="h-2.5 w-24 animate-pulse rounded bg-muted/80" />
+          </div>
+        </div>
       ))}
     </div>
   );
@@ -62,25 +78,25 @@ function ActivityRow({
 
   if (entry.kind === "title_ai") {
     return (
-      <div className="flex gap-3 py-4">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center text-violet-600">
+      <div className="flex cursor-pointer gap-3 py-3">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center text-violet-600">
           <Sparkles className="h-3.5 w-3.5" />
         </span>
-        <div className="min-w-0 flex-1 text-sm leading-relaxed text-[#5f6368]">
+        <div className="min-w-0 flex-1 text-[13px] leading-5 text-muted-foreground">
           <p>
             Title generated from issue <span className="font-medium text-foreground">description</span>{" "}
             using AI
           </p>
-          <p className="mt-0.5 text-xs text-[#80868b]">{relativeTime(entry.at)}</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">{relativeTime(entry.at)}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex gap-3 py-4">
-      <IssueUserAvatar name={actor} className="h-7 w-7 shrink-0 text-[10px]" />
-      <div className="min-w-0 flex-1 text-sm leading-relaxed text-[#5f6368]">
+    <div className="flex cursor-pointer gap-3 py-3">
+      <IssueUserAvatar name={actor} className="h-6 w-6 shrink-0 text-[9px]" />
+      <div className="min-w-0 flex-1 text-[13px] leading-5 text-muted-foreground">
         {entry.kind === "reported" && entry.issueType ? (
           <ReportedLine issueType={entry.issueType} you={you} actor={actor} at={entry.at} />
         ) : null}
@@ -126,7 +142,7 @@ function ReportedLine({
         <span className="font-medium text-foreground">{you ? "You" : actor}</span> reported this{" "}
         <span className="font-medium text-foreground">{ISSUE_TYPE_LABELS[issueType]}</span>
       </p>
-      <p className="mt-0.5 text-xs text-[#80868b]">{relativeTime(at)}</p>
+      <p className="mt-0.5 text-[11px] text-muted-foreground">{relativeTime(at)}</p>
     </>
   );
 }
@@ -149,7 +165,7 @@ function StatusLine({
         updated the <span className="font-medium text-foreground">status</span> to
         <IssueStatusInline status={toStatus} />
       </p>
-      <p className="mt-0.5 text-xs text-[#80868b]">{relativeTime(at)}</p>
+      <p className="mt-0.5 text-[11px] text-muted-foreground">{relativeTime(at)}</p>
     </>
   );
 }
@@ -172,11 +188,11 @@ function PriorityLine({
       <p className="flex flex-wrap items-center gap-1.5">
         <span className="font-medium text-foreground">{you ? "You" : actor}</span>
         updated the <span className="font-medium text-foreground">priority</span>
-        <span className="text-[#80868b]">{relativeTime(at)}.</span>
+        <span className="text-muted-foreground">{relativeTime(at)}.</span>
         {fromPriority ? (
           <>
             <PriorityPill priority={fromPriority} />
-            <ArrowRight className="h-3.5 w-3.5 text-[#80868b]" />
+            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
           </>
         ) : null}
         <PriorityPill priority={toPriority} />
@@ -210,7 +226,7 @@ function AssignmentLine({
       <p>
         <span className="font-medium text-foreground">{you ? "You" : actor}</span> {target}
       </p>
-      <p className="mt-0.5 text-xs text-[#80868b]">{relativeTime(at)}</p>
+      <p className="mt-0.5 text-[11px] text-muted-foreground">{relativeTime(at)}</p>
     </>
   );
 }

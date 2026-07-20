@@ -1,6 +1,9 @@
 "use client";
 
-import { IssueActivityTimeline } from "@/components/issues/IssueActivityTimeline";
+import {
+  IssueActivityTimeline,
+  IssueActivityTimelineSkeleton,
+} from "@/components/issues/IssueActivityTimeline";
 import { IssueDescriptionEditor } from "@/components/issues/IssueDescriptionEditor";
 import { IssueDetailSidebar } from "@/components/issues/IssueDetailSidebar";
 import { IssueScreenshotPreview } from "@/components/issues/IssueScreenshotPreview";
@@ -13,7 +16,14 @@ import {
 } from "@/lib/report-metadata";
 import type { ActivityEntry } from "@/lib/report-metadata";
 import type { IssuePriority, IssueType, WorkspaceMember, ReportStatus } from "@/types";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,12 +58,14 @@ export function IssueDetailModal({
   currentUserName: string;
   onNavigate: (issueId: string) => void;
   onUpdated: (issue: IssueItem) => void;
-  onDelete?: (issueId: string) => void;
+  onDelete?: (issueId: string) => void | Promise<void>;
 }) {
   const router = useRouter();
   const [detail, setDetail] = useState<IssueItem | null>(issue);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const currentIndex = useMemo(
     () => (issue ? issues.findIndex((item) => item.id === issue.id) : -1),
@@ -153,6 +165,14 @@ export function IssueDetailModal({
     await patchIssue({ description });
   }
 
+  async function handleConfirmDelete() {
+    if (!displayDetail || !onDelete) return;
+    setDeleting(true);
+    await onDelete(displayDetail.id);
+    setDeleting(false);
+    setDeleteConfirmOpen(false);
+  }
+
   function handleMetadataPatch(patch: { metadata?: Record<string, unknown> }) {
     const previous = parseReportMetadata(detail?.metadata);
     const nextPriority = patch.metadata?.priority;
@@ -184,17 +204,18 @@ export function IssueDetailModal({
   const reporterImage = reporterMember?.image ?? null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        showCloseButton={false}
-        className="flex h-[min(94vh,920px)] w-[min(96vw,1080px)] max-w-none flex-col overflow-hidden rounded-xl border-sidebar-border bg-card p-0 shadow-2xl"
-      >
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent
+          showCloseButton={false}
+          className="flex h-[min(94vh,920px)] w-[min(96vw,1080px)] max-w-none flex-col overflow-hidden rounded-xl border-sidebar-border bg-card p-0 shadow-2xl dark:bg-surface-elevated"
+        >
         <div className="flex min-h-0 flex-1">
-          <div className="flex min-w-0 flex-1 flex-col bg-muted/40">
+          <div className="flex min-w-0 flex-1 flex-col bg-muted/40 dark:bg-background">
             <div className="min-h-0 flex-1 overflow-y-auto">
               <IssueScreenshotPreview screenshotUrl={displayDetail.screenshotUrl} title={displayDetail.title} />
 
-              <section className="border-b border-sidebar-border bg-card px-5 py-4">
+              <section className="border-b border-sidebar-border bg-card px-5 py-4 dark:bg-surface-elevated">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-2">
@@ -237,7 +258,7 @@ export function IssueDetailModal({
                         {onDelete ? (
                           <DropdownMenuItem
                             className="gap-2 text-destructive data-highlighted:text-destructive"
-                            onClick={() => onDelete(displayDetail.id)}
+                            onClick={() => setDeleteConfirmOpen(true)}
                           >
                             <Trash2 className="h-4 w-4" />
                             Delete issue
@@ -251,10 +272,10 @@ export function IssueDetailModal({
 
               <IssueDescriptionEditor description={displayDetail.description} onSave={saveDescription} />
 
-              <section className="bg-card px-5 py-4">
+              <section className="bg-card px-5 py-4 dark:bg-surface-elevated">
                 <h3 className="mb-4 text-sm font-semibold text-foreground">History</h3>
                 {loading ? (
-                  <p className="py-8 text-sm text-muted-foreground">Loading…</p>
+                  <IssueActivityTimelineSkeleton />
                 ) : (
                   <IssueActivityTimeline
                     entries={activity}
@@ -286,7 +307,38 @@ export function IssueDetailModal({
             onPatch={handleMetadataPatch}
           />
         </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent showCloseButton className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete issue?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete{" "}
+              <span className="font-medium text-foreground">{displayDetail.title}</span>.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteConfirmOpen(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => void handleConfirmDelete()}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Delete issue"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
