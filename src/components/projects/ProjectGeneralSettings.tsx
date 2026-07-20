@@ -112,7 +112,12 @@ export function ProjectGeneralSettings({
             />
             {saveError ? <p className="text-sm text-destructive">{saveError}</p> : null}
             <div>
-              <Button type="submit" disabled={methods.formState.isSubmitting}>
+              <Button
+                type="submit"
+                size="sm"
+                className="h-9 rounded-md px-3"
+                disabled={methods.formState.isSubmitting}
+              >
                 {methods.formState.isSubmitting ? "Saving..." : "Save changes"}
               </Button>
             </div>
@@ -126,7 +131,8 @@ export function ProjectGeneralSettings({
             <Button
               type="button"
               variant="destructive"
-              className="mt-3"
+              size="sm"
+              className="mt-3 h-9 rounded-md px-3"
               onClick={() => {
                 setConfirmName("");
                 setDeleteError("");

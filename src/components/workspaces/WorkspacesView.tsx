@@ -137,7 +137,12 @@ export function WorkspacesView({ workspaces }: { workspaces: WorkspaceListItem[]
           title="Workspaces"
           description="Select a workspace to manage projects and feedback."
           action={
-            <Button type="button" onClick={() => setCreateOpen(true)}>
+            <Button
+              type="button"
+              size="sm"
+              className="h-9 rounded-md px-3"
+              onClick={() => setCreateOpen(true)}
+            >
               <Plus className="h-4 w-4" />
               Create Workspace
             </Button>

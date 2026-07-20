@@ -17,7 +17,6 @@ import {
   CreditCard,
   FileText,
   FolderKanban,
-  Highlighter,
   LayoutDashboard,
   LogOut,
   MessageSquare,
@@ -29,6 +28,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo } from "react";
 
@@ -192,10 +192,24 @@ export function Sidebar({
   const sidebarContent = (
     <div className="flex h-full flex-col">
       <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-sidebar-border px-4">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <Highlighter className="h-4 w-4" />
-        </div>
-        <span className="truncate text-sm font-semibold text-foreground">Highlighter</span>
+        <Link href="/workspaces" className="flex min-w-0 items-center">
+          <Image
+            src="/assets/logo_light.png"
+            alt="Highlighter_logo_light"
+            width={1136}
+            height={260}
+            priority
+            className="h-9 w-auto max-w-43 object-contain dark:hidden"
+          />
+          <Image
+            src="/assets/logo_dark.png"
+            alt="Highlighter_logo_dark"
+            width={1136}
+            height={260}
+            priority
+            className="hidden h-9 w-auto max-w-43 object-contain dark:block"
+          />
+        </Link>
       </div>
 
       <div className="shrink-0 p-3">
