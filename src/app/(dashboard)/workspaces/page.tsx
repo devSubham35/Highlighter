@@ -1,4 +1,5 @@
 import { WorkspacesView } from "@/components/workspaces/WorkspacesView";
+import { canAccessAllWorkspaceProjects, projectAccessWhere } from "@/lib/api/helpers";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { headers } from "next/headers";
@@ -27,25 +28,43 @@ export default async function WorkspacesPage() {
       },
       _count: {
         select: {
-          projects: { where: { archived: false } },
           memberships: true,
         },
       },
     },
   });
+  const currentMemberships = await db.membership.findMany({
+    where: {
+      userId: session!.user.id,
+      workspaceId: { in: workspacesData.map((workspace) => workspace.id) },
+    },
+    select: { workspaceId: true, role: true },
+  });
+  const roleByWorkspaceId = new Map(
+    currentMemberships.map((membership) => [membership.workspaceId, membership.role]),
+  );
 
-  const workspaces = workspacesData.map((workspace) => ({
-    id: workspace.id,
-    name: workspace.name,
-    createdAt: workspace.createdAt.toISOString(),
-    projectCount: workspace._count.projects,
-    memberCount: workspace._count.memberships,
-    members: workspace.memberships.map((membership) => ({
-      id: membership.user.id,
-      name: membership.user.name,
-      image: membership.user.image,
-    })),
-  }));
+  const workspaces = await Promise.all(
+    workspacesData.map(async (workspace) => {
+      const role = roleByWorkspaceId.get(workspace.id) ?? "VIEWER";
+      const projectWhere = canAccessAllWorkspaceProjects(role)
+        ? { workspaceId: workspace.id, archived: false }
+        : { workspaceId: workspace.id, archived: false, ...projectAccessWhere(session!.user.id) };
+
+      return {
+        id: workspace.id,
+        name: workspace.name,
+        createdAt: workspace.createdAt.toISOString(),
+        projectCount: await db.project.count({ where: projectWhere }),
+        memberCount: workspace._count.memberships,
+        members: workspace.memberships.map((membership) => ({
+          id: membership.user.id,
+          name: membership.user.name,
+          image: membership.user.image,
+        })),
+      };
+    }),
+  );
 
   return <WorkspacesView workspaces={workspaces} />;
 }

@@ -107,7 +107,14 @@ export function ProjectDetailsView({
     enabled: Boolean(project.id),
     projectId: project.id,
     onEvent: (event) => {
-      if (event.type === "issue.updated") {
+      if (
+        event.type === "issue.updated" ||
+        event.type === "issue:updated" ||
+        event.type === "issue:assigned" ||
+        event.type === "issue:status_changed" ||
+        event.type === "issue:priority_changed" ||
+        event.type === "issue:type_changed"
+      ) {
         setIssues((current) =>
           current.map((item) => (item.id === event.issue.id ? { ...item, ...event.issue } : item)),
         );
@@ -185,6 +192,7 @@ export function ProjectDetailsView({
             projectId={project.id}
             defaultPageUrl={project.websiteUrl}
             members={members}
+            currentUserId={currentUserId}
             onCreated={(issue) => {
               setIssues((current) => {
                 if (current.some((item) => item.id === issue.id)) return current;
@@ -208,6 +216,7 @@ export function ProjectDetailsView({
               issue={issue}
               projectName={project.name}
               members={members}
+              currentUserId={currentUserId}
               onOpen={() => openIssue(issue.id)}
               onUpdated={(updated) =>
                 setIssues((current) =>

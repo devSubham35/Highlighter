@@ -11,7 +11,10 @@ import {
   type ProjectSort,
   type ProjectViewMode,
 } from "@/lib/project-filters";
+import type { IssueRealtimeEvent } from "@/lib/realtime";
+import { useIssueRealtime } from "@/lib/use-issue-realtime";
 import { cn } from "@/lib/utils";
+import type { ReportStatus } from "@/types";
 import { LayoutGrid, List, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -36,29 +39,46 @@ export function ProjectsView({
   workspaceId: string;
   projects: ProjectListItem[];
 }) {
+  const [projectItems, setProjectItems] = useState(projects);
   const [status, setStatus] = useState<StatusFilter>("active");
   const [viewMode, setViewMode] = useState<ProjectViewMode>("grid");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<ProjectSort>(INITIAL_PROJECT_FILTERS.sortBy);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(PROJECT_VIEW_MODE_STORAGE_KEY);
-    if (stored === "grid" || stored === "list") {
-      setViewMode(stored);
-    }
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setProjectItems(projects);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [projects]);
+
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      const stored = window.localStorage.getItem(PROJECT_VIEW_MODE_STORAGE_KEY);
+      if (!cancelled && (stored === "grid" || stored === "list")) {
+        setViewMode(stored);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
     window.localStorage.setItem(PROJECT_VIEW_MODE_STORAGE_KEY, viewMode);
   }, [viewMode]);
 
-  const activeCount = projects.filter((project) => !project.archived).length;
-  const archivedCount = projects.filter((project) => project.archived).length;
+  const activeCount = projectItems.filter((project) => !project.archived).length;
+  const archivedCount = projectItems.filter((project) => project.archived).length;
 
   const filteredProjects = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return projects
+    return projectItems
       .filter((project) => (status === "active" ? !project.archived : project.archived))
       .filter((project) => {
         if (!query) return true;
@@ -72,10 +92,47 @@ export function ProjectsView({
         const bTime = new Date(b.createdAt).getTime();
         return sortBy === "newest" ? bTime - aTime : aTime - bTime;
       });
-  }, [projects, search, sortBy, status]);
+  }, [projectItems, search, sortBy, status]);
+
+  function updateProjectFromEvent(event: IssueRealtimeEvent) {
+    if (
+      event.type !== "issue.created" &&
+      event.type !== "issue:status_changed"
+    ) {
+      return;
+    }
+
+    setProjectItems((current) =>
+      current.map((project) => {
+        if (project.id !== event.projectId) return project;
+
+        if (event.type === "issue.created") {
+          return {
+            ...project,
+            openCount: event.issue.status === "OPEN" ? project.openCount + 1 : project.openCount,
+            imageCount: event.issue.screenshotUrl ? project.imageCount + 1 : project.imageCount,
+            lastIssueAt: maxIsoDate(project.lastIssueAt, event.issue.createdAt),
+          };
+        }
+
+        return {
+          ...project,
+          openCount: applyStatusDelta(project.openCount, event.previousStatus, event.status, "OPEN"),
+        };
+      }),
+    );
+  }
 
   return (
     <div className="space-y-6">
+      {projectItems.map((project) => (
+        <ProjectRealtimeBridge
+          key={project.id}
+          projectId={project.id}
+          onEvent={updateProjectFromEvent}
+        />
+      ))}
+
       <div className="flex flex-col gap-2 rounded-xl border border-sidebar-border bg-white p-3 dark:bg-surface-elevated lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <div className="inline-flex rounded-lg border border-sidebar-border bg-muted/40 p-0.5">
@@ -182,4 +239,41 @@ export function ProjectsView({
       )}
     </div>
   );
+}
+
+function ProjectRealtimeBridge({
+  projectId,
+  onEvent,
+}: {
+  projectId: string;
+  onEvent: (event: IssueRealtimeEvent) => void;
+}) {
+  useIssueRealtime({
+    enabled: Boolean(projectId),
+    projectId,
+    onEvent,
+  });
+
+  return null;
+}
+
+function applyStatusDelta(
+  current: number,
+  previousStatus: ReportStatus,
+  nextStatus: ReportStatus,
+  watchedStatus: ReportStatus,
+) {
+  if (previousStatus === nextStatus) return current;
+  if (previousStatus === watchedStatus && nextStatus !== watchedStatus) {
+    return Math.max(current - 1, 0);
+  }
+  if (previousStatus !== watchedStatus && nextStatus === watchedStatus) {
+    return current + 1;
+  }
+  return current;
+}
+
+function maxIsoDate(current: string | null, next: string) {
+  if (!current) return next;
+  return new Date(next).getTime() > new Date(current).getTime() ? next : current;
 }

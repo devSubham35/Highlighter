@@ -1,5 +1,6 @@
 import { jsonError, requireSession } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
+import { parseInvitationToken } from "@/lib/invitation-token";
 import { acceptInvitationSchema } from "@/lib/validations";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -11,13 +12,22 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return jsonError(parsed.error.flatten(), 400);
   }
+  if (!parseInvitationToken(parsed.data.token)) {
+    return jsonError("Invalid invitation token", 400);
+  }
 
   const invitation = await db.invitation.findUnique({
     where: { token: parsed.data.token },
-    include: { workspace: true },
+    include: {
+      workspace: true,
+      projects: { include: { project: { select: { id: true, name: true } } } },
+    },
   });
 
   if (!invitation) return jsonError("Invitation not found", 404);
+  if (invitation.status === "ACCEPTED") return jsonError("Invitation already accepted", 409);
+  if (invitation.status === "CANCELLED") return jsonError("Invitation was cancelled", 400);
+  if (invitation.status === "REVOKED") return jsonError("Invitation was revoked", 400);
   if (invitation.status !== "PENDING") return jsonError("Invitation is no longer valid", 400);
   if (invitation.expiresAt < new Date()) {
     await db.invitation.update({
@@ -49,22 +59,29 @@ export async function POST(req: NextRequest) {
     return jsonError("You are already a member of this workspace", 409);
   }
 
-  const [membership] = await db.$transaction([
-    db.membership.create({
+  const membership = await db.$transaction(async (tx) => {
+    const created = await tx.membership.create({
       data: {
         userId: authResult.session.user.id,
         workspaceId: invitation.workspaceId,
         role: invitation.role,
+        projectMemberships: {
+          create: invitation.projects.map((item) => ({ projectId: item.projectId })),
+        },
       },
       include: {
         user: { select: { id: true, name: true, email: true, image: true } },
+        projectMemberships: { include: { project: { select: { id: true, name: true } } } },
       },
-    }),
-    db.invitation.update({
+    });
+
+    await tx.invitation.update({
       where: { id: invitation.id },
-      data: { status: "ACCEPTED" },
-    }),
-  ]);
+      data: { status: "ACCEPTED", acceptedAt: new Date() },
+    });
+
+    return created;
+  });
 
   return NextResponse.json({
     ok: true,
@@ -74,6 +91,7 @@ export async function POST(req: NextRequest) {
       role: membership.role,
       createdAt: membership.createdAt,
       user: membership.user,
+      projects: membership.projectMemberships.map((item) => item.project),
     },
   });
 }

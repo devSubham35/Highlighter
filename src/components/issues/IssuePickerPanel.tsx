@@ -83,20 +83,12 @@ export function IssuePickerPanel({
                 type="button"
                 onClick={() => handleClick(item.value)}
                 className={cn(
-                  "grid w-full cursor-pointer grid-cols-[1rem_1.5rem_minmax(0,1fr)_auto] items-center gap-x-2 rounded-md px-2 py-2 text-left text-sm transition-colors",
+                  "grid w-full cursor-pointer grid-cols-[1.5rem_minmax(0,1fr)_1rem] items-center gap-x-2 rounded-md px-2.5 py-2 text-left text-sm transition-colors",
                   "hover:bg-secondary hover:text-secondary-foreground dark:hover:bg-secondary/90",
                   isSelected && "bg-primary/10 font-medium text-primary hover:bg-primary/15",
-                  !item.avatarName && !item.icon && "grid-cols-[1rem_minmax(0,1fr)_auto]",
+                  !item.avatarName && !item.icon && "grid-cols-[minmax(0,1fr)_1rem]",
                 )}
               >
-                <span
-                  className={cn(
-                    "flex h-4 w-4 shrink-0 items-center justify-center",
-                    isSelected ? "text-primary" : "text-muted-foreground",
-                  )}
-                >
-                  {isSelected ? <Check className="h-3.5 w-3.5" /> : null}
-                </span>
                 {item.avatarName ? (
                   <IssueUserAvatar
                     name={item.avatarName}
@@ -109,7 +101,14 @@ export function IssuePickerPanel({
                   <span aria-hidden />
                 )}
                 <span className="min-w-0 truncate font-medium">{item.label}</span>
-                <span aria-hidden />
+                <span
+                  className={cn(
+                    "flex h-4 w-4 shrink-0 items-center justify-center justify-self-end",
+                    isSelected ? "text-primary" : "text-transparent",
+                  )}
+                >
+                  <Check className="h-3.5 w-3.5" />
+                </span>
               </button>
             );
           })

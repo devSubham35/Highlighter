@@ -1,9 +1,11 @@
 import type { IssuePriority, IssueType, ReportStatus } from "@/types";
 import type { Report } from "@prisma/client";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 export type IssueRealtimeToken = {
   token: string;
-  projectId: string;
+  workspaceId?: string;
+  projectId?: string;
   issueId?: string;
   userId: string;
   expiresAt: number;
@@ -85,6 +87,56 @@ export type IssueRealtimeEvent =
       };
     }
   | {
+      type: "issue:updated";
+      projectId: string;
+      issueId: string;
+      issue: IssueRealtimeIssue;
+      changed: {
+        status?: boolean;
+        type?: IssueType;
+        priority?: IssuePriority;
+        assigneeIds?: string[];
+        metadata?: boolean;
+      };
+    }
+  | {
+      type: "issue:assigned";
+      projectId: string;
+      issueId: string;
+      issue: IssueRealtimeIssue;
+      assigneeIds: string[];
+      actorId: string;
+      actorName: string;
+    }
+  | {
+      type: "issue:status_changed";
+      projectId: string;
+      issueId: string;
+      issue: IssueRealtimeIssue;
+      status: ReportStatus;
+      previousStatus: ReportStatus;
+      actorId: string;
+      actorName: string;
+    }
+  | {
+      type: "issue:priority_changed";
+      projectId: string;
+      issueId: string;
+      issue: IssueRealtimeIssue;
+      priority: IssuePriority;
+      actorId: string;
+      actorName: string;
+    }
+  | {
+      type: "issue:type_changed";
+      projectId: string;
+      issueId: string;
+      issue: IssueRealtimeIssue;
+      issueType: IssueType;
+      actorId: string;
+      actorName: string;
+    }
+  | {
       type: "issue.deleted";
       projectId: string;
       issueId: string;
@@ -134,18 +186,62 @@ function getState() {
   return realtimeGlobal.__highlighterRealtime;
 }
 
+function realtimeSecret() {
+  return (
+    process.env.BETTER_AUTH_SECRET ??
+    process.env.AUTH_SECRET ??
+    process.env.NEXTAUTH_SECRET ??
+    "highlighter-development-realtime-secret"
+  );
+}
+
+function encodeTokenPart(input: unknown) {
+  return Buffer.from(JSON.stringify(input)).toString("base64url");
+}
+
+function signTokenPayload(payload: string) {
+  return createHmac("sha256", realtimeSecret()).update(payload).digest("base64url");
+}
+
+function verifySignature(payload: string, signature: string) {
+  const expected = Buffer.from(signTokenPayload(payload));
+  const actual = Buffer.from(signature);
+  return expected.length === actual.length && timingSafeEqual(expected, actual);
+}
+
 export function createRealtimeToken(input: Omit<IssueRealtimeToken, "token" | "expiresAt">) {
-  const token = crypto.randomUUID();
+  const expiresAt = Date.now() + 5 * 60 * 1000;
+  const payload = encodeTokenPart({
+    ...input,
+    expiresAt,
+    nonce: crypto.randomUUID(),
+  });
+  const token = `${payload}.${signTokenPayload(payload)}`;
   const entry: IssueRealtimeToken = {
     ...input,
     token,
-    expiresAt: Date.now() + 5 * 60 * 1000,
+    expiresAt,
   };
   getState().tokens.set(token, entry);
   return entry;
 }
 
 export function consumeRealtimeToken(token: string) {
+  const [payload, signature] = token.split(".");
+  if (payload && signature && verifySignature(payload, signature)) {
+    try {
+      const entry = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as Omit<
+        IssueRealtimeToken,
+        "token"
+      >;
+      if (entry.expiresAt > Date.now() && entry.userId) {
+        return { ...entry, token };
+      }
+    } catch {
+      return null;
+    }
+  }
+
   const state = getState();
   const entry = state.tokens.get(token);
   if (!entry) return null;
@@ -162,5 +258,33 @@ export function setRealtimeBroadcaster(broadcast: (event: IssueRealtimeEvent) =>
 }
 
 export function publishIssueEvent(event: IssueRealtimeEvent) {
-  getState().broadcast?.(event);
+  const broadcast = getState().broadcast;
+  if (broadcast) {
+    broadcast(event);
+    return;
+  }
+
+  void publishIssueEventInternal(event);
+}
+
+async function publishIssueEventInternal(event: IssueRealtimeEvent) {
+  const body = JSON.stringify(event);
+  const port = process.env.PORT ?? "3000";
+  const hostname = process.env.HOSTNAME ?? "localhost";
+  const endpoint =
+    process.env.REALTIME_INTERNAL_URL ??
+    `http://${hostname}:${port}/__highlighter/realtime/publish`;
+
+  try {
+    await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-realtime-signature": signTokenPayload(body),
+      },
+      body,
+    });
+  } catch {
+    // Realtime delivery is best-effort after the database transaction succeeds.
+  }
 }

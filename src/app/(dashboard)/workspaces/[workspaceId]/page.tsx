@@ -1,4 +1,5 @@
 import { WorkspaceOverviewView } from "@/components/workspaces/WorkspaceOverviewView";
+import { canAccessAllWorkspaceProjects, projectAccessWhere } from "@/lib/api/helpers";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { format, startOfMonth, subMonths } from "date-fns";
@@ -31,23 +32,39 @@ export default async function WorkspaceOverviewPage({
 
   if (!workspace) notFound();
 
-  const workspaceFilter = { project: { workspaceId: workspace.id } };
+  const role = workspace.memberships[0]?.role ?? "MEMBER";
+  const canSeeAll = canAccessAllWorkspaceProjects(role);
+  const projectWhere = canSeeAll
+    ? { workspaceId: workspace.id }
+    : { workspaceId: workspace.id, ...projectAccessWhere(session!.user.id) };
+  const reportWhere = { project: projectWhere };
 
   const chartStart = startOfMonth(subMonths(new Date(), 5));
 
-  const [activeProjects, totalReports, memberCount, resolvedReports, recentReports] = await Promise.all([
-    db.project.count({ where: { workspaceId: workspace.id, archived: false } }),
-    db.report.count({ where: workspaceFilter }),
+  const [activeProjects, totalReports, memberCount, resolvedReports, recentReports, visibleProjects] = await Promise.all([
+    db.project.count({ where: { ...projectWhere, archived: false } }),
+    db.report.count({ where: reportWhere }),
     db.membership.count({ where: { workspaceId: workspace.id } }),
-    db.report.count({ where: { ...workspaceFilter, status: "RESOLVED" } }),
+    db.report.count({ where: { ...reportWhere, status: { in: ["RESOLVED", "CLOSED"] } } }),
     db.report.findMany({
       where: {
-        ...workspaceFilter,
+        ...reportWhere,
         createdAt: { gte: chartStart },
       },
       select: {
         createdAt: true,
         status: true,
+      },
+    }),
+    db.project.findMany({
+      where: projectWhere,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        reports: {
+          select: { status: true },
+        },
       },
     }),
   ]);
@@ -76,10 +93,25 @@ export default async function WorkspaceOverviewPage({
     }
   });
 
+  const projectStats = visibleProjects.map((project) => {
+    const openTickets = project.reports.filter((report) => report.status === "OPEN").length;
+    const resolvedTickets = project.reports.filter(
+      (report) => report.status === "RESOLVED" || report.status === "CLOSED",
+    ).length;
+
+    return {
+      id: project.id,
+      name: project.name,
+      openTickets,
+      resolvedTickets,
+      totalTickets: project.reports.length,
+    };
+  });
+
   return (
     <WorkspaceOverviewView
       workspaceName={workspace.name}
-      role={workspace.memberships[0]?.role ?? "MEMBER"}
+      role={role}
       stats={{
         activeProjects,
         totalReports,
@@ -87,6 +119,8 @@ export default async function WorkspaceOverviewPage({
         resolvedReports,
       }}
       issueGraph={issueGraph}
+      projectStats={projectStats}
+      projectIds={visibleProjects.map((project) => project.id)}
     />
   );
 }

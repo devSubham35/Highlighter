@@ -107,7 +107,14 @@ export function IssueDetailModal({
     projectId: detail?.projectId,
     issueId: detail?.id,
     onEvent: (event) => {
-      if (event.type === "issue.updated") {
+      if (
+        event.type === "issue.updated" ||
+        event.type === "issue:updated" ||
+        event.type === "issue:assigned" ||
+        event.type === "issue:status_changed" ||
+        event.type === "issue:priority_changed" ||
+        event.type === "issue:type_changed"
+      ) {
         applyIssueData(event.issue);
         onUpdated(event.issue);
         return;
@@ -162,6 +169,16 @@ export function IssueDetailModal({
       });
     }
 
+    const previousDetail = detail;
+    const optimisticDetail: IssueItem = {
+      ...detail,
+      ...(patch.status ? { status: patch.status } : {}),
+      ...(patch.description !== undefined ? { description: patch.description } : {}),
+      ...(patch.metadata ? { metadata } : {}),
+    };
+    setDetail(optimisticDetail);
+    onUpdated(optimisticDetail);
+
     const response = await fetch(`/api/reports/${detail.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -172,6 +189,8 @@ export function IssueDetailModal({
       }),
     });
     if (!response.ok) {
+      setDetail(previousDetail);
+      onUpdated(previousDetail);
       toast.error("Issue update failed", "Could not save the issue change.");
       return;
     }
@@ -327,6 +346,7 @@ export function IssueDetailModal({
             reporterName={reporterName}
             reporterImage={reporterImage}
             currentIndex={currentIndex}
+            currentUserId={currentUserId}
             totalCount={issues.length}
             onClose={() => onOpenChange(false)}
             onPrev={() => {

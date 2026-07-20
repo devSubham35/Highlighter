@@ -1,7 +1,6 @@
 import { ProjectShell } from "@/components/projects/ProjectShell";
-import { auth } from "@/lib/auth";
+import { requireProjectAccess } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 export default async function ProjectLayout({
@@ -12,13 +11,11 @@ export default async function ProjectLayout({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
-  const session = await auth.api.getSession({ headers: await headers() });
+  const access = await requireProjectAccess(projectId, "read");
+  if ("error" in access) notFound();
 
   const project = await db.project.findFirst({
-    where: {
-      id: projectId,
-      workspace: { memberships: { some: { userId: session!.user.id } } },
-    },
+    where: { id: projectId },
     select: {
       id: true,
       name: true,

@@ -1,24 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
 import { signIn } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginFormSchema, type LoginFormData } from "@/lib/validations";
 import { ArrowRight, EyeOff, Lock, Mail } from "lucide-react";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const inviteToken = searchParams.get("invite");
+  const invitedEmail = searchParams.get("email") ?? "";
   const [error, setError] = useState("");
 
   const methods = useForm<LoginFormData>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
-      email: "",
+      email: invitedEmail,
       password: "",
     },
     mode: "onSubmit",
@@ -37,7 +40,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/workspaces");
+    router.push(inviteToken ? `/invite/${encodeURIComponent(inviteToken)}` : "/workspaces");
   };
 
   return (
@@ -113,10 +116,21 @@ export default function LoginPage() {
 
       <p className="mt-7 text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link className="font-medium text-primary hover:underline" href="/register">
+        <Link
+          className="font-medium text-primary hover:underline"
+          href={inviteToken ? `/register?invite=${encodeURIComponent(inviteToken)}&email=${encodeURIComponent(invitedEmail)}` : "/register"}
+        >
           Create account
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

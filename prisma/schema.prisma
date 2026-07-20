@@ -91,6 +91,7 @@ enum MemberRole {
   OWNER
   ADMIN
   MEMBER
+  VIEWER
 }
 
 model Membership {
@@ -98,10 +99,13 @@ model Membership {
   userId      String
   workspaceId String
   role        MemberRole @default(MEMBER)
+  suspended   Boolean    @default(false)
+  lastActiveAt DateTime?
   createdAt   DateTime   @default(now())
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  projectMemberships ProjectMembership[]
 
   @@unique([userId, workspaceId])
   @@map("memberships")
@@ -121,9 +125,25 @@ model Project {
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   reports   Report[]
+  projectMemberships ProjectMembership[]
+  invitationProjects InvitationProject[]
 
   @@index([workspaceId])
   @@map("projects")
+}
+
+model ProjectMembership {
+  id           String   @id @default(cuid())
+  membershipId String
+  projectId    String
+  createdAt    DateTime @default(now())
+
+  membership Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([membershipId, projectId])
+  @@index([projectId])
+  @@map("project_memberships")
 }
 
 enum ReportStatus {
@@ -209,6 +229,8 @@ enum InvitationStatus {
   PENDING
   ACCEPTED
   EXPIRED
+  CANCELLED
+  REVOKED
 }
 
 model Invitation {
@@ -218,14 +240,33 @@ model Invitation {
   role        MemberRole       @default(MEMBER)
   status      InvitationStatus @default(PENDING)
   token       String           @unique @default(cuid())
+  message     String?          @db.Text
   invitedById String
   expiresAt   DateTime
+  acceptedAt  DateTime?
+  cancelledAt DateTime?
+  revokedAt   DateTime?
+  resentAt    DateTime?
   createdAt   DateTime         @default(now())
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   invitedBy User      @relation("InvitedBy", fields: [invitedById], references: [id])
+  projects  InvitationProject[]
 
   @@index([workspaceId])
   @@index([email])
   @@map("invitations")
+}
+
+model InvitationProject {
+  id           String @id @default(cuid())
+  invitationId String
+  projectId    String
+
+  invitation Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([invitationId, projectId])
+  @@index([projectId])
+  @@map("invitation_projects")
 }

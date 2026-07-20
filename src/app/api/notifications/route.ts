@@ -1,4 +1,4 @@
-import { requireSession } from "@/lib/api/helpers";
+import { projectAccessWhere, requireSession } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { formatIssueKey, parseReportMetadata } from "@/lib/report-metadata";
 import { NextResponse } from "next/server";
@@ -28,11 +28,7 @@ export async function GET() {
 
   const reports = await db.report.findMany({
     where: {
-      project: {
-        workspace: {
-          memberships: { some: { userId: access.session.user.id } },
-        },
-      },
+      project: projectAccessWhere(access.session.user.id),
     },
     orderBy: { updatedAt: "desc" },
     take: 50,

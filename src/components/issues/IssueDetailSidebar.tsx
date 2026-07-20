@@ -14,6 +14,7 @@ import {
   isIssuePriority,
   isIssueType,
 } from "@/lib/issue-options";
+import { memberDisplayName } from "@/lib/member-display";
 import { formatIssueKey, parseReportMetadata } from "@/lib/report-metadata";
 import type { IssueItem } from "@/components/projects/ProjectDetailsView";
 import type { IssuePriority, IssueType, WorkspaceMember } from "@/types";
@@ -139,6 +140,7 @@ export function IssueDetailSidebar({
   reporterName,
   reporterImage,
   currentIndex,
+  currentUserId,
   totalCount,
   onClose,
   onPrev,
@@ -151,6 +153,7 @@ export function IssueDetailSidebar({
   reporterName: string;
   reporterImage?: string | null;
   currentIndex: number;
+  currentUserId: string;
   totalCount: number;
   onClose: () => void;
   onPrev: () => void;
@@ -185,11 +188,11 @@ export function IssueDetailSidebar({
     () =>
       members.map((member) => ({
         value: member.id,
-        label: member.name || member.email,
+        label: memberDisplayName(member, currentUserId),
         avatarName: member.name || member.email,
         avatarImage: member.image,
       })),
-    [members],
+    [currentUserId, members],
   );
 
   const pickerTriggerClass =
@@ -277,30 +280,35 @@ export function IssueDetailSidebar({
             </div>
           </PropertyRow>
           <PropertyRow label="Assignee" interactive onOpen={() => setAssigneeOpen(true)}>
-            <span className={PROPERTY_ICON_SLOT}>
-              {primaryAssignee ? (
-                <IssueUserAvatar
-                  name={primaryAssignee.name || primaryAssignee.email}
-                  image={primaryAssignee.image}
-                  className="size-6"
-                />
-              ) : (
-                issueUnassignedIcon()
-              )}
-            </span>
             <div className="min-w-0 flex-1">
               <Popover open={assigneeOpen} onOpenChange={setAssigneeOpen}>
-                <PopoverTrigger className={pickerTriggerClass}>
-                  <span
-                    className={cn(
-                      "min-w-0 truncate",
-                      !primaryAssignee && "text-muted-foreground",
-                    )}
-                  >
-                    {primaryAssignee
-                      ? primaryAssignee.name || primaryAssignee.email
-                      : "No assignee"}
-                  </span>
+                <PopoverTrigger
+                  aria-label={primaryAssignee ? "Change assignee" : "Assign issue"}
+                  className={cn(
+                    primaryAssignee
+                      ? "inline-flex cursor-pointer items-center gap-1.5 rounded-full outline-none"
+                      : pickerTriggerClass,
+                  )}
+                >
+                  {primaryAssignee ? (
+                    <>
+                      <IssueUserAvatar
+                        name={primaryAssignee.name || primaryAssignee.email}
+                        image={primaryAssignee.image}
+                        className="size-7"
+                      />
+                      {assignees.length > 1 ? (
+                        <span className="rounded-full bg-muted px-1.5 text-[11px] text-muted-foreground">
+                          +{assignees.length - 1}
+                        </span>
+                      ) : null}
+                    </>
+                  ) : (
+                    <>
+                      <span className={PROPERTY_ICON_SLOT}>{issueUnassignedIcon()}</span>
+                      <span className="min-w-0 truncate text-muted-foreground">No assignee</span>
+                    </>
+                  )}
                 </PopoverTrigger>
                 <PopoverContent className="w-auto border-0 bg-transparent p-0 shadow-none" align="start">
                   <IssuePickerPanel

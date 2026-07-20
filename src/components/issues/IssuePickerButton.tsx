@@ -18,6 +18,7 @@ import {
 } from "@/lib/issue-options";
 import type { IssuePriority, IssueType } from "@/types";
 import type { WorkspaceMember } from "@/types";
+import { memberDisplayName } from "@/lib/member-display";
 import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
 
@@ -27,10 +28,12 @@ const ROW_ICON_BUTTON =
 export function IssueAssignPicker({
   assigneeIds,
   members,
+  currentUserId,
   onAssigneeIdsChange,
 }: {
   assigneeIds: string[];
   members: WorkspaceMember[];
+  currentUserId: string;
   onAssigneeIdsChange: (ids: string[]) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -49,11 +52,11 @@ export function IssueAssignPicker({
     () =>
       members.map((member) => ({
         value: member.id,
-        label: member.name || member.email,
+        label: memberDisplayName(member, currentUserId),
         avatarName: member.name || member.email,
         avatarImage: member.image,
       })),
-    [members],
+    [currentUserId, members],
   );
 
   return (
@@ -95,7 +98,10 @@ export function IssueAssignPicker({
             items={items}
             values={assigneeIds}
             multiple
-            onValuesChange={onAssigneeIdsChange}
+            onValuesChange={(ids) => {
+              onAssigneeIdsChange(ids);
+              setOpen(false);
+            }}
           />
         </PopoverContent>
       </Popover>

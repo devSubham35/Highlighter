@@ -1,20 +1,16 @@
-import { auth } from "@/lib/auth";
+import { requireProjectAccess } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { publishIssueEvent, toIssueRealtimePayload } from "@/lib/realtime";
 import { createIssueSchema } from "@/lib/validations";
-import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest, ctx: RouteContext<"/api/projects/[projectId]/issues">) {
   const { projectId } = await ctx.params;
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const access = await requireProjectAccess(projectId, "write");
+  if ("error" in access) return access.error;
 
   const project = await db.project.findFirst({
-    where: {
-      id: projectId,
-      workspace: { memberships: { some: { userId: session.user.id } } },
-    },
+    where: { id: projectId },
     select: {
       id: true,
       workspaceId: true,
@@ -34,6 +30,10 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/projects/[p
       where: {
         workspaceId: project.workspaceId,
         userId: { in: assigneeIds },
+        OR: [
+          { role: { in: ["OWNER", "ADMIN"] } },
+          { projectMemberships: { some: { projectId } } },
+        ],
       },
     });
     if (validAssigneeCount !== new Set(assigneeIds).size) {
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/projects/[p
   }
 
   const now = new Date().toISOString();
-  const reporterName = session.user.name ?? session.user.email;
+  const reporterName = access.session.user.name ?? access.session.user.email;
   const assignees = assigneeIds.length
     ? await db.user.findMany({
         where: { id: { in: assigneeIds } },
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/projects/[p
     priority: parsed.data.priority,
     assigneeIds,
     reporterName,
-    reporterId: session.user.id,
+    reporterId: access.session.user.id,
     issueNumber: project._count.reports + 1,
     activityLog: [
       {

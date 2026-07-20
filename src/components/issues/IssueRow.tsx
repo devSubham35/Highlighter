@@ -21,16 +21,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatIssueKey, parseReportMetadata } from "@/lib/report-metadata";
+import { formatIssueKey, mergeReportMetadata, parseReportMetadata } from "@/lib/report-metadata";
 import { formatIssueCreatedAt } from "@/lib/issue-format";
+import { memberDisplayName } from "@/lib/member-display";
 import {
-  ISSUE_PRIORITY_LABELS,
-  ISSUE_PRIORITY_OPTIONS,
   ISSUE_STATUS_OPTION_CLASS,
   ISSUE_STATUS_TRIGGER_CLASS,
   issuePriorityIcon,
   issueTypeIcon,
-  isIssuePriority,
   isIssueType,
 } from "@/lib/issue-options";
 import { REPORT_STATUS_OPTIONS, isReportStatus } from "@/lib/report-options";
@@ -47,6 +45,7 @@ export function IssueRow({
   issue,
   projectName,
   members,
+  currentUserId,
   onOpen,
   onUpdated,
   onDeleted,
@@ -54,6 +53,7 @@ export function IssueRow({
   issue: IssueItem;
   projectName: string;
   members: WorkspaceMember[];
+  currentUserId: string;
   onOpen: () => void;
   onUpdated: (issue: IssueItem) => void;
   onDeleted: (issueId: string) => void;
@@ -65,6 +65,7 @@ export function IssueRow({
   const assigneeIds = metadata.assigneeIds ?? [];
   const issueKey = formatIssueKey(projectName, metadata.issueNumber ?? 1);
   const reporterName = metadata.reporterName ?? "Anonymous";
+  const reporterLabel = metadata.reporterId === currentUserId ? "You" : reporterName;
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -73,12 +74,21 @@ export function IssueRow({
     status?: ReportStatus;
     metadata?: Record<string, unknown>;
   }) {
+    const previousIssue = issue;
+    const optimisticIssue: IssueItem = {
+      ...issue,
+      ...(patch.status ? { status: patch.status } : {}),
+      ...(patch.metadata ? { metadata: mergeReportMetadata(issue.metadata, patch.metadata) } : {}),
+    };
+    onUpdated(optimisticIssue);
+
     const response = await fetch(`/api/reports/${issue.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
     });
     if (!response.ok) {
+      onUpdated(previousIssue);
       toast.error("Issue update failed", "Could not save the issue change.");
       return;
     }
@@ -118,7 +128,7 @@ export function IssueRow({
     <>
       <article
         onClick={onOpen}
-        className="group flex cursor-pointer items-center gap-3 rounded-2xl border border-border/70 bg-card px-3 py-3 shadow-[var(--shadow-surface)] transition-[background-color,box-shadow] duration-200 hover:bg-muted/40 dark:hover:bg-secondary/40"
+        className="group flex cursor-pointer items-center gap-3 rounded-2xl border border-border/70 bg-card px-3 py-3 shadow-[var(--shadow-surface)] transition-[background-color,box-shadow] duration-200 hover:bg-primary/5 dark:hover:bg-secondary/40"
       >
         <div className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-sidebar-border bg-muted">
           {issue.screenshotUrl ? (
@@ -148,6 +158,7 @@ export function IssueRow({
             <IssueAssignPicker
               assigneeIds={assigneeIds}
               members={members}
+              currentUserId={currentUserId}
               onAssigneeIdsChange={(ids) => patchIssue({ metadata: { assigneeIds: ids } })}
             />
 
@@ -162,7 +173,7 @@ export function IssueRow({
             <p className="truncate text-sm font-medium text-foreground">
               <span className="text-muted-foreground">#{issueKey}</span> {issue.title}
             </p>
-            <p className="truncate text-xs text-muted-foreground">{reporterName}</p>
+            <p className="truncate text-xs text-muted-foreground">Created by {reporterLabel}</p>
           </div>
         </div>
 
@@ -256,9 +267,12 @@ export function IssueRow({
   );
 }
 
-export function memberComboboxOptions(members: WorkspaceMember[]): ComboboxOption[] {
+export function memberComboboxOptions(
+  members: WorkspaceMember[],
+  currentUserId?: string,
+): ComboboxOption[] {
   return members.map((member) => ({
     value: member.id,
-    label: member.name || member.email,
+    label: memberDisplayName(member, currentUserId),
   }));
 }

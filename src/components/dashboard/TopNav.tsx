@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { signOut } from "@/lib/auth-client";
+import { disconnectRealtimeSocket } from "@/lib/use-issue-realtime";
 import { cn } from "@/lib/utils";
 import { LogOut, Menu, Moon, Search, Settings, Sun, User } from "lucide-react";
 import Link from "next/link";
@@ -76,6 +77,7 @@ export function TopNav({
   }, [profileMenuOpen]);
 
   function handleLogout() {
+    disconnectRealtimeSocket();
     signOut({
       fetchOptions: {
         onSuccess: () => {

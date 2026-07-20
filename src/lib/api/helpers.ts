@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import type { MemberRole, Membership } from "@prisma/client";
+import type { MemberRole, Membership, Prisma } from "@prisma/client";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -25,6 +25,7 @@ export async function requireSession(): Promise<ApiErrorResult | SessionResult> 
 }
 
 const roleRank: Record<MemberRole, number> = {
+  VIEWER: 0,
   MEMBER: 1,
   ADMIN: 2,
   OWNER: 3,
@@ -54,11 +55,99 @@ export async function requireWorkspaceMembership(
     return { error: jsonError("Not found", 404) };
   }
 
+  if (membership.suspended) {
+    return { error: jsonError("Workspace access suspended", 403) };
+  }
+
   if (!hasMinRole(membership.role, minimumRole)) {
     return { error: jsonError("Forbidden", 403) };
   }
 
   return { session: authResult.session, membership };
+}
+
+export function canManageMembers(role: MemberRole) {
+  return role === "OWNER" || role === "ADMIN";
+}
+
+export function canWriteWorkspace(role: MemberRole) {
+  return role === "OWNER" || role === "ADMIN" || role === "MEMBER";
+}
+
+export function canAccessAllWorkspaceProjects(role: MemberRole) {
+  return role === "OWNER" || role === "ADMIN";
+}
+
+export function projectAccessWhere(
+  userId: string,
+  mode: "read" | "write" = "read",
+): Prisma.ProjectWhereInput {
+  const roleFilter: MemberRole[] =
+    mode === "write" ? ["OWNER", "ADMIN", "MEMBER"] : ["OWNER", "ADMIN", "MEMBER", "VIEWER"];
+
+  return {
+    OR: [
+      {
+        workspace: {
+          memberships: {
+            some: {
+              userId,
+              suspended: false,
+              role: { in: ["OWNER", "ADMIN"] },
+            },
+          },
+        },
+      },
+      {
+        projectMemberships: {
+          some: {
+            membership: {
+              userId,
+              suspended: false,
+              role: { in: roleFilter },
+            },
+          },
+        },
+      },
+    ],
+  };
+}
+
+export async function requireProjectAccess(
+  projectId: string,
+  mode: "read" | "write" = "read",
+): Promise<ApiErrorResult | (WorkspaceAccessResult & { project: { id: string; workspaceId: string } })> {
+  const authResult = await requireSession();
+  if ("error" in authResult) return authResult;
+
+  const project = await db.project.findUnique({
+    where: { id: projectId },
+    select: { id: true, workspaceId: true },
+  });
+
+  if (!project) return { error: jsonError("Not found", 404) };
+
+  const access = await requireWorkspaceMembership(
+    project.workspaceId,
+    mode === "write" ? "MEMBER" : "VIEWER",
+  );
+  if ("error" in access) return access;
+
+  if (canAccessAllWorkspaceProjects(access.membership.role)) {
+    return { ...access, project };
+  }
+
+  const assigned = await db.projectMembership.findUnique({
+    where: {
+      membershipId_projectId: {
+        membershipId: access.membership.id,
+        projectId,
+      },
+    },
+  });
+
+  if (!assigned) return { error: jsonError("Project access denied", 403) };
+  return { ...access, project };
 }
 
 export async function isWorkspaceNameTaken(userId: string, name: string, excludeId?: string) {

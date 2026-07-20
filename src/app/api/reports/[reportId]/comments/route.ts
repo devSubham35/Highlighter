@@ -1,8 +1,7 @@
-import { auth } from "@/lib/auth";
+import { requireProjectAccess, requireSession } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { publishIssueEvent } from "@/lib/realtime";
 import { Prisma } from "@prisma/client";
-import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -10,20 +9,23 @@ const createCommentSchema = z.object({
   body: z.string().trim().min(1).max(5000),
 });
 
-async function requireReport(reportId: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return { error: "Unauthorized" as const };
+async function requireReport(reportId: string, mode: "read" | "write" = "read") {
+  const session = await requireSession();
+  if ("error" in session) return { error: "Unauthorized" as const };
 
-  const report = await db.report.findFirst({
-    where: {
-      id: reportId,
-      project: { workspace: { memberships: { some: { userId: session.user.id } } } },
-    },
+  const report = await db.report.findUnique({
+    where: { id: reportId },
     select: { id: true, projectId: true },
   });
 
   if (!report) return { error: "Not found" as const };
-  return { session, report };
+  const access = await requireProjectAccess(report.projectId, mode);
+  if ("error" in access) {
+    if (access.error.status === 401) return { error: "Unauthorized" as const };
+    if (access.error.status === 403) return { error: "Forbidden" as const };
+    return { error: "Not found" as const };
+  }
+  return { session: access.session, report };
 }
 
 function toCommentPayload(comment: {
@@ -92,7 +94,7 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/reports/[re
   const { reportId } = await ctx.params;
   const access = await requireReport(reportId);
   if ("error" in access) {
-    return NextResponse.json({ error: access.error }, { status: access.error === "Unauthorized" ? 401 : 404 });
+    return NextResponse.json({ error: access.error }, { status: access.error === "Unauthorized" ? 401 : access.error === "Forbidden" ? 403 : 404 });
   }
 
   const comments = await db.$queryRaw<CommentRow[]>(Prisma.sql`
@@ -142,9 +144,9 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/reports/[re
 
 export async function POST(req: NextRequest, ctx: RouteContext<"/api/reports/[reportId]/comments">) {
   const { reportId } = await ctx.params;
-  const access = await requireReport(reportId);
+  const access = await requireReport(reportId, "write");
   if ("error" in access) {
-    return NextResponse.json({ error: access.error }, { status: access.error === "Unauthorized" ? 401 : 404 });
+    return NextResponse.json({ error: access.error }, { status: access.error === "Unauthorized" ? 401 : access.error === "Forbidden" ? 403 : 404 });
   }
 
   const parsed = createCommentSchema.safeParse(await req.json());

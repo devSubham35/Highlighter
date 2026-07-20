@@ -1,6 +1,7 @@
 "use client";
 
 import { IssuePickerPanel } from "@/components/issues/IssuePickerPanel";
+import { IssueUserAvatar } from "@/components/issues/IssueUserAvatar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,7 +26,9 @@ import {
   isIssuePriority,
   isIssueType,
 } from "@/lib/issue-options";
+import { memberDisplayName } from "@/lib/member-display";
 import { toast } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 import type { IssuePriority, IssueType, WorkspaceMember } from "@/types";
 import type { IssueItem } from "@/components/projects/ProjectDetailsView";
 import { Plus } from "lucide-react";
@@ -36,11 +39,13 @@ export function CreateIssueDialog({
   projectId,
   defaultPageUrl,
   members,
+  currentUserId,
   onCreated,
 }: {
   projectId: string;
   defaultPageUrl: string | null;
   members: WorkspaceMember[];
+  currentUserId: string;
   onCreated: (issue: IssueItem) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -59,11 +64,11 @@ export function CreateIssueDialog({
     () =>
       members.map((member) => ({
         value: member.id,
-        label: member.name || member.email,
+        label: memberDisplayName(member, currentUserId),
         avatarName: member.name || member.email,
         avatarImage: member.image,
       })),
-    [members],
+    [currentUserId, members],
   );
 
   const assigneeLabel =
@@ -72,6 +77,8 @@ export function CreateIssueDialog({
       : assigneeIds.length === 1
         ? assigneeItems.find((item) => item.value === assigneeIds[0])?.label ?? "1 assignee"
         : `${assigneeIds.length} assignees`;
+  const selectedAssignees = members.filter((member) => assigneeIds.includes(member.id));
+  const primaryAssignee = selectedAssignees[0];
 
   function resetForm() {
     setTitle("");
@@ -133,9 +140,9 @@ export function CreateIssueDialog({
             <DialogTitle>Create issue</DialogTitle>
             <DialogDescription>Add an issue manually for this project.</DialogDescription>
           </DialogHeader>
-          <DialogBody className="space-y-4">
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium text-foreground">Title</span>
+          <DialogBody className="space-y-5">
+            <label className="block space-y-2">
+              <span className="block text-sm font-medium text-foreground">Title</span>
               <Input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
@@ -144,8 +151,8 @@ export function CreateIssueDialog({
               />
             </label>
 
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium text-foreground">Page URL</span>
+            <label className="block space-y-2">
+              <span className="block text-sm font-medium text-foreground">Page URL</span>
               <Input
                 value={pageUrl}
                 onChange={(event) => setPageUrl(event.target.value)}
@@ -155,8 +162,8 @@ export function CreateIssueDialog({
               />
             </label>
 
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium text-foreground">Description</span>
+            <label className="block space-y-2">
+              <span className="block text-sm font-medium text-foreground">Description</span>
               <Textarea
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
@@ -165,7 +172,7 @@ export function CreateIssueDialog({
               />
             </label>
 
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-3">
               <FieldPicker label="Type">
                 <Popover open={typeOpen} onOpenChange={setTypeOpen}>
                   <PopoverTrigger className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-md border border-input bg-card px-3 text-left text-sm font-medium">
@@ -210,9 +217,30 @@ export function CreateIssueDialog({
 
               <FieldPicker label="Assignee">
                 <Popover open={assigneeOpen} onOpenChange={setAssigneeOpen}>
-                  <PopoverTrigger className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-md border border-input bg-card px-3 text-left text-sm font-medium">
-                    {issueUnassignedIcon()}
-                    <span className="min-w-0 flex-1 truncate">{assigneeLabel}</span>
+                  <PopoverTrigger
+                    aria-label={primaryAssignee ? `Change assignee: ${assigneeLabel}` : "Assign issue"}
+                    className={cn(
+                      "flex h-9 cursor-pointer items-center gap-2 rounded-md border border-input bg-card text-left text-sm font-medium transition-colors hover:bg-muted/50",
+                      primaryAssignee ? "w-fit px-1.5 pr-2" : "w-full px-3",
+                    )}
+                  >
+                    {primaryAssignee ? (
+                      <>
+                        <IssueUserAvatar
+                          name={primaryAssignee.name || primaryAssignee.email}
+                          image={primaryAssignee.image}
+                          className="size-7"
+                        />
+                        {selectedAssignees.length > 1 ? (
+                          <span className="text-xs text-muted-foreground">+{selectedAssignees.length - 1}</span>
+                        ) : null}
+                      </>
+                    ) : (
+                      <>
+                        {issueUnassignedIcon()}
+                        <span className="min-w-0 flex-1 truncate">{assigneeLabel}</span>
+                      </>
+                    )}
                   </PopoverTrigger>
                   <PopoverContent className="w-auto border-0 bg-transparent p-0 shadow-none" align="start">
                     <IssuePickerPanel
@@ -244,8 +272,8 @@ export function CreateIssueDialog({
 
 function FieldPicker({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="space-y-1.5">
-      <span className="text-sm font-medium text-foreground">{label}</span>
+    <div className="space-y-2">
+      <span className="block text-sm font-medium text-foreground">{label}</span>
       {children}
     </div>
   );

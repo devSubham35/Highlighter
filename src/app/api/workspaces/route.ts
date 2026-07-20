@@ -1,7 +1,9 @@
 import {
+  canAccessAllWorkspaceProjects,
   getWorkspaceCounts,
   jsonError,
   isWorkspaceNameTaken,
+  projectAccessWhere,
   requireSession,
 } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
@@ -24,7 +26,6 @@ export async function GET() {
       },
       _count: {
         select: {
-          projects: { where: { archived: false } },
           memberships: true,
         },
       },
@@ -32,17 +33,30 @@ export async function GET() {
   });
 
   return NextResponse.json(
-    workspaces.map((workspace) => ({
-      id: workspace.id,
-      name: workspace.name,
-      slug: workspace.slug,
-      ownerId: workspace.ownerId,
-      role: workspace.memberships[0]?.role ?? "MEMBER",
-      projectCount: workspace._count.projects,
-      memberCount: workspace._count.memberships,
-      createdAt: workspace.createdAt,
-      updatedAt: workspace.updatedAt,
-    })),
+    await Promise.all(
+      workspaces.map(async (workspace) => {
+        const role = workspace.memberships[0]?.role ?? "MEMBER";
+        const projectWhere = canAccessAllWorkspaceProjects(role)
+          ? { workspaceId: workspace.id, archived: false }
+          : {
+              workspaceId: workspace.id,
+              archived: false,
+              ...projectAccessWhere(authResult.session.user.id),
+            };
+
+        return {
+          id: workspace.id,
+          name: workspace.name,
+          slug: workspace.slug,
+          ownerId: workspace.ownerId,
+          role,
+          projectCount: await db.project.count({ where: projectWhere }),
+          memberCount: workspace._count.memberships,
+          createdAt: workspace.createdAt,
+          updatedAt: workspace.updatedAt,
+        };
+      }),
+    ),
   );
 }
 

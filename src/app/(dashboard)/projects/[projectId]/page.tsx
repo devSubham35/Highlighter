@@ -1,4 +1,5 @@
 import { ProjectDetailsView } from "@/components/projects/ProjectDetailsView";
+import { requireProjectAccess } from "@/lib/api/helpers";
 import { auth } from "@/lib/auth";
 import { mergeReportMetadata, parseReportMetadata } from "@/lib/report-metadata";
 import type { IssuePriority, IssueType } from "@/types";
@@ -11,9 +12,11 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
   const { projectId } = await params;
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session!.user.id;
+  const projectAccess = await requireProjectAccess(projectId, "read");
+  if ("error" in projectAccess) notFound();
 
   const project = await db.project.findFirst({
-    where: { id: projectId, workspace: { memberships: { some: { userId } } } },
+    where: { id: projectId },
     include: {
       workspace: {
         include: {

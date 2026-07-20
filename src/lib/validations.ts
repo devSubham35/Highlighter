@@ -54,6 +54,10 @@ export type RegisterFormData = z.infer<typeof registerFormSchema>;
 export type CreateWorkspaceFormData = z.infer<typeof createWorkspaceFormSchema>;
 export type CreateProjectFormData = z.infer<typeof createProjectFormSchema>;
 
+const userIdSchema = z.string().trim().min(1).max(191);
+
+export const memberRoleSchema = z.enum(["OWNER", "ADMIN", "MEMBER", "VIEWER"]);
+
 export const createWorkspaceSchema = z.object({
   name: createWorkspaceFormSchema.shape.name,
   inviteEmail: createWorkspaceFormSchema.shape.inviteEmail.optional(),
@@ -106,26 +110,28 @@ export const updateReportSchema = z.object({
   description: z.string().max(5000).nullable().optional(),
   metadata: z
     .object({
-      type: z.enum(["BUG", "IMPROVEMENT"]).optional(),
-      priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
-      assigneeIds: z.array(z.string().cuid()).optional(),
+      type: z.enum(["BUG", "TASK", "FEATURE", "IMPROVEMENT", "STORY"]).optional(),
+      priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
+      assigneeIds: z.array(userIdSchema).optional(),
       reporterName: z.string().max(100).optional(),
-      reporterId: z.string().cuid().optional(),
+      reporterId: userIdSchema.optional(),
       issueNumber: z.number().int().positive().optional(),
       activityLog: z
         .array(
           z.object({
             id: z.string(),
-            kind: z.enum(["reported", "title_ai", "status", "priority", "assignment"]),
+            kind: z.enum(["reported", "title_ai", "status", "priority", "assignment", "type"]),
             at: z.string(),
             actorName: z.string().optional(),
-            issueType: z.enum(["BUG", "IMPROVEMENT"]).optional(),
+            issueType: z.enum(["BUG", "TASK", "FEATURE", "IMPROVEMENT", "STORY"]).optional(),
+            fromIssueType: z.enum(["BUG", "TASK", "FEATURE", "IMPROVEMENT", "STORY"]).optional(),
+            toIssueType: z.enum(["BUG", "TASK", "FEATURE", "IMPROVEMENT", "STORY"]).optional(),
             fromStatus: z.enum(["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"]).optional(),
             toStatus: z.enum(["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"]).optional(),
-            fromPriority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
-            toPriority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
-            fromAssigneeIds: z.array(z.string().cuid()).optional(),
-            toAssigneeIds: z.array(z.string().cuid()).optional(),
+            fromPriority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
+            toPriority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
+            fromAssigneeIds: z.array(userIdSchema).optional(),
+            toAssigneeIds: z.array(userIdSchema).optional(),
             toAssigneeNames: z.array(z.string()).optional(),
           }),
         )
@@ -138,17 +144,23 @@ export const createIssueSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200),
   description: z.string().trim().max(5000).nullable().optional(),
   pageUrl: z.string().trim().min(1, "Page URL is required").url("Enter a valid page URL"),
-  type: z.enum(["BUG", "IMPROVEMENT"]).default("BUG"),
-  priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH", "URGENT"]).default("NONE"),
-  assigneeIds: z.array(z.string().cuid()).default([]),
+  type: z.enum(["BUG", "TASK", "FEATURE", "IMPROVEMENT", "STORY"]).default("BUG"),
+  priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH", "CRITICAL"]).default("NONE"),
+  assigneeIds: z.array(userIdSchema).default([]),
 });
 
 export type CreateIssueData = z.infer<typeof createIssueSchema>;
 
 export const inviteMemberSchema = z.object({
-  email: z.string().email(),
-  role: z.enum(["ADMIN", "MEMBER"]),
+  email: z.string().email().optional(),
+  emails: z.array(z.string().email()).min(1).max(25).optional(),
+  role: memberRoleSchema.default("MEMBER"),
   workspaceId: z.string().cuid(),
+  projectIds: z.array(z.string().cuid()).default([]),
+  message: z.string().trim().max(1200).optional(),
+}).refine((value) => Boolean(value.email) || Boolean(value.emails?.length), {
+  message: "At least one email address is required",
+  path: ["emails"],
 });
 
 export const updateWorkspaceSchema = z.object({
@@ -160,7 +172,9 @@ export const updateWorkspaceSchema = z.object({
 });
 
 export const updateMemberRoleSchema = z.object({
-  role: z.enum(["ADMIN", "MEMBER"]),
+  role: z.enum(["ADMIN", "MEMBER", "VIEWER"]).optional(),
+  projectIds: z.array(z.string().cuid()).optional(),
+  suspended: z.boolean().optional(),
 });
 
 export const acceptInvitationSchema = z.object({

@@ -1,4 +1,4 @@
-import { enrichProjects, jsonError, requireWorkspaceMembership } from "@/lib/api/helpers";
+import { canAccessAllWorkspaceProjects, enrichProjects, jsonError, projectAccessWhere, requireWorkspaceMembership } from "@/lib/api/helpers";
 import { generateApiKey } from "@/lib/api-key";
 import { db } from "@/lib/db";
 import { createProjectSchema } from "@/lib/validations";
@@ -16,7 +16,9 @@ export async function GET(req: NextRequest) {
   const enriched = req.nextUrl.searchParams.get("enriched") !== "false";
 
   const projects = await db.project.findMany({
-    where: { workspaceId },
+    where: canAccessAllWorkspaceProjects(access.membership.role)
+      ? { workspaceId }
+      : { workspaceId, ...projectAccessWhere(access.session.user.id) },
     include: { _count: { select: { reports: true } } },
     orderBy: { createdAt: "desc" },
   });

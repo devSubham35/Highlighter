@@ -5,13 +5,16 @@ import { SpinnerGapIcon, XCircleIcon } from "@phosphor-icons/react";
 import {
   AlertCircle,
   ArrowUpCircle,
+  BookOpen,
   Bug,
   ChevronsUp,
   Circle,
   CircleCheck,
   Equal,
+  ListTodo,
   Lightbulb,
   Minus,
+  Sparkles,
   UserRound,
 } from "lucide-react";
 
@@ -22,16 +25,31 @@ export const ISSUE_TYPE_OPTIONS: ComboboxOption[] = [
     icon: <Bug className="h-4 w-4 text-destructive" />,
   },
   {
+    value: "TASK",
+    label: "Task",
+    icon: <ListTodo className="h-4 w-4 text-info" />,
+  },
+  {
+    value: "FEATURE",
+    label: "Feature",
+    icon: <Sparkles className="h-4 w-4 text-purple-500" />,
+  },
+  {
     value: "IMPROVEMENT",
     label: "Improvement",
     icon: <ArrowUpCircle className="h-4 w-4 text-success" />,
+  },
+  {
+    value: "STORY",
+    label: "Story",
+    icon: <BookOpen className="h-4 w-4 text-warning" />,
   },
 ];
 
 export const ISSUE_PRIORITY_OPTIONS: ComboboxOption[] = [
   {
-    value: "URGENT",
-    label: "Urgent",
+    value: "CRITICAL",
+    label: "Critical",
     icon: <AlertCircle className="h-4 w-4 text-destructive" />,
   },
   {
@@ -63,7 +81,10 @@ export const ISSUE_PRIORITY_OPTIONS: ComboboxOption[] = [
 
 export const ISSUE_TYPE_LABELS: Record<IssueType, string> = {
   BUG: "Bug",
+  TASK: "Task",
+  FEATURE: "Feature",
   IMPROVEMENT: "Improvement",
+  STORY: "Story",
 };
 
 export const ISSUE_PRIORITY_LABELS: Record<IssuePriority, string> = {
@@ -71,15 +92,12 @@ export const ISSUE_PRIORITY_LABELS: Record<IssuePriority, string> = {
   LOW: "Low",
   MEDIUM: "Medium",
   HIGH: "High",
-  URGENT: "Urgent",
+  CRITICAL: "Critical",
 };
 
 export function issueTypeIcon(type: IssueType) {
-  return type === "BUG" ? (
-    <Bug className="h-4 w-4 text-destructive" />
-  ) : (
-    <Lightbulb className="h-4 w-4 text-success" />
-  );
+  const option = ISSUE_TYPE_OPTIONS.find((item) => item.value === type);
+  return option?.icon ?? <Lightbulb className="h-4 w-4 text-success" />;
 }
 
 export function issuePriorityIcon(priority: IssuePriority) {
@@ -145,7 +163,7 @@ export function reportStatusIcon(status: ReportStatus, iconSize = 16) {
 }
 
 export function isIssueType(value: string): value is IssueType {
-  return value === "BUG" || value === "IMPROVEMENT";
+  return ISSUE_TYPE_OPTIONS.some((option) => option.value === value);
 }
 
 export function isIssuePriority(value: string): value is IssuePriority {

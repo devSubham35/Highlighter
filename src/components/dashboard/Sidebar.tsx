@@ -21,7 +21,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { signOut } from "@/lib/auth-client";
 import { toast } from "@/lib/toast";
+import { disconnectRealtimeSocket } from "@/lib/use-issue-realtime";
 import { cn } from "@/lib/utils";
+import type { MemberRole } from "@prisma/client";
 import {
   ChevronDown,
   Check,
@@ -44,6 +46,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 export type SidebarWorkspace = {
   id: string;
   name: string;
+  role: MemberRole;
 };
 
 type NavItem = {
@@ -72,8 +75,10 @@ const navItems: NavItem[] = [
   {
     label: "Members",
     icon: Users,
-    href: "/settings",
-    match: () => false,
+    href: (workspaceId) =>
+      workspaceId ? `/workspaces/${workspaceId}/members` : "/workspaces",
+    match: (pathname, workspaceId) =>
+      workspaceId !== null && pathname.startsWith(`/workspaces/${workspaceId}/members`),
   },
   {
     label: "Settings",
@@ -115,6 +120,10 @@ const DEFAULT_AVATAR_IMAGE = "https://github.com/maxleiter.png";
 
 function workspaceInitial(name: string) {
   return name.trim().charAt(0).toUpperCase() || "W";
+}
+
+function roleLabel(role: MemberRole) {
+  return role.charAt(0) + role.slice(1).toLowerCase();
 }
 
 function getWorkspaceIdFromPath(pathname: string) {
@@ -323,6 +332,7 @@ export function Sidebar({
     () => workspaces.find((workspace) => workspace.id === workspaceId) ?? workspaces[0] ?? null,
     [workspaces, workspaceId],
   );
+  const canInviteMembers = currentWorkspace?.role === "OWNER";
 
   const closeMobile = useCallback(() => onCloseMobile(), [onCloseMobile]);
 
@@ -374,6 +384,7 @@ export function Sidebar({
     .toUpperCase();
 
   function handleLogout() {
+    disconnectRealtimeSocket();
     signOut({
       fetchOptions: {
         onSuccess: () => {
@@ -428,17 +439,26 @@ export function Sidebar({
                 <DropdownMenuItem
                   key={workspace.id}
                   onClick={() => router.push(`/workspaces/${workspace.id}`)}
-                  className="gap-2"
+                  className={cn(
+                    "items-start gap-2 rounded-md px-2 py-2",
+                    workspace.id === currentWorkspace?.id &&
+                      "bg-primary/10 text-primary data-highlighted:bg-primary/10 data-highlighted:text-primary",
+                  )}
                 >
-                  <Avatar className="size-6 rounded-md">
+                  <Avatar className="mt-0.5 size-7 rounded-md">
                     <AvatarImage src={DEFAULT_AVATAR_IMAGE} alt={workspace.name} />
                     <AvatarFallback className="rounded-md text-[10px] font-semibold">
                       {workspaceInitial(workspace.name)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="truncate">{workspace.name}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{workspace.name}</span>
+                    <span className="mt-1 inline-flex h-5 items-center rounded-full border border-primary/20 bg-primary/10 px-2 text-[10px] font-semibold text-primary">
+                      {roleLabel(workspace.role)}
+                    </span>
+                  </span>
                   {workspace.id === currentWorkspace?.id ? (
-                    <Check className="ml-auto h-4 w-4 shrink-0 text-primary" />
+                    <Check className="mt-1.5 h-4 w-4 shrink-0 text-primary" />
                   ) : null}
                 </DropdownMenuItem>
               ))
@@ -505,35 +525,36 @@ export function Sidebar({
       </nav>
 
       <div className="shrink-0 space-y-3 p-3">
-        <div className="rounded-md border border-sidebar-border bg-card p-3">
-          <p className="text-sm font-semibold text-foreground">Invite your team</p>
-          <p className="mt-1 text-[11px] leading-tight text-muted-foreground">
-            Collaborate on projects and get feedback together.
-          </p>
-          <AvatarGroup className="mt-3">
-            {[0, 1, 2].map((index) => (
-              <Avatar key={index} className="size-7 border border-border ring-2 ring-card">
-                <AvatarImage
-                  src={DEFAULT_AVATAR_IMAGE}
-                  alt={`Team member ${String.fromCharCode(65 + index)}`}
-                />
-                <AvatarFallback className="text-[10px] font-semibold">
-                  {String.fromCharCode(65 + index)}
-                </AvatarFallback>
-              </Avatar>
-            ))}
-          </AvatarGroup>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mt-3 w-full"
-            onClick={() => setInviteMembersOpen(true)}
-            disabled={!currentWorkspace}
-          >
-            Invite members
-          </Button>
-        </div>
+        {canInviteMembers ? (
+          <div className="rounded-md border border-sidebar-border bg-card p-3">
+            <p className="text-sm font-semibold text-foreground">Invite your team</p>
+            <p className="mt-1 text-[11px] leading-tight text-muted-foreground">
+              Collaborate on projects and get feedback together.
+            </p>
+            <AvatarGroup className="mt-3">
+              {[0, 1, 2].map((index) => (
+                <Avatar key={index} className="size-7 border border-border ring-2 ring-card">
+                  <AvatarImage
+                    src={DEFAULT_AVATAR_IMAGE}
+                    alt={`Team member ${String.fromCharCode(65 + index)}`}
+                  />
+                  <AvatarFallback className="text-[10px] font-semibold">
+                    {String.fromCharCode(65 + index)}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
+            </AvatarGroup>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-3 w-full"
+              onClick={() => setInviteMembersOpen(true)}
+            >
+              Invite members
+            </Button>
+          </div>
+        ) : null}
 
         <div className="relative">
           <button

@@ -2,10 +2,12 @@ import type { IssuePriority, IssueType, ReportStatus } from "@/types";
 
 export type ActivityEntry = {
   id: string;
-  kind: "reported" | "title_ai" | "status" | "priority" | "assignment";
+  kind: "reported" | "title_ai" | "status" | "priority" | "assignment" | "type";
   at: string;
   actorName?: string;
   issueType?: IssueType;
+  fromIssueType?: IssueType;
+  toIssueType?: IssueType;
   fromStatus?: ReportStatus;
   toStatus?: ReportStatus;
   fromPriority?: IssuePriority;
@@ -115,6 +117,8 @@ export function appendActivityLog(
     kind: entry.kind,
     actorName: entry.actorName,
     issueType: entry.issueType,
+    fromIssueType: entry.fromIssueType,
+    toIssueType: entry.toIssueType,
     fromStatus: entry.fromStatus,
     toStatus: entry.toStatus,
     fromPriority: entry.fromPriority,
@@ -134,7 +138,13 @@ export function mergeReportMetadata(
 }
 
 function isIssueType(value: unknown): value is IssueType {
-  return value === "BUG" || value === "IMPROVEMENT";
+  return (
+    value === "BUG" ||
+    value === "TASK" ||
+    value === "FEATURE" ||
+    value === "IMPROVEMENT" ||
+    value === "STORY"
+  );
 }
 
 function isIssuePriority(value: unknown): value is IssuePriority {
@@ -143,7 +153,7 @@ function isIssuePriority(value: unknown): value is IssuePriority {
     value === "LOW" ||
     value === "MEDIUM" ||
     value === "HIGH" ||
-    value === "URGENT"
+    value === "CRITICAL"
   );
 }
 

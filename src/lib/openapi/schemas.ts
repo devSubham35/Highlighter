@@ -289,12 +289,12 @@ export const openApiSchemas = {
   },
   IssueType: {
     type: "string",
-    enum: ["BUG", "IMPROVEMENT"],
+    enum: ["BUG", "TASK", "FEATURE", "IMPROVEMENT", "STORY"],
     example: "BUG",
   },
   IssuePriority: {
     type: "string",
-    enum: ["NONE", "LOW", "MEDIUM", "HIGH", "URGENT"],
+    enum: ["NONE", "LOW", "MEDIUM", "HIGH", "CRITICAL"],
     example: "MEDIUM",
   },
   ActivityEntry: {

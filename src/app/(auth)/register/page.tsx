@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signUp } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
@@ -11,15 +11,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { registerFormSchema, type RegisterFormData } from "@/lib/validations";
 import { ArrowRight, EyeOff, Lock, Mail, User } from "lucide-react";
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const inviteToken = searchParams.get("invite");
+  const invitedEmail = searchParams.get("email") ?? "";
   const [error, setError] = useState("");
 
   const methods = useForm<RegisterFormData>({
     resolver: zodResolver(registerFormSchema),
     defaultValues: {
       name: "",
-      email: "",
+      email: invitedEmail,
       password: "",
     },
     mode: "onSubmit",
@@ -39,7 +42,7 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push("/workspaces");
+    router.push(inviteToken ? `/invite/${encodeURIComponent(inviteToken)}` : "/workspaces");
   };
 
   return (
@@ -130,10 +133,21 @@ export default function RegisterPage() {
 
       <p className="mt-7 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link className="font-medium text-primary hover:underline" href="/login">
+        <Link
+          className="font-medium text-primary hover:underline"
+          href={inviteToken ? `/login?invite=${encodeURIComponent(inviteToken)}&email=${encodeURIComponent(invitedEmail)}` : "/login"}
+        >
           Sign in
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterPageContent />
+    </Suspense>
   );
 }

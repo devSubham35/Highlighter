@@ -1,4 +1,4 @@
-import { jsonError, requireSession } from "@/lib/api/helpers";
+import { projectAccessWhere, requireSession } from "@/lib/api/helpers";
 import { checkRateLimit, corsHeaders } from "@/lib/http";
 import { db } from "@/lib/db";
 import { createReportSchema } from "@/lib/validations";
@@ -54,9 +54,7 @@ export async function GET(req: NextRequest) {
       ...(status ? { status: status as never } : {}),
       ...(severity ? { severity: severity as never } : {}),
       ...(search ? { title: { contains: search, mode: "insensitive" } } : {}),
-      project: {
-        workspace: { memberships: { some: { userId: authResult.session.user.id } } },
-      },
+      project: projectAccessWhere(authResult.session.user.id),
     },
     include: { project: true },
     orderBy: { createdAt: "desc" },

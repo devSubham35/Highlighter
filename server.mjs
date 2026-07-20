@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { parse } from "node:url";
 import next from "next";
 import { Server as SocketIOServer } from "socket.io";
@@ -19,7 +20,38 @@ function cleanupExpiredTokens() {
   }
 }
 
+function realtimeSecret() {
+  return (
+    process.env.BETTER_AUTH_SECRET ??
+    process.env.AUTH_SECRET ??
+    process.env.NEXTAUTH_SECRET ??
+    "highlighter-development-realtime-secret"
+  );
+}
+
+function signTokenPayload(payload) {
+  return createHmac("sha256", realtimeSecret()).update(payload).digest("base64url");
+}
+
+function verifySignature(payload, signature) {
+  const expected = Buffer.from(signTokenPayload(payload));
+  const actual = Buffer.from(signature);
+  return expected.length === actual.length && timingSafeEqual(expected, actual);
+}
+
 function consumeToken(token) {
+  const [payload, signature] = token.split(".");
+  if (payload && signature && verifySignature(payload, signature)) {
+    try {
+      const entry = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+      if (entry.expiresAt > Date.now() && entry.userId) {
+        return { ...entry, token };
+      }
+    } catch {
+      return null;
+    }
+  }
+
   cleanupExpiredTokens();
   const entry = realtimeState.tokens.get(token);
   if (!entry) return null;
@@ -31,19 +63,58 @@ function projectRoom(projectId) {
   return `project:${projectId}`;
 }
 
-function issueRoom(projectId, issueId) {
-  return `project:${projectId}:issue:${issueId}`;
+function workspaceRoom(workspaceId) {
+  return `workspace:${workspaceId}`;
+}
+
+function issueRoom(issueId) {
+  return `issue:${issueId}`;
+}
+
+function roomsForToken(token) {
+  const rooms = [];
+  if (token.workspaceId) rooms.push(workspaceRoom(token.workspaceId));
+  if (token.projectId) rooms.push(projectRoom(token.projectId));
+  if (token.issueId) rooms.push(issueRoom(token.issueId));
+  return rooms;
 }
 
 await app.prepare();
 
 const server = createServer((req, res) => {
   const parsedUrl = parse(req.url, true);
+  if (req.method === "POST" && parsedUrl.pathname === "/__highlighter/realtime/publish") {
+    let body = "";
+    req.setEncoding("utf8");
+    req.on("data", (chunk) => {
+      body += chunk;
+      if (body.length > 1_000_000) req.destroy();
+    });
+    req.on("end", () => {
+      const signature = req.headers["x-realtime-signature"];
+      if (typeof signature !== "string" || !verifySignature(body, signature)) {
+        res.writeHead(401, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "Unauthorized" }));
+        return;
+      }
+
+      try {
+        realtimeState.broadcast?.(JSON.parse(body));
+        res.writeHead(204);
+        res.end();
+      } catch {
+        res.writeHead(400, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "Invalid payload" }));
+      }
+    });
+    return;
+  }
+
   void handle(req, res, parsedUrl);
 });
 
 const io = new SocketIOServer(server, {
-  path: "/api/realtime",
+  path: "/api/realtime/socket",
   serveClient: false,
 });
 
@@ -58,23 +129,52 @@ io.on("connection", (socket) => {
   }
 
   socket.data.subscription = {
+    workspaceId: token.workspaceId,
     projectId: token.projectId,
     issueId: token.issueId,
     userId: token.userId,
   };
 
-  if (token.issueId) {
-    socket.join(issueRoom(token.projectId, token.issueId));
-  } else {
-    socket.join(projectRoom(token.projectId));
-  }
+  socket.join(`user:${token.userId}`);
+  io.emit("user:connected", { userId: token.userId });
 
-  socket.emit("subscribed", { projectId: token.projectId, issueId: token.issueId });
+  socket.on("room:join", (payload) => {
+    const roomTokenValue = payload?.token;
+    const roomToken = typeof roomTokenValue === "string" ? consumeToken(roomTokenValue) : null;
+    if (!roomToken || roomToken.userId !== token.userId) {
+      socket.emit("realtime:error", { message: "Invalid room token" });
+      return;
+    }
+    const rooms = roomsForToken(roomToken);
+    rooms.forEach((room) => socket.join(room));
+    socket.emit("room:joined", {
+      workspaceId: roomToken.workspaceId,
+      projectId: roomToken.projectId,
+      issueId: roomToken.issueId,
+    });
+  });
+
+  socket.on("room:leave", (payload) => {
+    const workspaceId = typeof payload?.workspaceId === "string" ? payload.workspaceId : undefined;
+    const projectId = typeof payload?.projectId === "string" ? payload.projectId : undefined;
+    const issueId = typeof payload?.issueId === "string" ? payload.issueId : undefined;
+    if (workspaceId) socket.leave(workspaceRoom(workspaceId));
+    if (projectId) socket.leave(projectRoom(projectId));
+    if (issueId) socket.leave(issueRoom(issueId));
+  });
+
+  socket.on("disconnect", () => {
+    io.emit("user:disconnected", { userId: token.userId });
+  });
+
+  socket.emit("subscribed", { userId: token.userId });
 });
 
 realtimeState.broadcast = (event) => {
   io.to(projectRoom(event.projectId)).emit("issue:event", event);
-  io.to(issueRoom(event.projectId, event.issueId)).emit("issue:event", event);
+  io.to(projectRoom(event.projectId)).emit(event.type, event);
+  io.to(issueRoom(event.issueId)).emit("issue:event", event);
+  io.to(issueRoom(event.issueId)).emit(event.type, event);
 };
 
 const tokenCleanup = setInterval(() => {
@@ -87,5 +187,5 @@ io.engine.on("close", () => {
 
 server.listen(port, () => {
   console.log(`> Ready on http://${hostname}:${port}`);
-  console.log("> Socket.IO endpoint ready on /api/realtime");
+  console.log("> Socket.IO endpoint ready on /api/realtime/socket");
 });

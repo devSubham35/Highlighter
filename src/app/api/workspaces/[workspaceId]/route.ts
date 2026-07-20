@@ -1,7 +1,9 @@
 import {
+  canAccessAllWorkspaceProjects,
   getWorkspaceCounts,
   isWorkspaceNameTaken,
   jsonError,
+  projectAccessWhere,
   requireWorkspaceMembership,
 } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
@@ -31,8 +33,19 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/workspaces/
 
   if (!workspace) return jsonError("Not found", 404);
 
-  const counts = await getWorkspaceCounts(workspaceId);
   const canManage = access.membership.role === "ADMIN" || access.membership.role === "OWNER";
+  const projectWhere = canAccessAllWorkspaceProjects(access.membership.role)
+    ? { workspaceId, archived: false }
+    : {
+        workspaceId,
+        archived: false,
+        ...projectAccessWhere(access.session.user.id),
+      };
+  const [projectCount, memberCount, pendingInvites] = await Promise.all([
+    db.project.count({ where: projectWhere }),
+    db.membership.count({ where: { workspaceId } }),
+    db.invitation.count({ where: { workspaceId, status: "PENDING" } }),
+  ]);
 
   return NextResponse.json({
     id: workspace.id,
@@ -40,7 +53,9 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/workspaces/
     slug: workspace.slug,
     ownerId: workspace.ownerId,
     role: access.membership.role,
-    ...counts,
+    projectCount,
+    memberCount,
+    pendingInvites,
     createdAt: workspace.createdAt,
     updatedAt: workspace.updatedAt,
     members: workspace.memberships.map((membership) => ({

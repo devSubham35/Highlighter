@@ -11,11 +11,24 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const workspaces = await db.workspace.findMany({
     where: { memberships: { some: { userId: session.user.id } } },
     orderBy: { name: "asc" },
-    select: { id: true, name: true },
+    select: {
+      id: true,
+      name: true,
+      memberships: {
+        where: { userId: session.user.id },
+        select: { role: true },
+        take: 1,
+      },
+    },
   });
+  const sidebarWorkspaces = workspaces.map((workspace) => ({
+    id: workspace.id,
+    name: workspace.name,
+    role: workspace.memberships[0]?.role ?? "VIEWER",
+  }));
 
   return (
-    <DashboardShell user={session.user} workspaces={workspaces}>
+    <DashboardShell user={session.user} workspaces={sidebarWorkspaces}>
       {children}
     </DashboardShell>
   );

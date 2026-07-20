@@ -115,6 +115,9 @@ export function ActivityRow({
             toPriority={entry.toPriority}
           />
         ) : null}
+        {entry.kind === "type" && entry.toIssueType ? (
+          <TypeLine fromIssueType={entry.fromIssueType} toIssueType={entry.toIssueType} />
+        ) : null}
         {entry.kind === "assignment" ? (
           <AssignmentLine
             assigneeNames={entry.toAssigneeNames ?? []}
@@ -133,6 +136,27 @@ function ReportedLine({
   return (
     <p className="mt-1 text-[13px] font-medium leading-5 text-foreground">
       Reported this {ISSUE_TYPE_LABELS[issueType]}
+    </p>
+  );
+}
+
+function TypeLine({
+  fromIssueType,
+  toIssueType,
+}: {
+  fromIssueType?: IssueType;
+  toIssueType: IssueType;
+}) {
+  return (
+    <p className="mt-1 flex flex-wrap items-center gap-1.5 text-[13px] font-medium leading-5 text-foreground">
+      Updated the type
+      {fromIssueType ? (
+        <>
+          <span>{ISSUE_TYPE_LABELS[fromIssueType]}</span>
+          <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+        </>
+      ) : null}
+      <span>{ISSUE_TYPE_LABELS[toIssueType]}</span>
     </p>
   );
 }
