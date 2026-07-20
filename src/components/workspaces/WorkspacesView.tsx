@@ -60,18 +60,18 @@ function WorkspaceCard({ workspace }: { workspace: WorkspaceListItem }) {
           </p>
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/80 pt-4">
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <Badge variant="info" className="h-6 gap-1.5 rounded-full px-2.5 text-[11px]">
+        <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/80 pt-4">
+          <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+            <Badge variant="info" className="h-6 shrink-0 gap-1.5 rounded-full px-2 text-[11px]">
               <FolderKanban className="h-3.5 w-3.5" />
               {workspace.projectCount} {workspace.projectCount === 1 ? "project" : "projects"}
             </Badge>
-            <Badge variant="info" className="h-6 gap-1.5 rounded-full px-2.5 text-[11px]">
+            <Badge variant="info" className="h-6 shrink-0 gap-1.5 rounded-full px-2 text-[11px]">
               <Users className="h-3.5 w-3.5" />
               {workspace.memberCount} {workspace.memberCount === 1 ? "member" : "members"}
             </Badge>
           </div>
-          <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-primary/10 bg-primary/10 text-foreground">
+          <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-primary/10 bg-primary/10 text-foreground">
             <ArrowRight className="h-4 w-4" />
           </span>
         </div>
@@ -84,7 +84,7 @@ export function WorkspacesView({ workspaces }: { workspaces: WorkspaceListItem[]
   const [createOpen, setCreateOpen] = useState(false);
 
   return (
-    <ContentContainer>
+    <ContentContainer className="max-w-7xl">
       <div className="space-y-8">
         <PageHeader
           title="Workspaces"
@@ -118,7 +118,7 @@ export function WorkspacesView({ workspaces }: { workspaces: WorkspaceListItem[]
             </Button>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(16rem,17.5rem))]">
             {workspaces.map((workspace) => (
               <WorkspaceCard key={workspace.id} workspace={workspace} />
             ))}
