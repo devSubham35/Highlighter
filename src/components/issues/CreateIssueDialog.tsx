@@ -41,14 +41,18 @@ export function CreateIssueDialog({
   members,
   currentUserId,
   onCreated,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   projectId: string;
   defaultPageUrl: string | null;
   members: WorkspaceMember[];
   currentUserId: string;
   onCreated: (issue: IssueItem) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [pageUrl, setPageUrl] = useState(defaultPageUrl ?? "");
@@ -59,6 +63,7 @@ export function CreateIssueDialog({
   const [typeOpen, setTypeOpen] = useState(false);
   const [priorityOpen, setPriorityOpen] = useState(false);
   const [assigneeOpen, setAssigneeOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
 
   const assigneeItems = useMemo(
     () =>
@@ -93,7 +98,10 @@ export function CreateIssueDialog({
   }
 
   function handleOpenChange(nextOpen: boolean) {
-    setOpen(nextOpen);
+    if (controlledOpen === undefined) {
+      setUncontrolledOpen(nextOpen);
+    }
+    onOpenChange?.(nextOpen);
     if (!nextOpen) resetForm();
   }
 
@@ -124,13 +132,13 @@ export function CreateIssueDialog({
     const issue = (await response.json()) as IssueItem;
     onCreated(issue);
     toast.success("Issue created");
-    setOpen(false);
+    handleOpenChange(false);
     resetForm();
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <Button type="button" size="sm" onClick={() => setOpen(true)}>
+      <Button type="button" size="sm" onClick={() => handleOpenChange(true)}>
         <Plus className="h-4 w-4" />
         Create issue
       </Button>

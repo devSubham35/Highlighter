@@ -16,6 +16,7 @@ import { useIssueRealtime } from "@/lib/use-issue-realtime";
 import { cn } from "@/lib/utils";
 import type { ReportStatus } from "@/types";
 import { LayoutGrid, List, Search } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 export type ProjectListItem = {
@@ -44,6 +45,9 @@ export function ProjectsView({
   const [viewMode, setViewMode] = useState<ProjectViewMode>("grid");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<ProjectSort>(INITIAL_PROJECT_FILTERS.sortBy);
+  const [createOpen, setCreateOpen] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     let cancelled = false;
@@ -71,6 +75,12 @@ export function ProjectsView({
   useEffect(() => {
     window.localStorage.setItem(PROJECT_VIEW_MODE_STORAGE_KEY, viewMode);
   }, [viewMode]);
+
+  useEffect(() => {
+    if (searchParams.get("create") !== "project") return;
+    setCreateOpen(true);
+    router.replace(`/workspaces/${workspaceId}/projects`, { scroll: false });
+  }, [router, searchParams, workspaceId]);
 
   const activeCount = projectItems.filter((project) => !project.archived).length;
   const archivedCount = projectItems.filter((project) => project.archived).length;
@@ -199,7 +209,11 @@ export function ProjectsView({
             className="h-9 w-36 text-sm"
           />
 
-          <CreateProjectDialog workspaceId={workspaceId} />
+          <CreateProjectDialog
+            workspaceId={workspaceId}
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+          />
         </div>
       </div>
 

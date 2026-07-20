@@ -56,6 +56,7 @@ export function ProjectDetailsView({
   const [search, setSearch] = useState("");
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [createIssueOpen, setCreateIssueOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,6 +83,12 @@ export function ProjectDetailsView({
       cancelled = true;
     };
   }, [searchParams, issues]);
+
+  useEffect(() => {
+    if (searchParams.get("create") !== "issue") return;
+    setCreateIssueOpen(true);
+    router.replace(`/projects/${project.id}`, { scroll: false });
+  }, [project.id, router, searchParams]);
 
   const filteredIssues = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -193,6 +200,8 @@ export function ProjectDetailsView({
             defaultPageUrl={project.websiteUrl}
             members={members}
             currentUserId={currentUserId}
+            open={createIssueOpen}
+            onOpenChange={setCreateIssueOpen}
             onCreated={(issue) => {
               setIssues((current) => {
                 if (current.some((item) => item.id === issue.id)) return current;

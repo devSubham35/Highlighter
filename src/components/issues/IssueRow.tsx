@@ -128,8 +128,9 @@ export function IssueRow({
     <>
       <article
         onClick={onOpen}
-        className="group flex cursor-pointer items-center gap-3 rounded-2xl border border-border/70 bg-card px-3 py-3 shadow-[var(--shadow-surface)] transition-[background-color,box-shadow] duration-200 hover:bg-primary/5 dark:hover:bg-secondary/40"
+        className="group relative flex cursor-pointer items-center gap-3 overflow-hidden rounded-2xl border border-border/70 bg-card px-3 py-3 shadow-[var(--shadow-surface)] transition-[background-color,border-color,box-shadow] duration-200 hover:border-primary/20 hover:bg-muted/40 hover:shadow-md dark:hover:border-primary/25 dark:hover:bg-white/5"
       >
+        <span className="pointer-events-none absolute inset-y-3 left-0 w-1 rounded-r-full bg-primary opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
         <div className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-sidebar-border bg-muted">
           {issue.screenshotUrl ? (
             // eslint-disable-next-line @next/next/no-img-element

@@ -24,10 +24,19 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-export function CreateProjectDialog({ workspaceId }: { workspaceId: string }) {
+export function CreateProjectDialog({
+  workspaceId,
+  open: controlledOpen,
+  onOpenChange,
+}: {
+  workspaceId: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const [serverError, setServerError] = useState("");
+  const open = controlledOpen ?? uncontrolledOpen;
 
   const methods = useForm<CreateProjectFormData>({
     resolver: zodResolver(createProjectFormSchema),
@@ -39,7 +48,10 @@ export function CreateProjectDialog({ workspaceId }: { workspaceId: string }) {
   });
 
   function handleOpenChange(nextOpen: boolean) {
-    setOpen(nextOpen);
+    if (controlledOpen === undefined) {
+      setUncontrolledOpen(nextOpen);
+    }
+    onOpenChange?.(nextOpen);
     if (!nextOpen) {
       methods.reset();
       setServerError("");
@@ -67,7 +79,7 @@ export function CreateProjectDialog({ workspaceId }: { workspaceId: string }) {
 
     const created = (await response.json()) as { name?: string };
     methods.reset();
-    setOpen(false);
+    handleOpenChange(false);
     toast.success(
       "Project created",
       created.name ? `"${created.name}" is ready to collect feedback.` : undefined,

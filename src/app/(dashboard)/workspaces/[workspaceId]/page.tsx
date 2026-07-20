@@ -2,11 +2,14 @@ import { WorkspaceOverviewView } from "@/components/workspaces/WorkspaceOverview
 import { canAccessAllWorkspaceProjects, projectAccessWhere } from "@/lib/api/helpers";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { format, formatDistanceToNow, startOfMonth, subMonths } from "date-fns";
+import { addDays, endOfMonth, format, formatDistanceToNow, startOfDay, startOfMonth, startOfWeek, subDays, subMonths } from "date-fns";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { parseReportMetadata, type ActivityEntry } from "@/lib/report-metadata";
 import type { IssuePriority, IssueType, ReportStatus } from "@/types";
+
+type OverviewRange = "7d" | "30d" | "90d" | "1y";
+const overviewRanges: OverviewRange[] = ["7d", "30d", "90d", "1y"];
 
 const SERVER_STATUS_LABELS: Record<ReportStatus, string> = {
   OPEN: "Open",
@@ -33,10 +36,14 @@ const SERVER_TYPE_LABELS: Record<IssueType, string> = {
 
 export default async function WorkspaceOverviewPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ workspaceId: string }>;
+  searchParams: Promise<{ range?: string | string[] }>;
 }) {
   const { workspaceId } = await params;
+  const query = await searchParams;
+  const range = parseOverviewRange(query.range);
   const session = await auth.api.getSession({ headers: await headers() });
 
   const workspace = await db.workspace.findFirst({
@@ -64,7 +71,10 @@ export default async function WorkspaceOverviewPage({
     : { workspaceId: workspace.id, ...projectAccessWhere(session!.user.id) };
   const reportWhere = { project: projectWhere };
 
-  const chartStart = startOfMonth(subMonths(new Date(), 5));
+  const issueGraphs = Object.fromEntries(
+    overviewRanges.map((item) => [item, createIssueGraph(item)]),
+  ) as Record<OverviewRange, ReturnType<typeof createIssueGraph>>;
+  const chartStart = issueGraphs["1y"][0]?.start ?? startOfMonth(subMonths(new Date(), 11));
 
   const [
     activeProjects,
@@ -128,28 +138,16 @@ export default async function WorkspaceOverviewPage({
     }),
   ]);
 
-  const issueGraph = Array.from({ length: 6 }, (_, index) => {
-    const date = startOfMonth(subMonths(new Date(), 5 - index));
-    const key = format(date, "yyyy-MM");
-    return {
-      key,
-      label: format(date, "MMM"),
-      reported: 0,
-      resolved: 0,
-    };
-  });
-
-  const issueGraphMap = new Map(issueGraph.map((item) => [item.key, item]));
-
   recentReports.forEach((report) => {
-    const key = format(report.createdAt, "yyyy-MM");
-    const bucket = issueGraphMap.get(key);
-    if (!bucket) return;
+    overviewRanges.forEach((item) => {
+      const bucket = issueGraphs[item].find(
+        (point) => report.createdAt >= point.start && report.createdAt <= point.end,
+      );
+      if (!bucket) return;
 
-    bucket.reported += 1;
-    if (report.status === "RESOLVED" || report.status === "CLOSED") {
-      bucket.resolved += 1;
-    }
+      bucket.reported += 1;
+      incrementIssueGraphStatus(bucket, report.status);
+    });
   });
 
   const projectStats = visibleProjects.map((project) => {
@@ -232,6 +230,7 @@ export default async function WorkspaceOverviewPage({
 
   return (
     <WorkspaceOverviewView
+      workspaceId={workspace.id}
       workspaceName={workspace.name}
       currentUserName={session!.user.name}
       role={role}
@@ -241,14 +240,121 @@ export default async function WorkspaceOverviewPage({
         memberCount,
         resolvedReports,
       }}
-      issueGraph={issueGraph}
+      selectedRange={range}
+      issueGraphs={Object.fromEntries(
+        overviewRanges.map((item) => [
+          item,
+          issueGraphs[item].map(({ start, end, ...point }) => point),
+        ]),
+      ) as Record<
+        OverviewRange,
+        Array<{
+          key: string;
+          label: string;
+          reported: number;
+          open: number;
+          inProgress: number;
+          resolved: number;
+          closed: number;
+        }>
+      >}
       projectStats={projectStats}
       projectIds={visibleProjects.map((project) => project.id)}
+      issueProjects={visibleProjects.map((project) => ({
+        id: project.id,
+        name: project.name,
+      }))}
       recentIssues={recentIssues}
       recentActivity={recentActivity}
       teamMembers={teamMembers}
     />
   );
+}
+
+function parseOverviewRange(value: string | string[] | undefined): OverviewRange {
+  const input = Array.isArray(value) ? value[0] : value;
+  return input === "7d" || input === "30d" || input === "90d" || input === "1y"
+    ? input
+    : "30d";
+}
+
+function createIssueGraph(range: OverviewRange) {
+  const now = new Date();
+
+  if (range === "1y") {
+    const year = now.getFullYear();
+    return Array.from({ length: 12 }, (_, index) => {
+      const start = new Date(year, index, 1);
+      return {
+        key: format(start, "yyyy-MM"),
+        label: format(start, "MMM"),
+        start,
+        end: endOfMonth(start),
+        reported: 0,
+        open: 0,
+        inProgress: 0,
+        resolved: 0,
+        closed: 0,
+      };
+    });
+  }
+
+  if (range === "90d") {
+    return Array.from({ length: 3 }, (_, index) => {
+      const start = startOfMonth(subMonths(now, 2 - index));
+      return {
+        key: format(start, "yyyy-MM"),
+        label: format(start, "MMM"),
+        start,
+        end: endOfMonth(start),
+        reported: 0,
+        open: 0,
+        inProgress: 0,
+        resolved: 0,
+        closed: 0,
+      };
+    });
+  }
+
+  const config =
+    range === "7d"
+      ? { bucketCount: 7, bucketDays: 1 }
+      : { bucketCount: 6, bucketDays: 5 };
+  const firstDay =
+    range === "7d"
+      ? startOfWeek(now, { weekStartsOn: 1 })
+      : startOfDay(subDays(now, config.bucketCount * config.bucketDays - 1));
+
+  return Array.from({ length: config.bucketCount }, (_, index) => {
+    const start = addDays(firstDay, index * config.bucketDays);
+    const end = index === config.bucketCount - 1 ? now : new Date(addDays(start, config.bucketDays).getTime() - 1);
+    return {
+      key: format(start, "yyyy-MM-dd"),
+      label: config.bucketDays === 1 ? format(start, "EEE") : format(start, "MMM d"),
+      start,
+      end,
+      reported: 0,
+      open: 0,
+      inProgress: 0,
+      resolved: 0,
+      closed: 0,
+    };
+  });
+}
+
+function incrementIssueGraphStatus(
+  bucket: {
+    open: number;
+    inProgress: number;
+    resolved: number;
+    closed: number;
+  },
+  status: ReportStatus,
+) {
+  if (status === "OPEN") bucket.open += 1;
+  if (status === "IN_PROGRESS") bucket.inProgress += 1;
+  if (status === "RESOLVED") bucket.resolved += 1;
+  if (status === "CLOSED") bucket.closed += 1;
 }
 
 function activityLabel(entry: ActivityEntry, issueTitle: string) {

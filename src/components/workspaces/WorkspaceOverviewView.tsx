@@ -3,6 +3,16 @@
 import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Combobox } from "@/components/ui/combobox";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { RoleBadge } from "@/components/common/RoleBadge";
 import {
   ISSUE_PRIORITY_LABELS,
@@ -28,6 +38,7 @@ import {
   Send,
   Users,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 
@@ -42,7 +53,10 @@ export type WorkspaceIssueGraphPoint = {
   key: string;
   label: string;
   reported: number;
+  open: number;
+  inProgress: number;
   resolved: number;
+  closed: number;
 };
 
 export type WorkspaceProjectStats = {
@@ -51,6 +65,11 @@ export type WorkspaceProjectStats = {
   totalTickets: number;
   statusCounts: Record<ReportStatus, number>;
   lastUpdatedAt: string;
+};
+
+export type WorkspaceIssueProject = {
+  id: string;
+  name: string;
 };
 
 export type WorkspaceRecentIssue = {
@@ -84,6 +103,8 @@ export type WorkspaceTeamMember = {
   lastActiveLabel: string;
 };
 
+type OverviewRange = "7d" | "30d" | "90d" | "1y";
+
 const STATUS_SEGMENTS: Array<{
   status: ReportStatus;
   className: string;
@@ -92,9 +113,9 @@ const STATUS_SEGMENTS: Array<{
 }> = [
   {
     status: "OPEN",
-    className: "bg-blue-600",
-    dotClassName: "bg-blue-600",
-    softClassName: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+    className: "bg-primary",
+    dotClassName: "bg-primary",
+    softClassName: "bg-primary/10 text-primary dark:bg-primary/15",
   },
   {
     status: "IN_PROGRESS",
@@ -117,35 +138,45 @@ const STATUS_SEGMENTS: Array<{
 ];
 
 export function WorkspaceOverviewView({
+  workspaceId,
   workspaceName,
   currentUserName,
   role,
   stats,
-  issueGraph,
+  selectedRange,
+  issueGraphs,
   projectStats,
   projectIds,
+  issueProjects,
   recentIssues,
   recentActivity,
   teamMembers,
 }: {
+  workspaceId: string;
   workspaceName: string;
   currentUserName: string;
   role: MemberRole;
   stats: WorkspaceOverviewStats;
-  issueGraph: WorkspaceIssueGraphPoint[];
+  selectedRange: OverviewRange;
+  issueGraphs: Record<OverviewRange, WorkspaceIssueGraphPoint[]>;
   projectStats: WorkspaceProjectStats[];
   projectIds: string[];
+  issueProjects: WorkspaceIssueProject[];
   recentIssues: WorkspaceRecentIssue[];
   recentActivity: WorkspaceRecentActivity[];
   teamMembers: WorkspaceTeamMember[];
 }) {
   const [liveStats, setLiveStats] = useState(stats);
-  const [liveIssueGraph, setLiveIssueGraph] = useState(issueGraph);
+  const [activeRange, setActiveRange] = useState<OverviewRange>(selectedRange);
+  const [liveIssueGraphs, setLiveIssueGraphs] = useState(issueGraphs);
   const [liveProjectStats, setLiveProjectStats] = useState(projectStats);
   const [liveRecentIssues, setLiveRecentIssues] = useState(recentIssues);
+  const [issueProjectPickerOpen, setIssueProjectPickerOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => setLiveStats(stats), [stats]);
-  useEffect(() => setLiveIssueGraph(issueGraph), [issueGraph]);
+  useEffect(() => setActiveRange(selectedRange), [selectedRange]);
+  useEffect(() => setLiveIssueGraphs(issueGraphs), [issueGraphs]);
   useEffect(() => setLiveProjectStats(projectStats), [projectStats]);
   useEffect(() => setLiveRecentIssues(recentIssues), [recentIssues]);
 
@@ -159,7 +190,7 @@ export function WorkspaceOverviewView({
           ? current.resolvedReports + 1
           : current.resolvedReports,
       }));
-      setLiveIssueGraph((current) => incrementGraphBucket(current, event.issue.createdAt, event.issue.status));
+      setLiveIssueGraphs((current) => mapGraphRanges(current, (graph) => incrementGraphBucket(graph, event.issue.createdAt, event.issue.status)));
       setLiveProjectStats((current) => incrementProjectStatus(current, event.projectId, event.issue.status));
       setLiveRecentIssues((current) =>
         [
@@ -185,14 +216,16 @@ export function WorkspaceOverviewView({
         ...current,
         resolvedReports: applyResolvedDelta(current.resolvedReports, event.previousStatus, event.status),
       }));
-      setLiveIssueGraph((current) =>
-        current.map((point) =>
-          point.key === event.issue.createdAt.slice(0, 7)
-            ? {
-                ...point,
-                resolved: applyResolvedDelta(point.resolved, event.previousStatus, event.status),
-              }
-            : point,
+      setLiveIssueGraphs((current) =>
+        mapGraphRanges(current, (graph) =>
+          graph.map((point) =>
+            point.key === findGraphPointKey(graph, event.issue.createdAt)
+              ? {
+                  ...point,
+                  ...moveGraphStatusCount(point, event.previousStatus, event.status),
+                }
+              : point,
+          ),
         ),
       );
       setLiveProjectStats((current) =>
@@ -227,8 +260,9 @@ export function WorkspaceOverviewView({
   }
 
   const totalProjectTickets = liveProjectStats.reduce((sum, project) => sum + project.totalTickets, 0);
+  const liveIssueGraph = liveIssueGraphs[activeRange] ?? [];
   const totalRecentReports = liveIssueGraph.reduce((sum, item) => sum + item.reported, 0);
-  const totalRecentResolved = liveIssueGraph.reduce((sum, item) => sum + item.resolved, 0);
+  const totalRecentResolved = liveIssueGraph.reduce((sum, item) => sum + item.resolved + item.closed, 0);
   const totalStatusCounts = useMemo(
     () =>
       liveProjectStats.reduce<Record<ReportStatus, number>>(
@@ -253,7 +287,7 @@ export function WorkspaceOverviewView({
       <div className="space-y-5">
         <section className="overflow-hidden rounded-[18px] border border-border/80 bg-card shadow-sm transition-shadow hover:shadow-md dark:bg-surface-elevated">
           <div className="relative p-6 sm:p-7">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(79,70,229,0.16),transparent_32%),linear-gradient(135deg,rgba(79,70,229,0.08),rgba(34,197,94,0.07)_52%,transparent)]" />
+            <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-primary/5 to-transparent" />
             <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
               <div className="max-w-3xl">
                 <div className="flex flex-wrap items-center gap-2">
@@ -276,18 +310,39 @@ export function WorkspaceOverviewView({
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button className="rounded-xl bg-indigo-600 shadow-sm hover:bg-indigo-500">
+                <a
+                  href={`/workspaces/${workspaceId}/projects?create=project`}
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-primary px-3 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                >
                   <Plus className="h-4 w-4" />
                   New Project
-                </Button>
-                <Button variant="outline" className="rounded-xl bg-white/80 dark:bg-white/5">
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setIssueProjectPickerOpen(true)}
+                  className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-xl border border-primary/20 bg-white/80 px-3 text-sm font-medium text-foreground shadow-sm transition-colors hover:border-primary/30 hover:bg-muted/60 dark:bg-white/5"
+                >
                   <FileText className="h-4 w-4" />
                   Create Issue
-                </Button>
+                </button>
               </div>
             </div>
           </div>
         </section>
+
+        <CreateIssueProjectDialog
+          open={issueProjectPickerOpen}
+          onOpenChange={setIssueProjectPickerOpen}
+          projects={issueProjects}
+          onContinue={(projectId) => {
+            setIssueProjectPickerOpen(false);
+            router.push(`/projects/${projectId}?create=issue`);
+          }}
+          onCreateProject={() => {
+            setIssueProjectPickerOpen(false);
+            router.push(`/workspaces/${workspaceId}/projects?create=project`);
+          }}
+        />
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard
@@ -327,6 +382,8 @@ export function WorkspaceOverviewView({
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-5">
             <IssueAnalyticsCard
+              selectedRange={activeRange}
+              onRangeChange={setActiveRange}
               graph={liveIssueGraph}
               totalReported={totalRecentReports}
               totalResolved={totalRecentResolved}
@@ -351,7 +408,7 @@ export function WorkspaceOverviewView({
           <aside className="space-y-5">
             <RecentActivityPanel activities={recentActivity} />
             <TeamWidget members={teamMembers} />
-            <RecentIssuesCard issues={liveRecentIssues} />
+            <RecentIssuesCard workspaceId={workspaceId} issues={liveRecentIssues} />
           </aside>
         </div>
       </div>
@@ -373,6 +430,86 @@ function WorkspaceOverviewRealtimeBridge({
   });
 
   return null;
+}
+
+function CreateIssueProjectDialog({
+  open,
+  onOpenChange,
+  projects,
+  onContinue,
+  onCreateProject,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  projects: WorkspaceIssueProject[];
+  onContinue: (projectId: string) => void;
+  onCreateProject: () => void;
+}) {
+  const [projectId, setProjectId] = useState("");
+
+  useEffect(() => {
+    if (!open) {
+      setProjectId("");
+      return;
+    }
+    setProjectId((current) => current || projects[0]?.id || "");
+  }, [open, projects]);
+
+  const projectOptions = projects.map((project) => ({
+    value: project.id,
+    label: project.name,
+  }));
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent showCloseButton className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create issue</DialogTitle>
+          <DialogDescription>Select the project where this issue should be created.</DialogDescription>
+        </DialogHeader>
+        <DialogBody className="space-y-2">
+          {projects.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-6 text-center">
+              <p className="text-sm font-medium text-foreground">No projects available</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Create a project first, then add issues to it.
+              </p>
+            </div>
+          ) : (
+            <label className="block space-y-2">
+              <span className="block text-sm font-medium text-foreground">Project</span>
+              <Combobox
+                value={projectId}
+                onValueChange={setProjectId}
+                options={projectOptions}
+                placeholder="Select project"
+                searchPlaceholder="Search projects..."
+                emptyMessage="No projects found"
+                className="w-full"
+              />
+            </label>
+          )}
+        </DialogBody>
+        <DialogFooter>
+          {projects.length === 0 ? (
+            <Button type="button" onClick={onCreateProject}>
+              <Plus className="h-4 w-4" />
+              New Project
+            </Button>
+          ) : (
+            <>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="button" disabled={!projectId} onClick={() => onContinue(projectId)}>
+                Continue
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function HeroStat({ label, value }: { label: string; value: number }) {
@@ -400,13 +537,13 @@ function MetricCard({
   spark: number[];
 }) {
   return (
-    <section className="group rounded-[18px] border border-border/80 bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md dark:bg-surface-elevated dark:hover:border-indigo-500/30">
+    <section className="group rounded-[18px] border border-border/80 bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md dark:bg-surface-elevated">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-muted-foreground">{label}</p>
           <p className="mt-4 text-3xl font-semibold text-foreground">{value}</p>
         </div>
-        <span className="flex size-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition-colors group-hover:bg-indigo-600 group-hover:text-white dark:bg-indigo-500/10 dark:text-indigo-300">
+        <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
           <Icon className="h-4 w-4" />
         </span>
       </div>
@@ -429,7 +566,7 @@ function Sparkline({ values }: { values: number[] }) {
       {values.map((value, index) => (
         <span
           key={`${value}-${index}`}
-          className="w-1.5 rounded-full bg-indigo-500/25 transition-colors group-hover:bg-indigo-500/60"
+          className="w-1.5 rounded-full bg-primary/20 transition-colors group-hover:bg-primary/60"
           style={{ height: `${Math.max(value, 12)}%` }}
         />
       ))}
@@ -438,14 +575,25 @@ function Sparkline({ values }: { values: number[] }) {
 }
 
 function IssueAnalyticsCard({
+  selectedRange,
+  onRangeChange,
   graph,
   totalReported,
   totalResolved,
 }: {
+  selectedRange: OverviewRange;
+  onRangeChange: (range: OverviewRange) => void;
   graph: WorkspaceIssueGraphPoint[];
   totalReported: number;
   totalResolved: number;
 }) {
+  const filters: Array<{ value: OverviewRange; label: string }> = [
+    { value: "7d", label: "7 Days" },
+    { value: "30d", label: "30 Days" },
+    { value: "90d", label: "90 Days" },
+    { value: "1y", label: "1 Year" },
+  ];
+
   return (
     <section className="rounded-[18px] border border-border/80 bg-card p-5 shadow-sm dark:bg-surface-elevated">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -456,25 +604,29 @@ function IssueAnalyticsCard({
           </p>
         </div>
         <div className="flex rounded-xl border border-border bg-muted/30 p-1 text-xs">
-          {["7 Days", "30 Days", "90 Days", "1 Year"].map((filter, index) => (
+          {filters.map((filter) => (
             <button
-              key={filter}
-              className={cn(
-                "rounded-lg px-3 py-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground",
-                index === 1 && "bg-card text-foreground shadow-sm",
-              )}
+              key={filter.value}
               type="button"
+              onClick={() => onRangeChange(filter.value)}
+              className={cn(
+                "cursor-pointer rounded-lg px-3 py-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground",
+                selectedRange === filter.value && "bg-card text-foreground shadow-sm",
+              )}
             >
-              {filter}
+              {filter.label}
             </button>
           ))}
         </div>
       </div>
       <div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-        <LegendDot className="bg-indigo-500" label="Reported" />
-        <LegendDot className="bg-blue-600" label="Open" />
-        <LegendDot className="bg-emerald-500" label="Resolved" />
-        <LegendDot className="bg-slate-500" label="Closed" />
+        {STATUS_SEGMENTS.map((segment) => (
+          <LegendDot
+            key={segment.status}
+            className={segment.dotClassName}
+            label={ISSUE_STATUS_LABELS[segment.status]}
+          />
+        ))}
       </div>
       <IssueTrendChart graph={graph} />
     </section>
@@ -482,50 +634,90 @@ function IssueAnalyticsCard({
 }
 
 function IssueTrendChart({ graph }: { graph: WorkspaceIssueGraphPoint[] }) {
-  const width = 760;
-  const height = 230;
-  const paddingX = 34;
+  const width = 1000;
+  const height = 260;
+  const paddingX = 36;
   const paddingTop = 18;
-  const baseline = 176;
-  const maxValue = Math.max(...graph.flatMap((point) => [point.reported, point.resolved]), 1);
+  const baseline = 194;
+  const maxValue = Math.max(
+    ...graph.flatMap((point) => [point.open, point.inProgress, point.resolved, point.closed]),
+    1,
+  );
+  const bucketWidth = (width - paddingX * 2) / Math.max(graph.length, 1);
+  const barWidth = Math.min(Math.max(bucketWidth * 0.12, 7), 16);
+  const barGap = Math.min(Math.max(bucketWidth * 0.035, 3), 6);
+  const groupWidth = STATUS_SEGMENTS.length * barWidth + (STATUS_SEGMENTS.length - 1) * barGap;
+  const yAxisTicks = buildYAxisTicks(maxValue, paddingTop, baseline);
   const points = graph.map((point, index) => {
-    const x = paddingX + (index * (width - paddingX * 2)) / Math.max(graph.length - 1, 1);
-    const reportedY = baseline - (point.reported / maxValue) * (baseline - paddingTop);
-    const resolvedY = baseline - (point.resolved / maxValue) * (baseline - paddingTop);
-    return { ...point, x, reportedY, resolvedY };
+    const x = paddingX + bucketWidth * index + bucketWidth / 2;
+    const statusValues = getGraphStatusValues(point);
+    const minY = Math.min(
+      ...statusValues
+        .filter((status) => status.value > 0)
+        .map((status) => baseline - (status.value / maxValue) * (baseline - paddingTop)),
+      baseline,
+    );
+    return {
+      ...point,
+      x,
+      minY,
+      statusValues,
+    };
   });
-  const reportedLine = buildLinePath(points.map((point) => [point.x, point.reportedY]));
-  const resolvedLine = buildLinePath(points.map((point) => [point.x, point.resolvedY]));
-  const reportedArea = `${reportedLine} L ${points.at(-1)?.x ?? paddingX} ${baseline} L ${points[0]?.x ?? paddingX} ${baseline} Z`;
 
   return (
-    <div className="mt-4 overflow-visible rounded-2xl bg-muted/20 p-4">
+    <div className="mt-4 overflow-visible rounded-2xl bg-linear-to-b from-primary/5 to-transparent px-2 py-4">
       <div className="relative overflow-visible">
-        <svg className="h-[250px] w-full overflow-visible" viewBox={`0 0 ${width} ${height}`} role="img">
+        <svg className="h-[270px] w-full overflow-visible" viewBox={`0 0 ${width} ${height}`} role="img">
           <defs>
-            <linearGradient id="reported-fill" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="#4F46E5" stopOpacity="0.22" />
-              <stop offset="100%" stopColor="#4F46E5" stopOpacity="0.02" />
-            </linearGradient>
+            <filter id="chart-shadow" x="-10%" y="-10%" width="120%" height="130%">
+              <feDropShadow dx="0" dy="6" stdDeviation="7" floodColor="var(--primary)" floodOpacity="0.12" />
+            </filter>
           </defs>
-          {[0, 0.5, 1].map((line) => (
-            <line
-              key={line}
-              x1={paddingX}
-              x2={width - paddingX}
-              y1={paddingTop + line * (baseline - paddingTop)}
-              y2={paddingTop + line * (baseline - paddingTop)}
-              className="stroke-border"
-              strokeWidth="1"
-            />
+          {yAxisTicks.map((tick, index) => (
+            <g key={tick.value}>
+              <text
+                x={0}
+                y={tick.y + 4}
+                textAnchor="start"
+                className="fill-muted-foreground text-[10px]"
+              >
+                {tick.value}
+              </text>
+              <line
+                x1={paddingX}
+                x2={width - paddingX}
+                y1={tick.y}
+                y2={tick.y}
+                className="stroke-border/70"
+                strokeWidth="1"
+                strokeDasharray={index === yAxisTicks.length - 1 ? "0" : "4 8"}
+              />
+            </g>
           ))}
-          <path d={reportedArea} fill="url(#reported-fill)" />
-          <path d={reportedLine} fill="none" stroke="#4F46E5" strokeLinecap="round" strokeWidth="3" />
-          <path d={resolvedLine} fill="none" stroke="#22C55E" strokeLinecap="round" strokeWidth="3" />
           {points.map((point) => (
             <g key={point.key}>
-              <circle cx={point.x} cy={point.reportedY} r="4" fill="#4F46E5" />
-              <circle cx={point.x} cy={point.resolvedY} r="4" fill="#22C55E" />
+              {point.statusValues.map((statusValue, statusIndex) => {
+                const barHeight = (statusValue.value / maxValue) * (baseline - paddingTop);
+                const barX = point.x - groupWidth / 2 + statusIndex * (barWidth + barGap);
+                const barY = baseline - barHeight;
+
+                return (
+                  <path
+                    key={statusValue.status}
+                    d={topRoundedBarPath(
+                      barX,
+                      barY,
+                      barWidth,
+                      Math.max(barHeight, statusValue.value > 0 ? 6 : 0),
+                      6,
+                    )}
+                    fill={statusValue.fill}
+                    opacity={statusValue.status === "OPEN" ? 0.92 : 0.86}
+                    filter={statusValue.status === "OPEN" ? "url(#chart-shadow)" : undefined}
+                  />
+                );
+              })}
               <text x={point.x} y={baseline + 28} textAnchor="middle" className="fill-muted-foreground text-[11px]">
                 {point.label}
               </text>
@@ -534,7 +726,13 @@ function IssueTrendChart({ graph }: { graph: WorkspaceIssueGraphPoint[] }) {
         </svg>
         <div className="absolute inset-0">
           {points.map((point) => (
-            <ChartHoverPoint key={point.key} point={point} left={(point.x / width) * 100} top={(point.reportedY / height) * 100} />
+            <ChartHoverPoint
+              key={point.key}
+              point={point}
+              left={(point.x / width) * 100}
+              top={(point.minY / height) * 100}
+              widthPercent={100 / Math.max(points.length, 1)}
+            />
           ))}
         </div>
       </div>
@@ -546,29 +744,55 @@ function ChartHoverPoint({
   point,
   left,
   top,
+  widthPercent,
 }: {
   point: WorkspaceIssueGraphPoint;
   left: number;
   top: number;
+  widthPercent: number;
 }) {
   return (
     <span
-      className="group absolute z-20 size-10 -translate-x-1/2 -translate-y-1/2 rounded-full"
-      style={{ left: `${left}%`, top: `${top}%` }}
+      className="group absolute top-0 z-20 h-full -translate-x-1/2 cursor-pointer rounded-full"
+      style={{ left: `${left}%`, width: `${widthPercent}%` }}
     >
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 hidden w-44 -translate-x-1/2 rounded-xl border border-border bg-white p-3 text-xs text-foreground opacity-100 shadow-xl dark:bg-neutral-950 group-hover:block">
+      <span className="pointer-events-none absolute top-4 left-1/2 hidden h-[194px] w-px -translate-x-1/2 bg-primary/20 group-hover:block" />
+      <span
+        className="pointer-events-none absolute left-1/2 z-30 hidden w-44 -translate-x-1/2 rounded-xl border border-border bg-white p-3 text-xs text-foreground opacity-100 shadow-xl dark:bg-neutral-950 group-hover:block"
+        style={{ top: `max(0.5rem, calc(${top}% - 5.5rem))` }}
+      >
         <span className="block font-semibold">{point.label}</span>
-        <span className="mt-2 flex items-center justify-between">
-          <LegendDot className="bg-indigo-500" label="Reported" />
-          <span className="font-semibold">{point.reported}</span>
-        </span>
-        <span className="mt-1.5 flex items-center justify-between">
-          <LegendDot className="bg-emerald-500" label="Resolved" />
-          <span className="font-semibold">{point.resolved}</span>
-        </span>
+        {getGraphStatusValues(point).map((statusValue) => (
+          <span key={statusValue.status} className="mt-1.5 flex items-center justify-between">
+            <LegendDot className={statusValue.dotClassName} label={ISSUE_STATUS_LABELS[statusValue.status]} />
+            <span className="font-semibold">{statusValue.value}</span>
+          </span>
+        ))}
       </span>
     </span>
   );
+}
+
+function getGraphStatusValues(point: WorkspaceIssueGraphPoint) {
+  const fills: Record<ReportStatus, string> = {
+    OPEN: "var(--primary)",
+    IN_PROGRESS: "#F59E0B",
+    RESOLVED: "#22C55E",
+    CLOSED: "#64748B",
+  };
+  const values: Record<ReportStatus, number> = {
+    OPEN: point.open,
+    IN_PROGRESS: point.inProgress,
+    RESOLVED: point.resolved,
+    CLOSED: point.closed,
+  };
+
+  return STATUS_SEGMENTS.map((segment) => ({
+    status: segment.status,
+    value: values[segment.status],
+    fill: fills[segment.status],
+    dotClassName: segment.dotClassName,
+  }));
 }
 
 function StatusSummaryCard({
@@ -640,13 +864,13 @@ function ProjectHealthOverview({
 function ProjectHealthRow({ project }: { project: WorkspaceProjectStats }) {
   const health = getProjectHealth(project);
   return (
-    <button
-      type="button"
-      className="grid w-full gap-4 px-4 py-4 text-left transition-colors hover:bg-indigo-50/70 dark:hover:bg-indigo-500/10 lg:grid-cols-[minmax(14rem,1fr)_minmax(18rem,1.4fr)_8rem_7rem]"
+    <a
+      href={`/projects/${project.id}`}
+      className="grid w-full gap-4 px-4 py-4 text-left transition-colors hover:bg-primary/10 lg:grid-cols-[minmax(14rem,1fr)_minmax(18rem,1.4fr)_8rem_7rem]"
     >
       <div className="flex min-w-0 items-center gap-3">
         <Avatar className="size-10 rounded-xl">
-          <AvatarFallback className="rounded-xl bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
+          <AvatarFallback className="rounded-xl bg-primary/10 text-primary">
             {initials(project.name)}
           </AvatarFallback>
         </Avatar>
@@ -677,7 +901,7 @@ function ProjectHealthRow({ project }: { project: WorkspaceProjectStats }) {
         <p className="text-xs text-muted-foreground">Issues</p>
         <p className="mt-1 text-xl font-semibold text-foreground">{project.totalTickets}</p>
       </div>
-    </button>
+    </a>
   );
 }
 
@@ -709,12 +933,23 @@ function SegmentedStatusBar({ project }: { project: WorkspaceProjectStats }) {
   );
 }
 
-function RecentIssuesCard({ issues }: { issues: WorkspaceRecentIssue[] }) {
+function RecentIssuesCard({
+  workspaceId,
+  issues,
+}: {
+  workspaceId: string;
+  issues: WorkspaceRecentIssue[];
+}) {
   return (
     <section className="rounded-[18px] border border-border/80 bg-card p-5 shadow-sm dark:bg-surface-elevated">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold text-foreground">Recent Issues</h2>
-        <Button variant="ghost" size="sm" className="rounded-xl text-muted-foreground">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="rounded-xl text-muted-foreground"
+          render={<a href={`/workspaces/${workspaceId}/projects`} />}
+        >
           View all
           <ArrowUpRight className="h-4 w-4" />
         </Button>
@@ -726,9 +961,10 @@ function RecentIssuesCard({ issues }: { issues: WorkspaceRecentIssue[] }) {
           </div>
         ) : (
           issues.map((issue) => (
-            <div
+            <a
               key={issue.id}
-              className="group flex items-start justify-between gap-4 rounded-2xl border border-transparent px-3 py-2.5 transition-all hover:border-indigo-100 hover:bg-indigo-50/70 dark:hover:border-indigo-500/20 dark:hover:bg-indigo-500/10"
+              href={`/projects/${issue.projectId}?issue=${issue.id}`}
+              className="group flex items-start justify-between gap-4 rounded-2xl border border-transparent px-3 py-2.5 transition-all hover:border-primary/20 hover:bg-primary/10"
             >
               <div className="min-w-0 flex-1">
                 <div className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -751,11 +987,11 @@ function RecentIssuesCard({ issues }: { issues: WorkspaceRecentIssue[] }) {
                 </p>
               </div>
               <div className="flex shrink-0 items-center">
-                <Button variant="outline" size="icon-sm" className="rounded-xl opacity-0 transition-opacity group-hover:opacity-100">
+                <span className="inline-flex size-9 items-center justify-center rounded-xl border border-border bg-card opacity-0 transition-opacity group-hover:opacity-100">
                   <Send className="h-4 w-4" />
-                </Button>
+                </span>
               </div>
-            </div>
+            </a>
           ))
         )}
       </div>
@@ -916,16 +1152,92 @@ function applyResolvedDelta(current: number, previousStatus: ReportStatus, nextS
 }
 
 function incrementGraphBucket(graph: WorkspaceIssueGraphPoint[], createdAt: string, status: ReportStatus) {
-  const key = createdAt.slice(0, 7);
+  const key = findGraphPointKey(graph, createdAt);
   return graph.map((point) =>
     point.key === key
       ? {
           ...point,
           reported: point.reported + 1,
-          resolved: isResolvedStatus(status) ? point.resolved + 1 : point.resolved,
+          ...incrementGraphStatusCount(point, status),
         }
       : point,
   );
+}
+
+function incrementGraphStatusCount(point: WorkspaceIssueGraphPoint, status: ReportStatus) {
+  return {
+    open: point.open + (status === "OPEN" ? 1 : 0),
+    inProgress: point.inProgress + (status === "IN_PROGRESS" ? 1 : 0),
+    resolved: point.resolved + (status === "RESOLVED" ? 1 : 0),
+    closed: point.closed + (status === "CLOSED" ? 1 : 0),
+  };
+}
+
+function moveGraphStatusCount(
+  point: WorkspaceIssueGraphPoint,
+  previousStatus: ReportStatus,
+  nextStatus: ReportStatus,
+) {
+  const next = {
+    open: point.open,
+    inProgress: point.inProgress,
+    resolved: point.resolved,
+    closed: point.closed,
+  };
+  const keys: Record<ReportStatus, keyof typeof next> = {
+    OPEN: "open",
+    IN_PROGRESS: "inProgress",
+    RESOLVED: "resolved",
+    CLOSED: "closed",
+  };
+
+  next[keys[previousStatus]] = Math.max(next[keys[previousStatus]] - 1, 0);
+  next[keys[nextStatus]] += 1;
+  return next;
+}
+
+function mapGraphRanges(
+  graphs: Record<OverviewRange, WorkspaceIssueGraphPoint[]>,
+  mapper: (graph: WorkspaceIssueGraphPoint[]) => WorkspaceIssueGraphPoint[],
+) {
+  return {
+    "7d": mapper(graphs["7d"]),
+    "30d": mapper(graphs["30d"]),
+    "90d": mapper(graphs["90d"]),
+    "1y": mapper(graphs["1y"]),
+  };
+}
+
+function findGraphPointKey(graph: WorkspaceIssueGraphPoint[], createdAt: string) {
+  const dayKey = createdAt.slice(0, 10);
+  const monthKey = createdAt.slice(0, 7);
+  return graph.find((point) => point.key === dayKey || point.key === monthKey)?.key ?? graph.at(-1)?.key;
+}
+
+function buildYAxisTicks(maxValue: number, paddingTop: number, baseline: number) {
+  const values = maxValue <= 1 ? [1, 0] : [maxValue, Math.ceil(maxValue / 2), 0];
+  const uniqueValues = Array.from(new Set(values));
+
+  return uniqueValues.map((value) => ({
+    value,
+    y: baseline - (value / Math.max(maxValue, 1)) * (baseline - paddingTop),
+  }));
+}
+
+function topRoundedBarPath(x: number, y: number, width: number, height: number, radius: number) {
+  if (height <= 0) return "";
+  const r = Math.min(radius, width / 2, height);
+  const bottom = y + height;
+
+  return [
+    `M ${x} ${bottom}`,
+    `L ${x} ${y + r}`,
+    `Q ${x} ${y} ${x + r} ${y}`,
+    `L ${x + width - r} ${y}`,
+    `Q ${x + width} ${y} ${x + width} ${y + r}`,
+    `L ${x + width} ${bottom}`,
+    "Z",
+  ].join(" ");
 }
 
 function incrementProjectStatus(projectStats: WorkspaceProjectStats[], projectId: string, status: ReportStatus) {
@@ -959,11 +1271,6 @@ function getProjectHealth(project: WorkspaceProjectStats) {
   const healthy = project.statusCounts.RESOLVED + project.statusCounts.CLOSED;
   const inMotion = project.statusCounts.IN_PROGRESS * 0.45;
   return Math.round(((healthy + inMotion) / project.totalTickets) * 100);
-}
-
-function buildLinePath(points: Array<[number, number]>) {
-  if (points.length === 0) return "";
-  return points.map(([x, y], index) => `${index === 0 ? "M" : "L"} ${x} ${y}`).join(" ");
 }
 
 function initials(value: string) {
