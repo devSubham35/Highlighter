@@ -158,9 +158,11 @@ export function ProjectCard({
       <Card
         onClick={navigateToProject}
         className={cn(
-          "cursor-pointer border border-border/60 bg-muted/40 shadow-[var(--shadow-surface)] surface-interactive hover:bg-muted/40 dark:bg-muted/40 dark:hover:bg-muted/40",
-          variant === "list" && "p-4",
-          variant === "grid" && "gap-0 overflow-hidden p-0",
+          "cursor-pointer border shadow-[var(--shadow-surface)] transition-[border-color,box-shadow] duration-200",
+          variant === "list" &&
+            "border-border/80 bg-card p-4 hover:border-primary/30 hover:shadow-md dark:border-border/60 dark:bg-surface-elevated dark:hover:border-primary/35",
+          variant === "grid" &&
+            "gap-0 overflow-hidden border-border/60 bg-card p-0 surface-interactive dark:bg-muted/40",
         )}
       >
         {variant === "grid" ? (

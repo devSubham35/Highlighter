@@ -18,6 +18,7 @@ interface RHFTextFieldProps {
   prefix?: string;
   fullWidth?: boolean;
   className?: string;
+  labelClassName?: string;
 }
 
 const PREFIX_CHIP =
@@ -36,6 +37,7 @@ function RHFTextField({
   prefix,
   fullWidth,
   className,
+  labelClassName,
 }: RHFTextFieldProps) {
   const { control } = useFormContext();
 
@@ -67,6 +69,7 @@ function RHFTextField({
             helperText={helperText}
             fullWidth={fullWidth}
             className={className}
+            labelClassName={labelClassName}
           >
             {prefix ? (
               <div className="flex items-stretch">

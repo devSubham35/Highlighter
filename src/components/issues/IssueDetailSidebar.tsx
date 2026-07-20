@@ -337,6 +337,7 @@ export function IssueDetailSidebar({
 
         <CollapsibleSection
           title="Session environment"
+          defaultOpen
           trailing={
             <SessionIcons os={detail.os} browser={detail.browser} device={detail.device} />
           }

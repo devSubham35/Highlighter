@@ -12,6 +12,7 @@ export interface FieldShellProps {
   helperText?: React.ReactNode;
   fullWidth?: boolean;
   className?: string;
+  labelClassName?: string;
   children: React.ReactNode;
 }
 
@@ -27,13 +28,14 @@ function FieldShell({
   helperText,
   fullWidth,
   className,
+  labelClassName,
   children,
 }: FieldShellProps) {
   return (
     <div className={cn('space-y-1.5', fullWidth && 'col-span-full', className)}>
       {label && (
         <div className="flex items-center gap-1.5">
-          <Label className="text-sm font-medium text-foreground/80">
+          <Label className={cn("text-sm font-medium text-foreground/80", labelClassName)}>
             {label}
             {required && <span className="text-destructive"> *</span>}
           </Label>

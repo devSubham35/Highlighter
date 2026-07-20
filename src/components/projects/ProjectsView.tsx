@@ -230,7 +230,7 @@ export function ProjectsView({
           className={cn(
             viewMode === "grid"
               ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6"
-              : "flex flex-col gap-3",
+              : "flex flex-col gap-3.5",
           )}
         >
           {filteredProjects.map((project) => (

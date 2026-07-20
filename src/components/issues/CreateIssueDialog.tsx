@@ -150,7 +150,7 @@ export function CreateIssueDialog({
           </DialogHeader>
           <DialogBody className="space-y-5">
             <label className="block space-y-2">
-              <span className="block text-sm font-medium text-foreground">Title</span>
+              <span className="block text-xs font-medium text-foreground">Title</span>
               <Input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
@@ -160,7 +160,7 @@ export function CreateIssueDialog({
             </label>
 
             <label className="block space-y-2">
-              <span className="block text-sm font-medium text-foreground">Page URL</span>
+              <span className="block text-xs font-medium text-foreground">Page URL</span>
               <Input
                 value={pageUrl}
                 onChange={(event) => setPageUrl(event.target.value)}
@@ -171,7 +171,7 @@ export function CreateIssueDialog({
             </label>
 
             <label className="block space-y-2">
-              <span className="block text-sm font-medium text-foreground">Description</span>
+              <span className="block text-xs font-medium text-foreground">Description</span>
               <Textarea
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
@@ -272,7 +272,7 @@ export function CreateIssueDialog({
 function FieldPicker({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="space-y-2">
-      <span className="block text-sm font-medium text-foreground">{label}</span>
+      <span className="block text-xs font-medium text-foreground">{label}</span>
       {children}
     </div>
   );

@@ -109,12 +109,14 @@ export function CreateProjectDialog({
               label="Website URL"
               type="text"
               placeholder="https://example.com"
+              labelClassName="text-xs"
               required
             />
             <RHFTextField
               name="name"
               label="Display name"
               placeholder="Marketing site"
+              labelClassName="text-xs"
               required
             />
             {serverError ? <p className="text-sm text-destructive">{serverError}</p> : null}
