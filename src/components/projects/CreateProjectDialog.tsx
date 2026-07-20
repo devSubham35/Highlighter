@@ -17,6 +17,7 @@ import {
   createProjectFormSchema,
   type CreateProjectFormData,
 } from "@/lib/validations";
+import { toast } from "@/lib/toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -58,12 +59,19 @@ export function CreateProjectDialog({ workspaceId }: { workspaceId: string }) {
     });
 
     if (!response.ok) {
-      setServerError("Could not create project. Check the website URL and try again.");
+      const message = "Could not create project. Check the website URL and try again.";
+      setServerError(message);
+      toast.error("Project creation failed", message);
       return;
     }
 
+    const created = (await response.json()) as { name?: string };
     methods.reset();
     setOpen(false);
+    toast.success(
+      "Project created",
+      created.name ? `"${created.name}" is ready to collect feedback.` : undefined,
+    );
     router.refresh();
   }
 
@@ -71,7 +79,7 @@ export function CreateProjectDialog({ workspaceId }: { workspaceId: string }) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button type="button">
+          <Button type="button" size="sm" className="h-9 rounded-md px-3">
             <Plus className="h-4 w-4" />
             New project
           </Button>

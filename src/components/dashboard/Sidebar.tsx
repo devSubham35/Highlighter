@@ -46,19 +46,19 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
-    label: "Overview",
-    icon: LayoutDashboard,
-    href: (workspaceId) => (workspaceId ? `/workspaces/${workspaceId}` : "/workspaces"),
-    match: (pathname, workspaceId) =>
-      workspaceId !== null && pathname === `/workspaces/${workspaceId}`,
-  },
-  {
     label: "Projects",
     icon: FolderKanban,
     href: (workspaceId) =>
       workspaceId ? `/workspaces/${workspaceId}/projects` : "/workspaces",
     match: (pathname, workspaceId) =>
       workspaceId !== null && pathname.startsWith(`/workspaces/${workspaceId}/projects`),
+  },
+  {
+    label: "Overview",
+    icon: LayoutDashboard,
+    href: (workspaceId) => (workspaceId ? `/workspaces/${workspaceId}` : "/workspaces"),
+    match: (pathname, workspaceId) =>
+      workspaceId !== null && pathname === `/workspaces/${workspaceId}`,
   },
   {
     label: "Reports",
@@ -204,7 +204,7 @@ export function Sidebar({
             render={
               <button
                 type="button"
-                className="flex h-10 w-full items-center gap-2.5 rounded-md border border-sidebar-border bg-card px-2.5 text-left transition-colors hover:bg-muted/40"
+                className="flex h-10 w-full cursor-pointer items-center gap-2.5 rounded-md border border-sidebar-border bg-card px-2.5 text-left transition-colors hover:bg-muted/40"
               >
                 {currentWorkspace ? (
                   <>
@@ -354,7 +354,7 @@ export function Sidebar({
             render={
               <button
                 type="button"
-                className="flex w-full items-center gap-2.5 rounded-md border border-transparent px-1 py-1.5 text-left transition-colors hover:border-sidebar-border hover:bg-muted/40"
+                className="flex w-full cursor-pointer items-center gap-2.5 rounded-md border border-transparent px-1 py-1.5 text-left transition-colors hover:border-sidebar-border hover:bg-muted/40"
               >
                 <Avatar className="size-8">
                   {user.image ? <AvatarImage src={user.image} alt={user.name ?? "User"} /> : null}
@@ -374,7 +374,7 @@ export function Sidebar({
               </button>
             }
           />
-          <DropdownMenuContent align="start" className="w-56">
+          <DropdownMenuContent side="top" align="start" sideOffset={8} className="w-56">
             <DropdownMenuItem onClick={() => router.push("/profile")} className="gap-2">
               <User className="h-4 w-4" />
               Profile

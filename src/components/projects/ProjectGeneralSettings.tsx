@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/lib/toast";
 import { createProjectFormSchema, type CreateProjectFormData } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Trash2 } from "lucide-react";
@@ -56,10 +57,13 @@ export function ProjectGeneralSettings({
     });
 
     if (!response.ok) {
-      setSaveError("Could not update project. Please try again.");
+      const message = "Could not update project. Please try again.";
+      setSaveError(message);
+      toast.error("Project update failed", message);
       return;
     }
 
+    toast.success("Project updated", "Your project settings were saved.");
     router.refresh();
   }
 
@@ -72,10 +76,13 @@ export function ProjectGeneralSettings({
     setDeleting(false);
 
     if (!response.ok) {
-      setDeleteError("Could not delete project.");
+      const message = "Could not delete project.";
+      setDeleteError(message);
+      toast.error("Project deletion failed", message);
       return;
     }
 
+    toast.success("Project deleted", `"${project.name}" was removed.`);
     router.push(`/workspaces/${workspaceId}/projects`);
     router.refresh();
   }

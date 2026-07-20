@@ -69,7 +69,7 @@ function Combobox({
         disabled={disabled}
         aria-label={ariaLabel}
         className={cn(
-          "flex h-11 w-full min-w-40 items-center justify-between gap-2 rounded-md border border-input bg-card px-3 text-sm font-medium whitespace-nowrap transition-colors outline-none select-none",
+          "flex h-11 w-full min-w-40 cursor-pointer items-center justify-between gap-2 rounded-md border border-input bg-card px-3 text-sm font-medium whitespace-nowrap transition-colors outline-none select-none",
           "hover:opacity-95 focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:opacity-100",
           !selected && "text-muted-foreground",
           className,

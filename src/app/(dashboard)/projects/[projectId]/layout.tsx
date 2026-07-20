@@ -24,6 +24,7 @@ export default async function ProjectLayout({
       name: true,
       websiteUrl: true,
       workspaceId: true,
+      workspace: { select: { name: true } },
     },
   });
 
@@ -33,6 +34,7 @@ export default async function ProjectLayout({
     <ProjectShell
       projectId={project.id}
       projectName={project.name}
+      workspaceName={project.workspace.name}
       websiteUrl={project.websiteUrl}
       workspaceId={project.workspaceId}
     >

@@ -5,12 +5,12 @@ import { IssueRow } from "@/components/issues/IssueRow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { parseReportMetadata } from "@/lib/report-metadata";
+import { toast } from "@/lib/toast";
 import type { WorkspaceMember, ReportStatus } from "@/types";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { memberComboboxOptions } from "@/components/issues/IssueRow";
 
 export type IssueItem = {
   id: string;
@@ -68,8 +68,6 @@ export function ProjectDetailsView({
     setModalOpen(true);
   }, [searchParams, issues]);
 
-  const memberOptions = useMemo(() => memberComboboxOptions(members), [members]);
-
   const filteredIssues = useMemo(() => {
     const query = search.trim().toLowerCase();
     return issues.filter((issue) => {
@@ -118,15 +116,15 @@ export function ProjectDetailsView({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 rounded-xl border border-sidebar-border bg-card p-4 dark:bg-surface-elevated lg:flex-row lg:items-center lg:justify-between">
-        <div className="inline-flex flex-wrap rounded-lg border border-sidebar-border bg-muted/40 p-1">
+      <div className="flex flex-col gap-2 rounded-xl border border-sidebar-border bg-card p-3 dark:bg-surface-elevated lg:flex-row lg:items-center lg:justify-between">
+        <div className="inline-flex flex-wrap rounded-lg border border-sidebar-border bg-muted/40 p-0.5">
           {filterButtons.map((item) => (
             <Button
               key={item.key}
               type="button"
               variant={filter === item.key ? "secondary" : "ghost"}
               size="sm"
-              className={cn("h-8 rounded-md px-3", filter === item.key && "bg-card shadow-sm")}
+              className={cn("h-7 rounded-md px-2.5", filter === item.key && "bg-card text-primary shadow-sm")}
               onClick={() => setFilter(item.key)}
             >
               {item.label}
@@ -139,7 +137,7 @@ export function ProjectDetailsView({
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search issues"
             aria-label="Search issues"
-            className="h-10 bg-white pr-9 dark:bg-background"
+            className="h-9 bg-white pr-9 dark:bg-background"
           />
           <Search className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         </div>
@@ -191,9 +189,13 @@ export function ProjectDetailsView({
         }
         onDelete={async (issueId) => {
           const response = await fetch(`/api/reports/${issueId}`, { method: "DELETE" });
-          if (!response.ok) return;
+          if (!response.ok) {
+            toast.error("Issue deletion failed", "Could not delete issue.");
+            return;
+          }
           setIssues((current) => current.filter((item) => item.id !== issueId));
           closeModal();
+          toast.success("Issue deleted");
           router.refresh();
         }}
       />

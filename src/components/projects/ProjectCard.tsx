@@ -5,6 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -43,6 +51,7 @@ export function ProjectCard({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
 
   const lastIssueBadge = formatLastIssueBadge(project.lastIssueAt);
 
@@ -57,9 +66,10 @@ export function ProjectCard({
     setLoading(false);
     if (!response.ok) {
       setError("Could not update project.");
-      return;
+      return false;
     }
     router.refresh();
+    return true;
   }
 
   const timeBadge = (
@@ -83,9 +93,12 @@ export function ProjectCard({
           </Button>
         }
       />
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
         <DropdownMenuItem
-          onClick={archiveProject}
+          onClick={(event) => {
+            event.stopPropagation();
+            setArchiveConfirmOpen(true);
+          }}
           disabled={loading}
           className="gap-2"
         >
@@ -94,7 +107,10 @@ export function ProjectCard({
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => router.push(`/projects/${project.id}/settings`)}
+          onClick={(event) => {
+            event.stopPropagation();
+            router.push(`/projects/${project.id}/settings`);
+          }}
           className="gap-2"
         >
           <Settings className="h-4 w-4" />
@@ -138,51 +154,90 @@ export function ProjectCard({
   }
 
   return (
-    <Card
-      role="button"
-      tabIndex={0}
-      onClick={navigateToProject}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          navigateToProject();
-        }
-      }}
-      className={cn(
-        "cursor-pointer border border-border/60 shadow-[var(--shadow-surface)] surface-interactive dark:bg-surface-elevated dark:hover:bg-white/5",
-        variant === "list" && "p-4",
-        variant === "grid" && "gap-0 overflow-hidden p-0",
-      )}
-    >
-      {variant === "grid" ? (
-        <div className="flex flex-col">
-          <div className="relative">
-            <ProjectThumbnail
-              websiteUrl={project.websiteUrl}
-              className="h-36 w-full rounded-none border-0"
-            />
-            <div className="absolute top-2 right-2">{timeBadge}</div>
-          </div>
-          <div className="space-y-3 p-4">
-            {titleBlock}
-            {footer}
-            {error ? <p className="text-xs text-destructive">{error}</p> : null}
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <div className="flex items-center gap-4">
-            <ProjectThumbnail websiteUrl={project.websiteUrl} className="h-12 w-12 shrink-0 rounded-md" />
-            <div className="min-w-0 flex-1">{titleBlock}</div>
-            <div className="flex shrink-0 items-center gap-3">
-              {timeBadge}
-              {stats}
-              {menu}
+    <>
+      <Card
+        role="button"
+        tabIndex={0}
+        onClick={navigateToProject}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            navigateToProject();
+          }
+        }}
+        className={cn(
+          "cursor-pointer border border-border/60 shadow-[var(--shadow-surface)] surface-interactive dark:bg-surface-elevated dark:hover:bg-white/5",
+          variant === "list" && "p-4",
+          variant === "grid" && "gap-0 overflow-hidden p-0",
+        )}
+      >
+        {variant === "grid" ? (
+          <div className="flex flex-col">
+            <div className="relative">
+              <ProjectThumbnail
+                websiteUrl={project.websiteUrl}
+                className="h-36 w-full rounded-none border-0"
+              />
+              <div className="absolute top-2 right-2">{timeBadge}</div>
+            </div>
+            <div className="space-y-3 p-4">
+              {titleBlock}
+              {footer}
+              {error ? <p className="text-xs text-destructive">{error}</p> : null}
             </div>
           </div>
-          {error ? <p className="text-xs text-destructive">{error}</p> : null}
-        </div>
-      )}
-    </Card>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-center gap-4">
+              <ProjectThumbnail websiteUrl={project.websiteUrl} className="h-12 w-12 shrink-0 rounded-md" />
+              <div className="min-w-0 flex-1">{titleBlock}</div>
+              <div className="flex shrink-0 items-center gap-3">
+                {timeBadge}
+                {stats}
+                {menu}
+              </div>
+            </div>
+            {error ? <p className="text-xs text-destructive">{error}</p> : null}
+          </div>
+        )}
+      </Card>
+
+      <Dialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
+        <DialogContent showCloseButton onClick={(event) => event.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle>{project.archived ? "Restore project?" : "Archive project?"}</DialogTitle>
+            <DialogDescription>
+              {project.archived
+                ? `This will move "${project.name}" back to active projects.`
+                : `This will move "${project.name}" to archived projects. You can restore it later.`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setArchiveConfirmOpen(false)}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={async () => {
+                const updated = await archiveProject();
+                if (updated) setArchiveConfirmOpen(false);
+              }}
+              disabled={loading}
+            >
+              {loading
+                ? "Updating..."
+                : project.archived
+                  ? "Restore project"
+                  : "Archive project"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

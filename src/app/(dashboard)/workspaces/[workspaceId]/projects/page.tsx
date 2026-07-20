@@ -1,5 +1,5 @@
+import { BreadcrumbHeader } from "@/components/common/BreadcrumbHeader";
 import { ContentContainer } from "@/components/common/ContentContainer";
-import { PageHeader } from "@/components/common/PageHeader";
 import { ProjectsView } from "@/components/projects/ProjectsView";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -65,10 +65,12 @@ export default async function WorkspaceProjectsPage({
   return (
     <ContentContainer>
       <div className="space-y-6">
-        <PageHeader
-          title="Projects"
-          description={workspace.name}
-          backHref={`/workspaces/${workspaceId}`}
+        <BreadcrumbHeader
+          items={[
+            { label: "Workspaces", href: "/workspaces" },
+            { label: workspace.name, href: `/workspaces/${workspaceId}` },
+            { label: "Projects" },
+          ]}
         />
         <ProjectsView workspaceId={workspaceId} projects={projects} />
       </div>

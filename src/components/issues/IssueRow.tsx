@@ -33,6 +33,7 @@ import {
   isIssueType,
 } from "@/lib/issue-options";
 import { REPORT_STATUS_OPTIONS, isReportStatus } from "@/lib/report-options";
+import { toast } from "@/lib/toast";
 import type { IssueItem } from "@/components/projects/ProjectDetailsView";
 import type { ComboboxOption } from "@/components/ui/combobox";
 import type { IssuePriority, IssueType, WorkspaceMember, ReportStatus } from "@/types";
@@ -76,9 +77,13 @@ export function IssueRow({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
     });
-    if (!response.ok) return;
+    if (!response.ok) {
+      toast.error("Issue update failed", "Could not save the issue change.");
+      return;
+    }
     const updated = (await response.json()) as IssueItem;
     onUpdated(updated);
+    toast.success("Issue updated");
     router.refresh();
   }
 
@@ -88,17 +93,21 @@ export function IssueRow({
     const response = await fetch(`/api/reports/${issue.id}`, { method: "DELETE" });
     setLoading(false);
     if (!response.ok) {
-      setError("Could not delete issue.");
+      const message = "Could not delete issue.";
+      setError(message);
+      toast.error("Issue deletion failed", message);
       return;
     }
     setDeleteOpen(false);
     onDeleted(issue.id);
+    toast.success("Issue deleted", `"${issue.title}" was removed.`);
     router.refresh();
   }
 
   function copyLink() {
     const url = `${window.location.origin}/projects/${issue.projectId}?issue=${issue.id}`;
     void navigator.clipboard.writeText(url);
+    toast.success("Issue link copied");
   }
 
   const statusLabel =

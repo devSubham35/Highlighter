@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { isIssuePriority } from "@/lib/issue-options";
+import { toast } from "@/lib/toast";
 import { ExternalLink, Link2, MoreHorizontal, Sparkles, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -123,12 +124,16 @@ export function IssueDetailModal({
         metadata,
       }),
     });
-    if (!response.ok) return;
+    if (!response.ok) {
+      toast.error("Issue update failed", "Could not save the issue change.");
+      return;
+    }
 
     const updated = (await response.json()) as IssueItem;
     setDetail(updated);
     onUpdated(updated);
     await loadIssue(updated.id, updated);
+    toast.success("Issue updated");
     router.refresh();
   }
 
