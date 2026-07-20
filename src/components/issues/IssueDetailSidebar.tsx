@@ -105,12 +105,12 @@ function PropertyRow({
         className={cn(
           "group/property flex min-h-8 w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-medium leading-5 text-foreground",
           interactive &&
-            "cursor-pointer border border-transparent bg-primary/5 pr-1.5 text-foreground transition-colors hover:border-primary/20 hover:bg-primary/10",
+            "cursor-pointer border border-transparent bg-muted/45 pr-1.5 text-foreground transition-colors hover:border-border hover:bg-muted/70 dark:bg-white/5 dark:hover:bg-white/10",
         )}
       >
         {children}
         {interactive ? (
-          <ChevronRightIcon className="ml-auto h-3.5 w-3.5 shrink-0 text-primary/70 opacity-70 transition-transform group-hover/property:translate-x-0.5 group-hover/property:opacity-100" />
+          <ChevronRightIcon className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-70 transition-transform group-hover/property:translate-x-0.5 group-hover/property:opacity-100" />
         ) : null}
       </div>
     </div>

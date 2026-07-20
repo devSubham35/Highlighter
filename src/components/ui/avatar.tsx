@@ -16,7 +16,7 @@ function Avatar({ className, ...props }: React.ComponentProps<"div">) {
 
 function AvatarImage({ className, ...props }: React.ComponentProps<"img">) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
+    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
     <img
       data-slot="avatar-image"
       className={cn("aspect-square size-full object-cover", className)}
@@ -30,7 +30,7 @@ function AvatarFallback({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="avatar-fallback"
       className={cn(
-        "flex size-full items-center justify-center rounded-full bg-[#e8eaed] text-xs font-medium text-[#5f6368]",
+        "flex size-full items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground",
         className,
       )}
       {...props}
@@ -38,4 +38,14 @@ function AvatarFallback({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-export { Avatar, AvatarFallback, AvatarImage };
+function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="avatar-group"
+      className={cn("flex items-center -space-x-2", className)}
+      {...props}
+    />
+  );
+}
+
+export { Avatar, AvatarFallback, AvatarGroup, AvatarImage };

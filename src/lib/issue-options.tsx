@@ -153,7 +153,7 @@ export function isIssuePriority(value: string): value is IssuePriority {
 }
 
 export const ISSUE_STATUS_TRIGGER_CLASS: Record<ReportStatus, string> = {
-  OPEN: "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D] hover:!bg-[#BBF7D0] dark:border-success/20 dark:bg-success/15 dark:text-success dark:hover:!bg-success/25",
+  OPEN: "border-sky-200 bg-sky-50 text-sky-700 hover:!bg-sky-100 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300 dark:hover:!bg-sky-500/15",
   IN_PROGRESS:
     "border-[#FDE68A] bg-[#FEF3C7] text-[#B45309] hover:!bg-[#FDE68A] dark:border-warning/20 dark:bg-warning/15 dark:text-[#FBBF24]",
   RESOLVED:
@@ -170,8 +170,18 @@ export const ISSUE_STATUS_LABELS: Record<ReportStatus, string> = {
 };
 
 export const ISSUE_STATUS_BADGE_CLASS: Record<ReportStatus, string> = {
-  OPEN: "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D] dark:border-success/20 dark:bg-success/15 dark:text-success dark:hover:bg-success/25",
+  OPEN: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300 dark:hover:bg-sky-500/15",
   IN_PROGRESS: "border-[#FDE68A] bg-[#FEF3C7] text-[#B45309]",
   RESOLVED: "border-[#BBF7D0] bg-[#DCFCE7] text-[#15803D] dark:border-success/20 dark:bg-success/15 dark:text-success dark:hover:bg-success/25",
   CLOSED: "border-border bg-muted text-muted-foreground",
+};
+
+export const ISSUE_STATUS_OPTION_CLASS: Record<ReportStatus, string> = {
+  OPEN: "bg-sky-50 text-sky-700 hover:!bg-sky-100 dark:bg-sky-500/10 dark:text-sky-300 dark:hover:!bg-sky-500/15",
+  IN_PROGRESS:
+    "bg-amber-50 text-amber-700 hover:!bg-amber-100 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:!bg-amber-500/15",
+  RESOLVED:
+    "bg-emerald-50 text-emerald-700 hover:!bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:!bg-emerald-500/15",
+  CLOSED:
+    "bg-muted text-muted-foreground hover:!bg-muted/80 dark:bg-white/5 dark:text-muted-foreground dark:hover:!bg-white/10",
 };

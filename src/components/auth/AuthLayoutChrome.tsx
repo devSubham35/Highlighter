@@ -1,7 +1,10 @@
 import { AuthBackground } from "@/components/auth/AuthBackground";
 import { AuthGraphic } from "@/components/auth/AuthGraphic";
+import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "@/components/ui/avatar";
 import { Highlighter } from "lucide-react";
 import Link from "next/link";
+
+const DEFAULT_AVATAR_IMAGE = "https://github.com/maxleiter.png";
 
 export function AuthLayoutChrome({ children }: { children: React.ReactNode }) {
   return (
@@ -37,12 +40,14 @@ export function AuthLayoutChrome({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="relative z-10 mt-auto flex items-center gap-3 pt-8">
-          <div className="flex -space-x-2">
-            <span className="h-7 w-7 rounded-full border-2 border-white bg-[#d2d6db]" />
-            <span className="h-7 w-7 rounded-full border-2 border-white bg-[#f2b5a7]" />
-            <span className="h-7 w-7 rounded-full border-2 border-white bg-[#9bc0ff]" />
-            <span className="h-7 w-7 rounded-full border-2 border-white bg-[#b5d6a3]" />
-          </div>
+          <AvatarGroup>
+            {["A", "B", "C", "D"].map((initial) => (
+              <Avatar key={initial} className="size-7 border-2 border-white">
+                <AvatarImage src={DEFAULT_AVATAR_IMAGE} alt={`Team member ${initial}`} />
+                <AvatarFallback className="text-[10px] font-semibold">{initial}</AvatarFallback>
+              </Avatar>
+            ))}
+          </AvatarGroup>
           <div>
             <p className="text-xs font-medium text-foreground">Loved by 1,000+ teams worldwide</p>
             <p className="text-xs text-muted-foreground">★★★★★ 4.9/5</p>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogBody,
@@ -10,8 +10,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { avatarColor } from "@/lib/avatar-colors";
-import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { Bell, CircleDot, UserRoundPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -28,6 +26,8 @@ type NotificationItem = {
   createdAt: string;
   href: string;
 };
+
+const DEFAULT_AVATAR_IMAGE = "https://github.com/maxleiter.png";
 
 function initials(name: string) {
   return name
@@ -120,7 +120,6 @@ export function NotificationsDrawer() {
             ) : (
               <div className="divide-y divide-sidebar-border">
                 {notifications.map((item) => {
-                  const colors = avatarColor(item.authorName);
                   const Icon = item.kind === "assignment" ? UserRoundPlus : CircleDot;
 
                   return (
@@ -134,9 +133,8 @@ export function NotificationsDrawer() {
                       }}
                     >
                       <Avatar className="size-9 shrink-0">
-                        <AvatarFallback
-                          className={cn("text-xs font-semibold", colors.bg, colors.text)}
-                        >
+                        <AvatarImage src={DEFAULT_AVATAR_IMAGE} alt={item.authorName} />
+                        <AvatarFallback className="text-xs font-semibold">
                           {initials(item.authorName)}
                         </AvatarFallback>
                       </Avatar>

@@ -26,6 +26,7 @@ import { formatIssueCreatedAt } from "@/lib/issue-format";
 import {
   ISSUE_PRIORITY_LABELS,
   ISSUE_PRIORITY_OPTIONS,
+  ISSUE_STATUS_OPTION_CLASS,
   ISSUE_STATUS_TRIGGER_CLASS,
   issuePriorityIcon,
   issueTypeIcon,
@@ -184,6 +185,11 @@ export function IssueRow({
                 "h-8 w-fit min-w-0 gap-1.5 rounded-lg border px-2.5 text-xs font-medium",
                 ISSUE_STATUS_TRIGGER_CLASS[issue.status],
               )}
+              optionClassName={(option, selected) =>
+                selected && isReportStatus(option.value)
+                  ? ISSUE_STATUS_OPTION_CLASS[option.value]
+                  : undefined
+              }
             />
           </div>
           <Button

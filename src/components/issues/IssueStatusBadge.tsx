@@ -5,6 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import {
   ISSUE_STATUS_BADGE_CLASS,
   ISSUE_STATUS_LABELS,
+  ISSUE_STATUS_OPTION_CLASS,
   reportStatusIcon,
 } from "@/lib/issue-options";
 import { REPORT_STATUS_OPTIONS, isReportStatus } from "@/lib/report-options";
@@ -43,7 +44,7 @@ export function IssueStatusBadge({
               variant="ghost"
               className={cn(
                 "h-auto w-full justify-start gap-2 rounded-md px-2 py-2 pr-8 text-left text-sm font-normal",
-                selected && "bg-primary/10 text-primary",
+                selected && ISSUE_STATUS_OPTION_CLASS[value],
               )}
               onClick={() => {
                 if (!isReportStatus(option.value)) return;

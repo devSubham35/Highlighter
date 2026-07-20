@@ -60,9 +60,9 @@ export function IssuePickerPanel({
   }
 
   return (
-    <div className="w-72 overflow-hidden rounded-lg border border-sidebar-border bg-popover text-popover-foreground shadow-xl">
-      <div className="flex items-center gap-2 border-b border-sidebar-border px-3 py-2.5">
-        <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+    <div className="w-60 overflow-hidden rounded-lg border border-sidebar-border bg-popover text-popover-foreground shadow-xl">
+      <div className="flex items-center gap-2 border-b border-sidebar-border px-2.5 py-2">
+        <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         <Input
           value={search}
           onChange={(event) => setSearch(event.target.value)}

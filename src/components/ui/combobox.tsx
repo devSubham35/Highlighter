@@ -25,6 +25,7 @@ interface ComboboxProps {
   disabled?: boolean;
   emptyMessage?: string;
   searchable?: boolean;
+  optionClassName?: (option: ComboboxOption, selected: boolean) => string | undefined;
   "aria-label"?: string;
 }
 
@@ -39,6 +40,7 @@ function Combobox({
   disabled = false,
   emptyMessage = "No results found",
   searchable = true,
+  optionClassName,
   "aria-label": ariaLabel,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
@@ -118,12 +120,13 @@ function Combobox({
                         "relative h-auto w-full cursor-pointer justify-start gap-2 rounded-md px-2 py-2 pr-8 text-left text-sm font-normal",
                         "hover:!bg-secondary hover:!text-secondary-foreground dark:hover:!bg-secondary/90",
                         isSelected && "bg-primary/10 font-semibold text-primary hover:bg-primary/15",
+                        optionClassName?.(option, isSelected),
                       )}
                     >
                       {option.icon ? <span className="flex shrink-0 items-center">{option.icon}</span> : null}
                       {option.label}
                       {isSelected ? (
-                        <span className="pointer-events-none absolute right-2 flex h-4 w-4 items-center justify-center text-primary">
+                        <span className="pointer-events-none absolute right-2 flex h-4 w-4 items-center justify-center text-current">
                           <Check className="h-3 w-3" />
                         </span>
                       ) : null}

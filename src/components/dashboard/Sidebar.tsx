@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth-client";
-import { avatarColor } from "@/lib/avatar-colors";
 import { cn } from "@/lib/utils";
 import {
   ChevronDown,
@@ -30,7 +29,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export type SidebarWorkspace = {
   id: string;
@@ -120,6 +119,8 @@ const projectNavItems: ProjectNavItem[] = [
   },
 ];
 
+const DEFAULT_AVATAR_IMAGE = "https://github.com/maxleiter.png";
+
 function workspaceInitial(name: string) {
   return name.trim().charAt(0).toUpperCase() || "W";
 }
@@ -149,6 +150,9 @@ export function Sidebar({
   const router = useRouter();
   const workspaceId = getWorkspaceIdFromPath(pathname);
   const projectId = getProjectIdFromPath(pathname);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
+  const profileTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   const currentWorkspace = useMemo(
     () => workspaces.find((workspace) => workspace.id === workspaceId) ?? workspaces[0] ?? null,
@@ -170,14 +174,39 @@ export function Sidebar({
     };
   }, [mobileOpen]);
 
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target as Node;
+      if (
+        profileMenuRef.current?.contains(target) ||
+        profileTriggerRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setProfileMenuOpen(false);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setProfileMenuOpen(false);
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [profileMenuOpen]);
+
   const userInitials = (user.name ?? user.email ?? "U")
     .split(" ")
     .map((part) => part[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
-
-  const userColors = avatarColor(user.email ?? user.name ?? "user");
 
   function handleLogout() {
     signOut({
@@ -222,15 +251,12 @@ export function Sidebar({
               >
                 {currentWorkspace ? (
                   <>
-                    <div
-                      className={cn(
-                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold",
-                        avatarColor(currentWorkspace.id).bg,
-                        avatarColor(currentWorkspace.id).text,
-                      )}
-                    >
-                      {workspaceInitial(currentWorkspace.name)}
-                    </div>
+                    <Avatar className="size-7 rounded-md">
+                      <AvatarImage src={DEFAULT_AVATAR_IMAGE} alt={currentWorkspace.name} />
+                      <AvatarFallback className="rounded-md text-xs font-semibold">
+                        {workspaceInitial(currentWorkspace.name)}
+                      </AvatarFallback>
+                    </Avatar>
                     <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
                       {currentWorkspace.name}
                     </span>
@@ -254,15 +280,12 @@ export function Sidebar({
                   onClick={() => router.push(`/workspaces/${workspace.id}`)}
                   className="gap-2"
                 >
-                  <div
-                    className={cn(
-                      "flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-semibold",
-                      avatarColor(workspace.id).bg,
-                      avatarColor(workspace.id).text,
-                    )}
-                  >
-                    {workspaceInitial(workspace.name)}
-                  </div>
+                  <Avatar className="size-6 rounded-md">
+                    <AvatarImage src={DEFAULT_AVATAR_IMAGE} alt={workspace.name} />
+                    <AvatarFallback className="rounded-md text-[10px] font-semibold">
+                      {workspaceInitial(workspace.name)}
+                    </AvatarFallback>
+                  </Avatar>
                   <span className="truncate">{workspace.name}</span>
                 </DropdownMenuItem>
               ))
@@ -334,24 +357,19 @@ export function Sidebar({
           <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
             Collaborate on projects and triage feedback together.
           </p>
-          <div className="mt-3 flex items-center">
+          <AvatarGroup className="mt-3">
             {[0, 1, 2].map((index) => (
-              <Avatar
-                key={index}
-                className={cn("size-7 border border-border", index > 0 && "-ml-2")}
-              >
-                <AvatarFallback
-                  className={cn(
-                    "text-[10px] font-semibold",
-                    avatarColor(`invite-${index}`).bg,
-                    avatarColor(`invite-${index}`).text,
-                  )}
-                >
+              <Avatar key={index} className="size-7 border border-border ring-2 ring-card">
+                <AvatarImage
+                  src={DEFAULT_AVATAR_IMAGE}
+                  alt={`Team member ${String.fromCharCode(65 + index)}`}
+                />
+                <AvatarFallback className="text-[10px] font-semibold">
                   {String.fromCharCode(65 + index)}
                 </AvatarFallback>
               </Avatar>
             ))}
-          </div>
+          </AvatarGroup>
           <Button
             type="button"
             variant="outline"
@@ -363,50 +381,68 @@ export function Sidebar({
           </Button>
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
+        <div className="relative">
+          <button
+            ref={profileTriggerRef}
+            type="button"
+            aria-expanded={profileMenuOpen}
+            className="flex w-full cursor-pointer items-center gap-2.5 rounded-md border border-sidebar-border px-1 py-1.5 text-left transition-colors hover:bg-muted/40"
+            onClick={() => setProfileMenuOpen((open) => !open)}
+          >
+            <Avatar className="size-8">
+              <AvatarImage src={user.image ?? DEFAULT_AVATAR_IMAGE} alt={user.name ?? "User"} />
+              <AvatarFallback className="text-xs font-semibold">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-foreground">
+                {user.name ?? "User"}
+              </p>
+              <p className="truncate text-[11px] text-muted-foreground">{user.email}</p>
+            </div>
+            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </button>
+
+          {profileMenuOpen ? (
+            <div
+              ref={profileMenuRef}
+              className="absolute bottom-0 left-full z-50 ml-2 w-56 overflow-hidden rounded-lg border border-sidebar-border bg-popover p-1 shadow-xl outline-none"
+            >
               <button
                 type="button"
-                className="flex w-full cursor-pointer items-center gap-2.5 rounded-md border border-transparent px-1 py-1.5 text-left transition-colors hover:border-sidebar-border hover:bg-muted/40"
+                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-muted"
+                onClick={() => {
+                  setProfileMenuOpen(false);
+                  router.push("/profile");
+                }}
               >
-                <Avatar className="size-8">
-                  {user.image ? <AvatarImage src={user.image} alt={user.name ?? "User"} /> : null}
-                  <AvatarFallback
-                    className={cn("text-xs font-semibold", userColors.bg, userColors.text)}
-                  >
-                    {userInitials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {user.name ?? "User"}
-                  </p>
-                  <p className="truncate text-[11px] text-muted-foreground">{user.email}</p>
-                </div>
-                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <User className="h-4 w-4" />
+                Profile
               </button>
-            }
-          />
-          <DropdownMenuContent side="top" align="start" sideOffset={8} className="w-56">
-            <DropdownMenuItem onClick={() => router.push("/profile")} className="gap-2">
-              <User className="h-4 w-4" />
-              Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/settings")} className="gap-2">
-              <Settings className="h-4 w-4" />
-              Settings
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={handleLogout}
-              className="gap-2 text-destructive data-highlighted:text-destructive"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <button
+                type="button"
+                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-muted"
+                onClick={() => {
+                  setProfileMenuOpen(false);
+                  router.push("/settings");
+                }}
+              >
+                <Settings className="h-4 w-4" />
+                Settings
+              </button>
+              <div className="-mx-1 my-1 h-px bg-border" />
+              <button
+                type="button"
+                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-destructive outline-none transition-colors hover:bg-muted"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

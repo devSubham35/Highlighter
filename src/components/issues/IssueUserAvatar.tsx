@@ -1,6 +1,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
+const DEFAULT_AVATAR_IMAGE = "https://github.com/maxleiter.png";
+
 export function IssueUserAvatar({
   name,
   image,
@@ -14,7 +16,7 @@ export function IssueUserAvatar({
 
   return (
     <Avatar className={cn("size-7", className)}>
-      {image ? <AvatarImage src={image} alt={name} /> : null}
+      <AvatarImage src={image ?? DEFAULT_AVATAR_IMAGE} alt={name} />
       <AvatarFallback className="text-[11px]">{initial}</AvatarFallback>
     </Avatar>
   );

@@ -7,12 +7,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { avatarColor } from "@/lib/avatar-colors";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowRight, FolderKanban, Plus, Users } from "lucide-react";
+import { ArrowRight, CalendarDays, FolderKanban, Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+
+const DEFAULT_AVATAR_IMAGE = "https://github.com/maxleiter.png";
 
 export type WorkspaceMemberPreview = {
   id: string;
@@ -29,65 +30,8 @@ export type WorkspaceListItem = {
   members: WorkspaceMemberPreview[];
 };
 
-const MAX_VISIBLE_MEMBERS = 4;
-
-function MemberAvatar({
-  member,
-  className,
-}: {
-  member: WorkspaceMemberPreview;
-  className?: string;
-}) {
-  const colors = avatarColor(member.id);
-  const initial = member.name.slice(0, 1).toUpperCase();
-
-  return (
-    <Avatar className={className}>
-      {member.image ? <AvatarImage src={member.image} alt={member.name} /> : null}
-      <AvatarFallback className={cn("text-xs font-semibold", colors.bg, colors.text)}>
-        {initial}
-      </AvatarFallback>
-    </Avatar>
-  );
-}
-
-function MemberAvatarStack({
-  members,
-  totalCount,
-}: {
-  members: WorkspaceMemberPreview[];
-  totalCount: number;
-}) {
-  if (totalCount === 0) return null;
-
-  const visible = members.slice(0, MAX_VISIBLE_MEMBERS);
-  const overflow = Math.max(0, totalCount - visible.length);
-
-  return (
-    <div className="flex items-center">
-      {visible.map((member, index) => (
-        <MemberAvatar
-          key={member.id}
-          member={member}
-          className={cn(
-            "size-10 border border-border",
-            index > 0 && "-ml-3.5",
-          )}
-        />
-      ))}
-      {overflow > 0 ? (
-        <div
-          className={cn(
-            "relative flex size-10 shrink-0 items-center justify-center rounded-full border border-border",
-            "bg-muted text-xs font-semibold text-muted-foreground",
-            visible.length > 0 && "-ml-3.5",
-          )}
-        >
-          +{overflow}
-        </div>
-      ) : null}
-    </div>
-  );
+function workspaceInitial(name: string) {
+  return name.trim().charAt(0).toUpperCase() || "W";
 }
 
 function WorkspaceCard({ workspace }: { workspace: WorkspaceListItem }) {
@@ -95,32 +39,41 @@ function WorkspaceCard({ workspace }: { workspace: WorkspaceListItem }) {
     <Link href={`/workspaces/${workspace.id}`} className="group block h-full">
       <Card
         className={cn(
-          "flex h-full flex-col gap-4 border border-sidebar-border/50 p-5 shadow-none transition-[background-color,box-shadow]",
-          "hover:bg-muted/30 hover:shadow-sm",
-          "dark:bg-surface-elevated dark:hover:bg-white/5",
+          "flex h-full min-h-[11.75rem] flex-col gap-0 rounded-xl border border-border/80 bg-card p-5 shadow-none",
+          "dark:border-sidebar-border/70 dark:bg-surface-elevated",
         )}
       >
-        <div className="flex items-center justify-between gap-3">
-          <MemberAvatarStack members={workspace.members} totalCount={workspace.memberCount} />
-          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
+        <div className="flex items-start">
+          <Avatar className="size-9 rounded-lg">
+            <AvatarImage src={DEFAULT_AVATAR_IMAGE} alt={workspace.name} />
+            <AvatarFallback className="rounded-lg text-sm font-semibold">
+              {workspaceInitial(workspace.name)}
+            </AvatarFallback>
+          </Avatar>
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="mt-5 min-w-0">
           <p className="truncate text-base font-semibold text-foreground">{workspace.name}</p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <CalendarDays className="h-3.5 w-3.5 text-foreground/80" />
             Created {formatDistanceToNow(new Date(workspace.createdAt), { addSuffix: true }).replace(/^about /, "")}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 border-t border-sidebar-border/60 pt-4">
-          <Badge variant="info" className="h-6 gap-1.5 px-2.5 text-[11px]">
-            <FolderKanban className="h-3.5 w-3.5" />
-            {workspace.projectCount} {workspace.projectCount === 1 ? "project" : "projects"}
-          </Badge>
-          <Badge variant="purple" className="h-6 gap-1.5 px-2.5 text-[11px]">
-            <Users className="h-3.5 w-3.5" />
-            {workspace.memberCount} {workspace.memberCount === 1 ? "member" : "members"}
-          </Badge>
+        <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/80 pt-4">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <Badge variant="info" className="h-6 gap-1.5 rounded-full px-2.5 text-[11px]">
+              <FolderKanban className="h-3.5 w-3.5" />
+              {workspace.projectCount} {workspace.projectCount === 1 ? "project" : "projects"}
+            </Badge>
+            <Badge variant="info" className="h-6 gap-1.5 rounded-full px-2.5 text-[11px]">
+              <Users className="h-3.5 w-3.5" />
+              {workspace.memberCount} {workspace.memberCount === 1 ? "member" : "members"}
+            </Badge>
+          </div>
+          <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-primary/10 bg-primary/10 text-foreground">
+            <ArrowRight className="h-4 w-4" />
+          </span>
         </div>
       </Card>
     </Link>
@@ -165,7 +118,7 @@ export function WorkspacesView({ workspaces }: { workspaces: WorkspaceListItem[]
             </Button>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {workspaces.map((workspace) => (
               <WorkspaceCard key={workspace.id} workspace={workspace} />
             ))}
