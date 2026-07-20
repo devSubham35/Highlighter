@@ -128,7 +128,7 @@ export function IssueRow({
     <>
       <article
         onClick={onOpen}
-        className="group relative flex cursor-pointer items-center gap-3 overflow-hidden rounded-2xl border border-border/70 bg-card px-3 py-3 shadow-[var(--shadow-surface)] transition-[background-color,border-color,box-shadow] duration-200 hover:border-primary/20 hover:bg-muted/40 hover:shadow-md dark:hover:border-primary/25 dark:hover:bg-white/5"
+        className="group relative flex cursor-pointer items-center gap-3 overflow-hidden rounded-2xl border border-border/70 bg-card px-3 py-3 shadow-[var(--shadow-surface)] transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md dark:hover:border-primary/40"
       >
         <span className="pointer-events-none absolute inset-y-3 left-0 w-1 rounded-r-full bg-primary opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
         <div className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-sidebar-border bg-muted">
@@ -174,14 +174,15 @@ export function IssueRow({
             <p className="truncate text-sm font-medium text-foreground">
               <span className="text-muted-foreground">#{issueKey}</span> {issue.title}
             </p>
-            <p className="truncate text-xs text-muted-foreground">Created by {reporterLabel}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              Created by {reporterLabel}
+              <span className="mx-1.5 text-muted-foreground/70">•</span>
+              {formatIssueCreatedAt(issue.createdAt)}
+            </p>
           </div>
         </div>
 
         <div className="flex shrink-0 items-center gap-3" onClick={(event) => event.stopPropagation()}>
-          <span className="hidden text-xs text-muted-foreground md:inline">
-            {formatIssueCreatedAt(issue.createdAt)}
-          </span>
           <div className="hidden sm:block">
             <Combobox
               value={issue.status}
@@ -194,7 +195,7 @@ export function IssueRow({
               aria-label="Issue status"
               popoverClassName="min-w-[9.5rem]"
               className={cn(
-                "h-8 w-fit min-w-0 gap-1.5 rounded-lg border px-2.5 text-xs font-medium",
+                "h-8 w-32 min-w-32 justify-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium",
                 ISSUE_STATUS_TRIGGER_CLASS[issue.status],
               )}
               optionClassName={(option, selected) =>

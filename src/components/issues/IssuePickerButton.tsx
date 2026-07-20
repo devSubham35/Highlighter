@@ -1,7 +1,7 @@
 "use client";
 
 import { IssuePickerPanel } from "@/components/issues/IssuePickerPanel";
-import { IssueUserAvatar } from "@/components/issues/IssueUserAvatar";
+import { IssueAvatarGroup } from "@/components/issues/IssueUserAvatar";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import type { ComboboxOption } from "@/components/ui/combobox";
@@ -69,19 +69,19 @@ export function IssueAssignPicker({
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon"
-                  className={ROW_ICON_BUTTON}
+                  size={primaryAssignee ? "sm" : "icon"}
+                  className={cn(
+                    primaryAssignee
+                      ? "h-9 w-auto min-w-9 shrink-0 rounded-md px-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground dark:hover:bg-secondary/90"
+                      : ROW_ICON_BUTTON,
+                  )}
                   aria-label={tooltipLabel}
                   onClick={(event) => event.stopPropagation()}
                 />
               }
             >
               {primaryAssignee ? (
-                <IssueUserAvatar
-                  name={primaryAssignee.name || primaryAssignee.email}
-                  image={primaryAssignee.image}
-                  className="size-8"
-                />
+                <IssueAvatarGroup members={assignees} size="md" />
               ) : (
                 issueUnassignedIcon("lg")
               )}

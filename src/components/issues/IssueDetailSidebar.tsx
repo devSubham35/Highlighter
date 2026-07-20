@@ -1,7 +1,7 @@
 "use client";
 
 import { IssuePickerPanel } from "@/components/issues/IssuePickerPanel";
-import { IssueUserAvatar } from "@/components/issues/IssueUserAvatar";
+import { IssueAvatarGroup, IssueUserAvatar } from "@/components/issues/IssueUserAvatar";
 import { formatIssueReportedAt } from "@/lib/issue-format";
 import {
   ISSUE_PRIORITY_LABELS,
@@ -291,18 +291,7 @@ export function IssueDetailSidebar({
                   )}
                 >
                   {primaryAssignee ? (
-                    <>
-                      <IssueUserAvatar
-                        name={primaryAssignee.name || primaryAssignee.email}
-                        image={primaryAssignee.image}
-                        className="size-7"
-                      />
-                      {assignees.length > 1 ? (
-                        <span className="rounded-full bg-muted px-1.5 text-[11px] text-muted-foreground">
-                          +{assignees.length - 1}
-                        </span>
-                      ) : null}
-                    </>
+                    <IssueAvatarGroup members={assignees} size="sm" />
                   ) : (
                     <>
                       <span className={PROPERTY_ICON_SLOT}>{issueUnassignedIcon()}</span>

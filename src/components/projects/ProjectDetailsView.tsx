@@ -169,7 +169,7 @@ export function ProjectDetailsView({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-2 rounded-xl border border-sidebar-border bg-card p-3 dark:bg-surface-elevated lg:flex-row lg:items-center lg:justify-between">
+      <div className="sticky top-[6.7rem] z-20 flex flex-col gap-2 rounded-xl border border-sidebar-border bg-card/95 p-3 shadow-[var(--shadow-surface)] backdrop-blur-md dark:bg-surface-elevated/95 lg:flex-row lg:items-center lg:justify-between">
         <div className="inline-flex flex-wrap rounded-lg border border-sidebar-border bg-muted/40 p-0.5">
           {filterButtons.map((item) => (
             <Button

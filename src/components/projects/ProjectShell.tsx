@@ -28,8 +28,9 @@ export function ProjectShell({
 
   return (
     <ContentContainer>
-      <div className="space-y-6">
+      <div className="space-y-4">
         <BreadcrumbHeader
+          className="sticky top-14 z-30 -mx-4 border-b border-border/70 bg-background/95 px-4 py-3 backdrop-blur-md md:-mx-8 md:px-8"
           items={[
             { label: workspaceName, href: `/workspaces/${workspaceId}` },
             { label: "Projects", href: `/workspaces/${workspaceId}/projects` },

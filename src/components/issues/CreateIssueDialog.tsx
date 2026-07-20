@@ -1,7 +1,7 @@
 "use client";
 
 import { IssuePickerPanel } from "@/components/issues/IssuePickerPanel";
-import { IssueUserAvatar } from "@/components/issues/IssueUserAvatar";
+import { IssueAvatarGroup } from "@/components/issues/IssueUserAvatar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -233,16 +233,7 @@ export function CreateIssueDialog({
                     )}
                   >
                     {primaryAssignee ? (
-                      <>
-                        <IssueUserAvatar
-                          name={primaryAssignee.name || primaryAssignee.email}
-                          image={primaryAssignee.image}
-                          className="size-7"
-                        />
-                        {selectedAssignees.length > 1 ? (
-                          <span className="text-xs text-muted-foreground">+{selectedAssignees.length - 1}</span>
-                        ) : null}
-                      </>
+                      <IssueAvatarGroup members={selectedAssignees} size="sm" />
                     ) : (
                       <>
                         {issueUnassignedIcon()}
