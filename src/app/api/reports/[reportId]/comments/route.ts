@@ -35,7 +35,7 @@ function toCommentPayload(comment: {
   createdAt: Date | string;
   reactionCount: number;
   reactedByMe: boolean;
-  reactions: Array<{ emoji: string; count: number; reactedByMe: boolean }>;
+  reactions: Array<ReactionPayload>;
   author: {
     id: string;
     name: string;
@@ -66,11 +66,19 @@ type ReactionRow = {
   emoji: string;
   count: bigint | number;
   reactedByMe: boolean;
+  users: Array<{ id: string; name: string | null; email: string }>;
+};
+
+type ReactionPayload = {
+  emoji: string;
+  count: number;
+  reactedByMe: boolean;
+  users: Array<{ id: string; name: string; email: string }>;
 };
 
 function rowToComment(
   row: CommentRow,
-  reactions: Array<{ emoji: string; count: number; reactedByMe: boolean }> = [],
+  reactions: ReactionPayload[] = [],
 ) {
   const reactionCount = reactions.reduce((total, reaction) => total + reaction.count, 0);
   return toCommentPayload({
@@ -120,19 +128,33 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/reports/[re
       r."commentId",
       r."emoji",
       COUNT(*) AS "count",
-      BOOL_OR(r."userId" = ${access.session.user.id}) AS "reactedByMe"
+      BOOL_OR(r."userId" = ${access.session.user.id}) AS "reactedByMe",
+      JSON_AGG(
+        JSON_BUILD_OBJECT(
+          'id', u."id",
+          'name', COALESCE(u."name", u."email"),
+          'email', u."email"
+        )
+        ORDER BY r."createdAt" ASC
+      ) AS "users"
     FROM "report_comment_reactions" r
+    INNER JOIN "users" u ON u."id" = r."userId"
     WHERE r."commentId" IN (${Prisma.join(comments.map((comment) => comment.id))})
     GROUP BY r."commentId", r."emoji"
     ORDER BY MIN(r."createdAt") ASC
   `);
-  const reactionsByCommentId = new Map<string, Array<{ emoji: string; count: number; reactedByMe: boolean }>>();
+  const reactionsByCommentId = new Map<string, ReactionPayload[]>();
   for (const reaction of reactions) {
     const group = reactionsByCommentId.get(reaction.commentId) ?? [];
     group.push({
       emoji: reaction.emoji,
       count: Number(reaction.count),
       reactedByMe: reaction.reactedByMe,
+      users: reaction.users.map((user) => ({
+        id: user.id,
+        name: user.name || user.email,
+        email: user.email,
+      })),
     });
     reactionsByCommentId.set(reaction.commentId, group);
   }

@@ -73,13 +73,34 @@ export async function POST(
     `);
   }
 
-  const [reaction] = await db.$queryRaw<Array<{ count: bigint | number }>>(Prisma.sql`
-    SELECT COUNT(*) AS "count"
-    FROM "report_comment_reactions"
-    WHERE "commentId" = ${commentId}
-      AND "emoji" = ${emoji}
+  const [reaction] = await db.$queryRaw<Array<{
+    count: bigint | number;
+    users: Array<{ id: string; name: string | null; email: string }> | null;
+  }>>(Prisma.sql`
+    SELECT
+      COUNT(r.*) AS "count",
+      COALESCE(
+        JSON_AGG(
+          JSON_BUILD_OBJECT(
+            'id', u."id",
+            'name', COALESCE(u."name", u."email"),
+            'email', u."email"
+          )
+          ORDER BY r."createdAt" ASC
+        ) FILTER (WHERE r."id" IS NOT NULL),
+        '[]'::json
+      ) AS "users"
+    FROM "report_comment_reactions" r
+    INNER JOIN "users" u ON u."id" = r."userId"
+    WHERE r."commentId" = ${commentId}
+      AND r."emoji" = ${emoji}
   `);
   const count = Number(reaction?.count ?? 0);
+  const users = (reaction?.users ?? []).map((user) => ({
+    id: user.id,
+    name: user.name || user.email,
+    email: user.email,
+  }));
 
   publishIssueEvent({
     type: "issue.comment_reaction_updated",
@@ -90,6 +111,7 @@ export async function POST(
     emoji,
     count,
     reactedByUser,
+    users,
   });
 
   return NextResponse.json({
@@ -97,5 +119,6 @@ export async function POST(
     emoji,
     count,
     reactedByMe: reactedByUser,
+    users,
   });
 }

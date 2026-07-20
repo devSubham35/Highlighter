@@ -38,7 +38,8 @@ import {
   Users,
   XCircle,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 type Project = { id: string; name: string; websiteUrl?: string | null };
 type UserSummary = { id: string; name: string; email: string; image?: string | null };
@@ -86,6 +87,10 @@ const sortOptions = [
   { value: "name", label: "Name" },
   { value: "joined", label: "Recently joined" },
 ];
+const memberMenuItemClass =
+  "gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-medium text-foreground data-highlighted:bg-primary/10 data-highlighted:text-primary";
+const memberMenuDangerItemClass =
+  "gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-medium text-destructive data-highlighted:bg-destructive/10 data-highlighted:text-destructive";
 
 function initials(value: string) {
   return value
@@ -183,6 +188,9 @@ export function MembersManagementView({
   initialMembers: MemberRow[];
   initialInvitations: InvitationRow[];
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [members, setMembers] = useState(initialMembers);
   const [invitations, setInvitations] = useState(initialInvitations);
   const [query, setQuery] = useState("");
@@ -196,6 +204,21 @@ export function MembersManagementView({
   const [inviteMessage, setInviteMessage] = useState("");
   const [preview, setPreview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [pendingMemberAction, setPendingMemberAction] = useState<
+    | { type: "suspend"; member: MemberRow }
+    | { type: "remove"; member: MemberRow }
+    | null
+  >(null);
+
+  useEffect(() => {
+    if (searchParams.get("invite") !== "1") return;
+    if (currentUser.canInvite) setInviteOpen(true);
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete("invite");
+    const query = nextParams.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [currentUser.canInvite, pathname, router, searchParams]);
 
   const visibleRows = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -287,7 +310,6 @@ export function MembersManagementView({
   }
 
   async function removeMember(member: MemberRow) {
-    if (!window.confirm(`Remove ${member.user.email} from ${workspace.name}?`)) return;
     const response = await fetch(`/api/workspaces/${workspace.id}/members/${member.user.id}`, { method: "DELETE" });
     if (!response.ok) {
       toast.error("Could not remove member");
@@ -389,7 +411,7 @@ export function MembersManagementView({
         ) : (
           visibleRows.map((row) =>
             row.kind === "member" ? (
-              <div key={row.member.id} className="grid grid-cols-1 gap-3 border-b border-sidebar-border px-4 py-4 last:border-b-0 lg:grid-cols-[minmax(260px,1.35fr)_120px_140px_minmax(220px,1fr)_48px] lg:items-center">
+              <div key={row.member.id} className="grid grid-cols-1 gap-3 border-b border-sidebar-border px-4 py-2.5 last:border-b-0 lg:grid-cols-[minmax(260px,1.35fr)_120px_140px_minmax(220px,1fr)_48px] lg:items-center">
                 <div className="flex min-w-0 items-center gap-3">
                   <Avatar className="size-10">
                     {row.member.user.image ? <AvatarImage src={row.member.user.image} alt="" /> : null}
@@ -400,20 +422,37 @@ export function MembersManagementView({
                 <div><RoleBadge role={row.member.role} /></div>
                 <div>{statusBadge(row.member.status)}</div>
                 <ProjectChips projects={row.member.projects} allCount={projects.length} />
-                {currentUser.canManage ? (
+                {currentUser.canManage && row.member.role !== "OWNER" ? (
                   <DropdownMenu>
-                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>} />
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-lg border border-border/70 bg-card text-muted-foreground shadow-sm hover:border-primary/25 hover:bg-primary/5 hover:text-primary"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      }
+                    />
+                    <DropdownMenuContent align="end" sideOffset={8} className="w-48 rounded-xl border-border bg-popover p-1.5 shadow-xl">
                       {roles.filter((role) => role !== "OWNER").map((role) => (
-                        <DropdownMenuItem key={role} onClick={() => updateMember(row.member, { role })}>
+                        <DropdownMenuItem
+                          key={role}
+                          onClick={() => updateMember(row.member, { role })}
+                          className={memberMenuItemClass}
+                        >
                           <ShieldCheck className="h-4 w-4" /> Make {roleLabel(role)}
                         </DropdownMenuItem>
                       ))}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => updateMember(row.member, { suspended: row.member.status !== "SUSPENDED" })}>
+                      <DropdownMenuSeparator className="my-1.5" />
+                      <DropdownMenuItem
+                        onClick={() => setPendingMemberAction({ type: "suspend", member: row.member })}
+                        className={memberMenuItemClass}
+                      >
                         <XCircle className="h-4 w-4" /> {row.member.status === "SUSPENDED" ? "Restore access" : "Suspend access"}
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => removeMember(row.member)} className="text-destructive">
+                      <DropdownMenuItem onClick={() => setPendingMemberAction({ type: "remove", member: row.member })} className={memberMenuDangerItemClass}>
                         <UserMinus className="h-4 w-4" /> Remove member
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -423,19 +462,29 @@ export function MembersManagementView({
                 )}
               </div>
             ) : (
-              <div key={row.invitation.id} className="grid grid-cols-1 gap-3 border-b border-sidebar-border bg-muted/20 px-4 py-4 last:border-b-0 lg:grid-cols-[minmax(260px,1.35fr)_120px_140px_minmax(220px,1fr)_48px] lg:items-center">
+              <div key={row.invitation.id} className="grid grid-cols-1 gap-3 border-b border-sidebar-border bg-muted/20 px-4 py-2.5 last:border-b-0 lg:grid-cols-[minmax(260px,1.35fr)_120px_140px_minmax(220px,1fr)_48px] lg:items-center">
                 <div className="min-w-0"><p className="truncate text-sm font-medium">{row.invitation.email}</p><p className="truncate text-xs text-muted-foreground">Invited by {row.invitation.invitedBy.name}</p></div>
                 <div><RoleBadge role={row.invitation.role} /></div>
                 <div>{statusBadge(row.invitation.status)}</div>
                 <ProjectChips projects={row.invitation.projects} allCount={projects.length} />
                 {currentUser.canManage ? (
                   <DropdownMenu>
-                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>} />
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => invitationAction(row.invitation, "resend")}><RefreshCcw className="h-4 w-4" /> Resend</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/invite/${encodeURIComponent(row.invitation.token)}`).then(() => toast.success("Invitation link copied"))}><Copy className="h-4 w-4" /> Copy link</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => invitationAction(row.invitation, "cancel")} className="text-destructive"><XCircle className="h-4 w-4" /> Cancel</DropdownMenuItem>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-lg border border-border/70 bg-card text-muted-foreground shadow-sm hover:border-primary/25 hover:bg-primary/5 hover:text-primary"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      }
+                    />
+                    <DropdownMenuContent align="end" sideOffset={8} className="w-48 rounded-xl border-border bg-popover p-1.5 shadow-xl">
+                      <DropdownMenuItem onClick={() => invitationAction(row.invitation, "resend")} className={memberMenuItemClass}><RefreshCcw className="h-4 w-4" /> Resend</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/invite/${encodeURIComponent(row.invitation.token)}`).then(() => toast.success("Invitation link copied"))} className={memberMenuItemClass}><Copy className="h-4 w-4" /> Copy link</DropdownMenuItem>
+                      <DropdownMenuSeparator className="my-1.5" />
+                      <DropdownMenuItem onClick={() => invitationAction(row.invitation, "cancel")} className={memberMenuDangerItemClass}><XCircle className="h-4 w-4" /> Cancel</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
@@ -491,6 +540,59 @@ export function MembersManagementView({
             <Button onClick={sendInvite} disabled={submitting || parsedEmails.length === 0}>
               <UserRoundCheck className="h-4 w-4" />
               {submitting ? "Sending..." : "Send invitation"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(pendingMemberAction)}
+        onOpenChange={(open) => {
+          if (!open) setPendingMemberAction(null);
+        }}
+      >
+        <DialogContent showCloseButton className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {pendingMemberAction?.type === "remove"
+                ? "Remove Member?"
+                : pendingMemberAction?.member.status === "SUSPENDED"
+                  ? "Restore member access?"
+                  : "Suspend member access?"}
+            </DialogTitle>
+            <DialogDescription>
+              {pendingMemberAction?.type === "remove"
+                ? `${pendingMemberAction.member.user.name || pendingMemberAction.member.user.email} will lose access to ${workspace.name}.`
+                : pendingMemberAction?.member.status === "SUSPENDED"
+                  ? `${pendingMemberAction?.member.user.name || pendingMemberAction?.member.user.email} will regain access to this workspace.`
+                  : `${pendingMemberAction?.member.user.name || pendingMemberAction?.member.user.email} will no longer be able to access this workspace until restored.`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPendingMemberAction(null)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant={pendingMemberAction?.type === "remove" ? "destructive" : "default"}
+              className={pendingMemberAction?.type === "remove" ? "text-white hover:text-white" : undefined}
+              onClick={async () => {
+                if (!pendingMemberAction) return;
+                if (pendingMemberAction.type === "remove") {
+                  await removeMember(pendingMemberAction.member);
+                } else {
+                  await updateMember(pendingMemberAction.member, {
+                    suspended: pendingMemberAction.member.status !== "SUSPENDED",
+                  });
+                }
+                setPendingMemberAction(null);
+              }}
+            >
+              {pendingMemberAction?.type === "remove"
+                ? "Remove Member"
+                : pendingMemberAction?.member.status === "SUSPENDED"
+                  ? "Restore access"
+                  : "Suspend access"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -14,17 +14,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { IssueRealtimeComment } from "@/lib/realtime";
 import type { ActivityEntry } from "@/lib/report-metadata";
 import { toast } from "@/lib/toast";
 import { useIssueRealtime } from "@/lib/use-issue-realtime";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { ListFilter, Paperclip, Pencil, Send, SmilePlus, Trash2 } from "lucide-react";
-import dynamic from "next/dynamic";
-import type { EmojiClickData, Props as EmojiPickerProps } from "emoji-picker-react";
+import { ListFilter, Paperclip, Pencil, Search, Send, SmilePlus, Trash2 } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -32,26 +32,21 @@ export type IssueComment = IssueRealtimeComment;
 type ActivityFilter = "all" | "comments" | "history";
 type ActivitySort = "newest" | "oldest";
 const ACTIVITY_SORT_STORAGE_KEY = "highlighter:issue-activity-sort";
-const EMOJI_PICKER_REACTIONS = [
-  "2705",
-  "1f440",
-  "1f64c",
-  "1f64f",
-  "2795",
-  "1f44f",
-  "1f4a1",
-  "1f3af",
-  "1f44b",
-] as const;
-
-const EmojiPicker = dynamic<EmojiPickerProps>(() => import("emoji-picker-react"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-52 w-80 items-center justify-center text-sm text-muted-foreground">
-      Loading emoji...
-    </div>
-  ),
-});
+const QUICK_REACTIONS = ["✅", "👀", "🙌", "🙏", "➕", "👏", "💡", "🎯", "👋", "👍", "❤️", "🔥"] as const;
+const REACTION_LABELS: Record<string, string> = {
+  "✅": "Done",
+  "👀": "Looking",
+  "🙌": "Celebrate",
+  "🙏": "Thanks",
+  "➕": "Plus one",
+  "👏": "Clap",
+  "💡": "Idea",
+  "🎯": "Target",
+  "👋": "Wave",
+  "👍": "Thumbs up",
+  "❤️": "Love",
+  "🔥": "Fire",
+};
 
 function commentTime(at: string) {
   return formatDistanceToNow(new Date(at), { addSuffix: true }).replace(/^about /, "");
@@ -144,10 +139,11 @@ export function IssueComments({
       if (event.type === "issue.comment_reaction_updated" && event.issueId === issueId) {
         setComments((current) =>
           current.map((comment) =>
-            comment.id === event.commentId ? applyReactionUpdate(comment, {
+              comment.id === event.commentId ? applyReactionUpdate(comment, {
               emoji: event.emoji,
               count: event.count,
               reactedByMe: event.userId === currentUserId ? event.reactedByUser : undefined,
+              users: event.users,
             }) : comment,
           ),
         );
@@ -251,6 +247,13 @@ export function IssueComments({
   }
 
   async function handleReactComment(commentId: string, emoji: string) {
+    const previousComments = comments;
+    setComments((current) =>
+      current.map((comment) =>
+        comment.id === commentId ? optimisticToggleReaction(comment, emoji, currentUserId, currentUserName) : comment,
+      ),
+    );
+
     const response = await fetch(`/api/reports/${issueId}/comments/${commentId}/reactions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -258,6 +261,7 @@ export function IssueComments({
     });
 
     if (!response.ok) {
+      setComments(previousComments);
       toast.error("Reaction failed", "Could not update your reaction.");
       return;
     }
@@ -267,6 +271,7 @@ export function IssueComments({
       emoji: string;
       count: number;
       reactedByMe: boolean;
+      users: Array<{ id: string; name: string; email: string }>;
     };
     setComments((current) =>
       current.map((comment) =>
@@ -524,21 +529,35 @@ function CommentRow({
         {comment.reactions.length > 0 ? (
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             {comment.reactions.map((reaction) => (
-              <button
-                key={reaction.emoji}
-                type="button"
-                onClick={() => void onReact(comment.id, reaction.emoji)}
-                className={cn(
-                  "inline-flex h-6 cursor-pointer items-center gap-1 rounded-full border px-2 text-[12px] font-semibold transition-colors",
-                  reaction.reactedByMe
-                    ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
-                    : "border-sidebar-border bg-muted/40 text-foreground hover:bg-muted",
-                )}
-              >
-                <span>{reaction.emoji}</span>
-                <span>{reaction.count}</span>
-              </button>
+              <Tooltip key={reaction.emoji}>
+                <TooltipTrigger
+                  render={
+                    <button
+                      type="button"
+                      aria-pressed={reaction.reactedByMe}
+                      onClick={() => void onReact(comment.id, reaction.emoji)}
+                      className={cn(
+                        "inline-flex h-6 cursor-pointer items-center gap-1 rounded-full border px-2 text-[12px] font-semibold transition-[background-color,border-color,box-shadow] hover:border-primary/30 hover:shadow-sm",
+                        reaction.reactedByMe
+                          ? "border-primary/35 bg-primary/10 text-primary"
+                          : "border-sidebar-border bg-card text-foreground hover:bg-muted/60",
+                      )}
+                    />
+                  }
+                >
+                  <span className="text-[13px] leading-none">{reaction.emoji}</span>
+                  <span>{reaction.count}</span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-56 text-center">
+                  {reactionTooltipText(reaction, currentUserId)}
+                </TooltipContent>
+              </Tooltip>
             ))}
+            <EmojiReactionPicker
+              onSelect={(emoji) => void onReact(comment.id, emoji)}
+              triggerClassName="h-6 gap-1 rounded-full border border-sidebar-border bg-card px-2 text-[12px] text-muted-foreground hover:border-primary/30 hover:bg-muted/60 hover:text-foreground"
+              contentAlign="start"
+            />
           </div>
         ) : null}
       </div>
@@ -550,22 +569,26 @@ function CommentRow({
               triggerClassName="h-8 w-8 justify-center text-muted-foreground hover:bg-muted hover:text-foreground"
               contentAlign="end"
             />
-            <button
-              type="button"
-              aria-label="Delete comment"
-              className="inline-flex h-8 w-8 cursor-pointer items-center justify-center text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-              onClick={onDelete}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              aria-label="Edit comment"
-              className="inline-flex h-8 w-8 cursor-pointer items-center justify-center text-muted-foreground transition-colors hover:bg-info/10 hover:text-info"
-              onClick={() => setEditing(true)}
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </button>
+            {mine ? (
+              <>
+                <button
+                  type="button"
+                  aria-label="Delete comment"
+                  className="inline-flex h-8 w-8 cursor-pointer items-center justify-center text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  onClick={onDelete}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Edit comment"
+                  className="inline-flex h-8 w-8 cursor-pointer items-center justify-center text-muted-foreground transition-colors hover:bg-info/10 hover:text-info"
+                  onClick={() => setEditing(true)}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              </>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -583,10 +606,20 @@ function EmojiReactionPicker({
   contentAlign?: "start" | "center" | "end";
 }) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
-  function handleEmojiSelect(emojiData: EmojiClickData) {
-    onSelect(emojiData.emoji);
+  const reactions = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) return QUICK_REACTIONS;
+    return QUICK_REACTIONS.filter((emoji) =>
+      (REACTION_LABELS[emoji] ?? emoji).toLowerCase().includes(normalizedQuery),
+    );
+  }, [query]);
+
+  function handleEmojiSelect(emoji: string) {
+    onSelect(emoji);
     setOpen(false);
+    setQuery("");
   }
 
   return (
@@ -600,24 +633,36 @@ function EmojiReactionPicker({
       >
         <SmilePlus className="h-3.5 w-3.5" />
       </PopoverTrigger>
-      <PopoverContent align={contentAlign} sideOffset={6} className="w-auto border-0 bg-transparent p-0 shadow-none">
-        <EmojiPicker
-          reactionsDefaultOpen
-          allowExpandReactions
-          reactions={[...EMOJI_PICKER_REACTIONS]}
-          onEmojiClick={handleEmojiSelect}
-          onReactionClick={handleEmojiSelect}
-          autoFocusSearch
-          searchPlaceholder="Search all emoji"
-          emojiStyle={"native" as EmojiPickerProps["emojiStyle"]}
-          theme={"auto" as EmojiPickerProps["theme"]}
-          previewConfig={{ showPreview: false }}
-          skinTonesDisabled
-          lazyLoadEmojis
-          width={340}
-          height={420}
-          className="highlighter-emoji-picker"
-        />
+      <PopoverContent
+        align={contentAlign}
+        sideOffset={6}
+        className="w-72 rounded-xl border border-border bg-popover p-2 shadow-xl"
+      >
+        <div className="relative">
+          <Input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search reactions"
+            className="h-8 rounded-lg bg-card pl-8 text-xs"
+          />
+          <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        </div>
+        <div className="mt-2 grid grid-cols-6 gap-1">
+          {reactions.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              title={REACTION_LABELS[emoji] ?? emoji}
+              onClick={() => handleEmojiSelect(emoji)}
+              className="flex h-9 cursor-pointer items-center justify-center rounded-lg text-lg transition-colors hover:bg-primary/10 focus-visible:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25"
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+        {reactions.length === 0 ? (
+          <p className="px-2 py-4 text-center text-xs text-muted-foreground">No reactions found.</p>
+        ) : null}
       </PopoverContent>
     </Popover>
   );
@@ -625,7 +670,12 @@ function EmojiReactionPicker({
 
 function applyReactionUpdate(
   comment: IssueComment,
-  update: { emoji: string; count: number; reactedByMe?: boolean },
+  update: {
+    emoji: string;
+    count: number;
+    reactedByMe?: boolean;
+    users?: Array<{ id: string; name: string; email: string }>;
+  },
 ): IssueComment {
   const reactions = [...comment.reactions];
   const index = reactions.findIndex((reaction) => reaction.emoji === update.emoji);
@@ -636,12 +686,14 @@ function applyReactionUpdate(
       ...reactions[index],
       count: update.count,
       reactedByMe: update.reactedByMe ?? reactions[index].reactedByMe,
+      users: update.users ?? reactions[index].users,
     };
   } else {
     reactions.push({
       emoji: update.emoji,
       count: update.count,
       reactedByMe: update.reactedByMe ?? false,
+      users: update.users ?? [],
     });
   }
 
@@ -651,4 +703,57 @@ function applyReactionUpdate(
     reactionCount: reactions.reduce((total, reaction) => total + reaction.count, 0),
     reactedByMe: reactions.some((reaction) => reaction.reactedByMe),
   };
+}
+
+function optimisticToggleReaction(
+  comment: IssueComment,
+  emoji: string,
+  currentUserId: string,
+  currentUserName: string,
+): IssueComment {
+  const reactions = [...comment.reactions];
+  const index = reactions.findIndex((reaction) => reaction.emoji === emoji);
+  const currentUser = { id: currentUserId, name: currentUserName, email: "" };
+
+  if (index < 0) {
+    reactions.push({ emoji, count: 1, reactedByMe: true, users: [currentUser] });
+  } else {
+    const current = reactions[index];
+    const nextCount = current.reactedByMe ? current.count - 1 : current.count + 1;
+    const nextUsers = current.reactedByMe
+      ? current.users.filter((user) => user.id !== currentUserId)
+      : [...current.users.filter((user) => user.id !== currentUserId), currentUser];
+
+    if (nextCount <= 0) {
+      reactions.splice(index, 1);
+    } else {
+      reactions[index] = {
+        ...current,
+        count: nextCount,
+        reactedByMe: !current.reactedByMe,
+        users: nextUsers,
+      };
+    }
+  }
+
+  return {
+    ...comment,
+    reactions,
+    reactionCount: reactions.reduce((total, reaction) => total + reaction.count, 0),
+    reactedByMe: reactions.some((reaction) => reaction.reactedByMe),
+  };
+}
+
+function reactionTooltipText(
+  reaction: IssueComment["reactions"][number],
+  currentUserId: string,
+) {
+  if (!reaction.users.length) {
+    return reaction.count === 1 ? "1 reaction" : `${reaction.count} reactions`;
+  }
+
+  const names = reaction.users.map((user) => (user.id === currentUserId ? "You" : user.name || user.email));
+  if (names.length === 1) return `${names[0]} reacted with ${reaction.emoji}`;
+  if (names.length === 2) return `${names[0]} and ${names[1]} reacted with ${reaction.emoji}`;
+  return `${names.slice(0, -1).join(", ")}, and ${names[names.length - 1]} reacted with ${reaction.emoji}`;
 }

@@ -410,7 +410,6 @@ export function Sidebar({
                 {currentWorkspace ? (
                   <>
                     <Avatar className="size-7 rounded-md">
-                      <AvatarImage src={DEFAULT_AVATAR_IMAGE} alt={currentWorkspace.name} />
                       <AvatarFallback className="rounded-md text-xs font-semibold">
                         {workspaceInitial(currentWorkspace.name)}
                       </AvatarFallback>
@@ -443,7 +442,6 @@ export function Sidebar({
                   )}
                 >
                   <Avatar className="mt-0.5 size-7 rounded-md">
-                    <AvatarImage src={DEFAULT_AVATAR_IMAGE} alt={workspace.name} />
                     <AvatarFallback className="rounded-md text-[10px] font-semibold">
                       {workspaceInitial(workspace.name)}
                     </AvatarFallback>
@@ -544,7 +542,10 @@ export function Sidebar({
               variant="outline"
               size="sm"
               className="mt-3 w-full"
-              onClick={() => setInviteMembersOpen(true)}
+              onClick={() => {
+                if (!currentWorkspace) return;
+                router.push(`/workspaces/${currentWorkspace.id}/members?invite=1`);
+              }}
             >
               Invite members
             </Button>
@@ -560,7 +561,7 @@ export function Sidebar({
             onClick={() => setProfileMenuOpen((open) => !open)}
           >
             <Avatar className="size-8">
-              <AvatarImage src={user.image ?? DEFAULT_AVATAR_IMAGE} alt={user.name ?? "User"} />
+              {user.image ? <AvatarImage src={user.image} alt={user.name ?? "User"} /> : null}
               <AvatarFallback className="text-xs font-semibold">
                 {userInitials}
               </AvatarFallback>

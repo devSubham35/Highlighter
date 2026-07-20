@@ -24,6 +24,14 @@ type ReactionRow = {
   emoji: string;
   count: bigint | number;
   reactedByMe: boolean;
+  users: Array<{ id: string; name: string | null; email: string }>;
+};
+
+type ReactionPayload = {
+  emoji: string;
+  count: number;
+  reactedByMe: boolean;
+  users: Array<{ id: string; name: string; email: string }>;
 };
 
 async function requireReport(reportId: string) {
@@ -47,7 +55,7 @@ async function requireReport(reportId: string) {
 
 function rowToComment(
   row: CommentRow,
-  reactions: Array<{ emoji: string; count: number; reactedByMe: boolean }> = [],
+  reactions: ReactionPayload[] = [],
 ) {
   const reactionCount = reactions.reduce((total, reaction) => total + reaction.count, 0);
   return {
@@ -106,8 +114,17 @@ export async function PATCH(
     SELECT
       r."emoji",
       COUNT(*) AS "count",
-      BOOL_OR(r."userId" = ${access.session.user.id}) AS "reactedByMe"
+      BOOL_OR(r."userId" = ${access.session.user.id}) AS "reactedByMe",
+      JSON_AGG(
+        JSON_BUILD_OBJECT(
+          'id', u."id",
+          'name', COALESCE(u."name", u."email"),
+          'email', u."email"
+        )
+        ORDER BY r."createdAt" ASC
+      ) AS "users"
     FROM "report_comment_reactions" r
+    INNER JOIN "users" u ON u."id" = r."userId"
     WHERE r."commentId" = ${commentId}
     GROUP BY r."emoji"
     ORDER BY MIN(r."createdAt") ASC
@@ -119,6 +136,11 @@ export async function PATCH(
       emoji: reaction.emoji,
       count: Number(reaction.count),
       reactedByMe: reaction.reactedByMe,
+      users: reaction.users.map((user) => ({
+        id: user.id,
+        name: user.name || user.email,
+        email: user.email,
+      })),
     })),
   );
   publishIssueEvent({

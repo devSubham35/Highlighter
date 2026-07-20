@@ -22,6 +22,11 @@ export type IssueRealtimeComment = {
     emoji: string;
     count: number;
     reactedByMe: boolean;
+    users: Array<{
+      id: string;
+      name: string;
+      email: string;
+    }>;
   }>;
   author: {
     id: string;
@@ -168,6 +173,11 @@ export type IssueRealtimeEvent =
       emoji: string;
       count: number;
       reactedByUser: boolean;
+      users: Array<{
+        id: string;
+        name: string;
+        email: string;
+      }>;
     };
 
 type RealtimeState = {
