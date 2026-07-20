@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { RoleBadge } from "@/components/common/RoleBadge";
 import {
   Dialog,
   DialogBody,
@@ -58,19 +59,19 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
+    label: "Overview",
+    icon: LayoutDashboard,
+    href: (workspaceId) => (workspaceId ? `/workspaces/${workspaceId}` : "/workspaces"),
+    match: (pathname, workspaceId) =>
+      workspaceId !== null && pathname === `/workspaces/${workspaceId}`,
+  },
+  {
     label: "Projects",
     icon: FolderKanban,
     href: (workspaceId) =>
       workspaceId ? `/workspaces/${workspaceId}/projects` : "/workspaces",
     match: (pathname, workspaceId) =>
       workspaceId !== null && pathname.startsWith(`/workspaces/${workspaceId}/projects`),
-  },
-  {
-    label: "Overview",
-    icon: LayoutDashboard,
-    href: (workspaceId) => (workspaceId ? `/workspaces/${workspaceId}` : "/workspaces"),
-    match: (pathname, workspaceId) =>
-      workspaceId !== null && pathname === `/workspaces/${workspaceId}`,
   },
   {
     label: "Members",
@@ -120,10 +121,6 @@ const DEFAULT_AVATAR_IMAGE = "https://github.com/maxleiter.png";
 
 function workspaceInitial(name: string) {
   return name.trim().charAt(0).toUpperCase() || "W";
-}
-
-function roleLabel(role: MemberRole) {
-  return role.charAt(0) + role.slice(1).toLowerCase();
 }
 
 function getWorkspaceIdFromPath(pathname: string) {
@@ -453,9 +450,7 @@ export function Sidebar({
                   </Avatar>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">{workspace.name}</span>
-                    <span className="mt-1 inline-flex h-5 items-center rounded-full border border-primary/20 bg-primary/10 px-2 text-[10px] font-semibold text-primary">
-                      {roleLabel(workspace.role)}
-                    </span>
+                    <RoleBadge role={workspace.role} className="mt-1" />
                   </span>
                   {workspace.id === currentWorkspace?.id ? (
                     <Check className="mt-1.5 h-4 w-4 shrink-0 text-primary" />

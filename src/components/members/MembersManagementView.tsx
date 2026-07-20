@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
+import { RoleBadge, roleLabel } from "@/components/common/RoleBadge";
 import { MultiSelectCombobox } from "@/components/issues/MultiSelectCombobox";
 import {
   Dialog,
@@ -95,10 +96,6 @@ function initials(value: string) {
     .toUpperCase();
 }
 
-function roleLabel(role: MemberRole) {
-  return role.charAt(0) + role.slice(1).toLowerCase();
-}
-
 function statusBadge(status: MemberStatus | InvitationStatus) {
   const variant =
     status === "ACTIVE" || status === "ACCEPTED"
@@ -112,23 +109,6 @@ function statusBadge(status: MemberStatus | InvitationStatus) {
   return (
     <Badge variant={variant} className="h-6 rounded-md px-2.5 text-[11px]">
       {status.replace("_", " ")}
-    </Badge>
-  );
-}
-
-function roleBadge(role: MemberRole) {
-  const variant =
-    role === "OWNER"
-      ? "default"
-      : role === "ADMIN"
-        ? "purple"
-        : role === "MEMBER"
-          ? "info"
-          : "outline";
-
-  return (
-    <Badge variant={variant} className="h-6 rounded-md px-2.5 text-[11px]">
-      {roleLabel(role)}
     </Badge>
   );
 }
@@ -417,7 +397,7 @@ export function MembersManagementView({
                   </Avatar>
                   <div className="min-w-0"><p className="truncate text-sm font-medium">{row.member.user.name}</p><p className="truncate text-xs text-muted-foreground">{row.member.user.email}</p></div>
                 </div>
-                <div>{roleBadge(row.member.role)}</div>
+                <div><RoleBadge role={row.member.role} /></div>
                 <div>{statusBadge(row.member.status)}</div>
                 <ProjectChips projects={row.member.projects} allCount={projects.length} />
                 {currentUser.canManage ? (
@@ -445,7 +425,7 @@ export function MembersManagementView({
             ) : (
               <div key={row.invitation.id} className="grid grid-cols-1 gap-3 border-b border-sidebar-border bg-muted/20 px-4 py-4 last:border-b-0 lg:grid-cols-[minmax(260px,1.35fr)_120px_140px_minmax(220px,1fr)_48px] lg:items-center">
                 <div className="min-w-0"><p className="truncate text-sm font-medium">{row.invitation.email}</p><p className="truncate text-xs text-muted-foreground">Invited by {row.invitation.invitedBy.name}</p></div>
-                <div>{roleBadge(row.invitation.role)}</div>
+                <div><RoleBadge role={row.invitation.role} /></div>
                 <div>{statusBadge(row.invitation.status)}</div>
                 <ProjectChips projects={row.invitation.projects} allCount={projects.length} />
                 {currentUser.canManage ? (
