@@ -134,6 +134,17 @@ export const updateReportSchema = z.object({
     .optional(),
 });
 
+export const createIssueSchema = z.object({
+  title: z.string().trim().min(1, "Title is required").max(200),
+  description: z.string().trim().max(5000).nullable().optional(),
+  pageUrl: z.string().trim().min(1, "Page URL is required").url("Enter a valid page URL"),
+  type: z.enum(["BUG", "IMPROVEMENT"]).default("BUG"),
+  priority: z.enum(["NONE", "LOW", "MEDIUM", "HIGH", "URGENT"]).default("NONE"),
+  assigneeIds: z.array(z.string().cuid()).default([]),
+});
+
+export type CreateIssueData = z.infer<typeof createIssueSchema>;
+
 export const inviteMemberSchema = z.object({
   email: z.string().email(),
   role: z.enum(["ADMIN", "MEMBER"]),

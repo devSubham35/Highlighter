@@ -17,7 +17,14 @@ export function IssueDescriptionEditor({
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!editing) setDraft(description ?? "");
+    if (editing) return;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setDraft(description ?? "");
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [description, editing]);
 
   async function handleSave() {
@@ -29,24 +36,24 @@ export function IssueDescriptionEditor({
   }
 
   return (
-    <section className="border-b border-sidebar-border bg-card px-5 py-4 dark:bg-surface-elevated">
-      <h3 className="text-sm font-semibold text-foreground">Description</h3>
+    <section className="shrink-0 bg-card px-5 pt-4 pb-3 dark:bg-surface-elevated">
+      <h3 className="text-[13px] font-semibold text-foreground">Description</h3>
       {!editing ? (
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="mt-2 w-full cursor-text rounded-md bg-muted/70 px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted dark:bg-white/5 dark:hover:bg-white/10"
+          className="mt-2 w-full cursor-text rounded-md text-left text-sm leading-5 text-muted-foreground transition-colors hover:text-foreground"
         >
-          <span className={cn(!description?.trim() && "italic text-muted-foreground")}>
-            {description?.trim() ? description : "No description"}
+          <span className={cn(description?.trim() && "text-foreground")}>
+            {description?.trim() ? description : "Add a description..."}
           </span>
         </button>
       ) : (
-        <div className="mt-2 space-y-3">
+        <div className="mt-2 space-y-2">
           <Textarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            className="h-32 resize-none text-sm"
+            className="h-24 resize-none text-sm"
             placeholder="Add a description…"
             autoFocus
           />

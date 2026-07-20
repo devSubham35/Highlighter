@@ -1,11 +1,13 @@
 "use client";
 
+import { CreateIssueDialog } from "@/components/issues/CreateIssueDialog";
 import { IssueDetailModal } from "@/components/issues/IssueDetailModal";
 import { IssueRow } from "@/components/issues/IssueRow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { parseReportMetadata } from "@/lib/report-metadata";
 import { toast } from "@/lib/toast";
+import { useIssueRealtime } from "@/lib/use-issue-realtime";
 import type { WorkspaceMember, ReportStatus } from "@/types";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
@@ -56,7 +58,13 @@ export function ProjectDetailsView({
   const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
-    setIssues(initialIssues);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setIssues(initialIssues);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [initialIssues]);
 
   useEffect(() => {
@@ -64,8 +72,15 @@ export function ProjectDetailsView({
     if (!issueId) return;
     const exists = issues.some((issue) => issue.id === issueId);
     if (!exists) return;
-    setSelectedIssueId(issueId);
-    setModalOpen(true);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setSelectedIssueId(issueId);
+      setModalOpen(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [searchParams, issues]);
 
   const filteredIssues = useMemo(() => {
@@ -87,6 +102,30 @@ export function ProjectDetailsView({
   }, [issues, filter, search, currentUserId]);
 
   const selectedIssue = issues.find((issue) => issue.id === selectedIssueId) ?? null;
+
+  useIssueRealtime({
+    enabled: Boolean(project.id),
+    projectId: project.id,
+    onEvent: (event) => {
+      if (event.type === "issue.updated") {
+        setIssues((current) =>
+          current.map((item) => (item.id === event.issue.id ? { ...item, ...event.issue } : item)),
+        );
+        return;
+      }
+      if (event.type === "issue.created") {
+        setIssues((current) => {
+          if (current.some((item) => item.id === event.issue.id)) return current;
+          return [event.issue, ...current];
+        });
+        return;
+      }
+      if (event.type === "issue.deleted") {
+        setIssues((current) => current.filter((item) => item.id !== event.issueId));
+        if (selectedIssueId === event.issueId) closeModal();
+      }
+    },
+  });
 
   function openIssue(issueId: string) {
     setSelectedIssueId(issueId);
@@ -131,15 +170,29 @@ export function ProjectDetailsView({
             </Button>
           ))}
         </div>
-        <div className="relative min-w-[220px] sm:w-64">
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search issues"
-            aria-label="Search issues"
-            className="h-9 bg-white pr-9 dark:bg-background"
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="relative min-w-[220px] sm:w-64">
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search issues"
+              aria-label="Search issues"
+              className="h-9 bg-white pr-9 dark:bg-background"
+            />
+            <Search className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          </div>
+          <CreateIssueDialog
+            projectId={project.id}
+            defaultPageUrl={project.websiteUrl}
+            members={members}
+            onCreated={(issue) => {
+              setIssues((current) => {
+                if (current.some((item) => item.id === issue.id)) return current;
+                return [issue, ...current];
+              });
+              openIssue(issue.id);
+            }}
           />
-          <Search className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         </div>
       </div>
 
@@ -180,6 +233,7 @@ export function ProjectDetailsView({
         issues={issues}
         projectName={project.name}
         members={members}
+        currentUserId={currentUserId}
         currentUserName={currentUserName}
         onNavigate={openIssue}
         onUpdated={(updated) =>

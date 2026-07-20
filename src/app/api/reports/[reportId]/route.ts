@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { publishIssueEvent, toIssueRealtimePayload } from "@/lib/realtime";
 import { appendActivityLog, mergeReportMetadata, parseReportMetadata } from "@/lib/report-metadata";
 import { updateReportSchema, updateReportStatusSchema } from "@/lib/validations";
 import { headers } from "next/headers";
@@ -48,6 +49,13 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/reports/[r
       where: { id: reportId },
       data: legacy.data,
     });
+    publishIssueEvent({
+      type: "issue.updated",
+      projectId: report.projectId,
+      issueId: report.id,
+      issue: toIssueRealtimePayload(report),
+      changed: { status: true },
+    });
     return NextResponse.json(report);
   }
 
@@ -93,6 +101,21 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/reports/[r
     },
   });
 
+  publishIssueEvent({
+    type: "issue.updated",
+    projectId: report.projectId,
+    issueId: report.id,
+    issue: toIssueRealtimePayload(report),
+    changed: {
+      ...(parsed.data.status ? { status: true } : {}),
+      ...(parsed.data.description !== undefined ? { description: true } : {}),
+      ...(parsed.data.metadata?.type ? { type: parsed.data.metadata.type } : {}),
+      ...(parsed.data.metadata?.priority ? { priority: parsed.data.metadata.priority } : {}),
+      ...(parsed.data.metadata?.assigneeIds ? { assigneeIds: parsed.data.metadata.assigneeIds } : {}),
+      ...(parsed.data.metadata ? { metadata: true } : {}),
+    },
+  });
+
   return NextResponse.json(report);
 }
 
@@ -104,5 +127,10 @@ export async function DELETE(_req: NextRequest, ctx: RouteContext<"/api/reports/
   }
 
   await db.report.delete({ where: { id: reportId } });
+  publishIssueEvent({
+    type: "issue.deleted",
+    projectId: access.report.projectId,
+    issueId: reportId,
+  });
   return NextResponse.json({ ok: true });
 }

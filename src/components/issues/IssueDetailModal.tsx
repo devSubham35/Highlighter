@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  IssueActivityTimeline,
-  IssueActivityTimelineSkeleton,
-} from "@/components/issues/IssueActivityTimeline";
 import { IssueDescriptionEditor } from "@/components/issues/IssueDescriptionEditor";
+import { IssueComments } from "@/components/issues/IssueComments";
 import { IssueDetailSidebar } from "@/components/issues/IssueDetailSidebar";
 import { IssueScreenshotPreview } from "@/components/issues/IssueScreenshotPreview";
 import { IssueStatusBadge } from "@/components/issues/IssueStatusBadge";
@@ -32,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { isIssuePriority } from "@/lib/issue-options";
+import { useIssueRealtime } from "@/lib/use-issue-realtime";
 import { toast } from "@/lib/toast";
 import { ExternalLink, Link2, MoreHorizontal, Sparkles, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -44,6 +42,7 @@ export function IssueDetailModal({
   issues,
   projectName,
   members,
+  currentUserId,
   currentUserName,
   onNavigate,
   onUpdated,
@@ -55,6 +54,7 @@ export function IssueDetailModal({
   issues: IssueItem[];
   projectName: string;
   members: WorkspaceMember[];
+  currentUserId: string;
   currentUserName: string;
   onNavigate: (issueId: string) => void;
   onUpdated: (issue: IssueItem) => void;
@@ -72,12 +72,7 @@ export function IssueDetailModal({
     [issue, issues],
   );
 
-  const loadIssue = useCallback(async (issueId: string, seed?: IssueItem) => {
-    setLoading(true);
-    const response = await fetch(`/api/reports/${issueId}`);
-    setLoading(false);
-    if (!response.ok) return;
-    const data = (await response.json()) as IssueItem;
+  const applyIssueData = useCallback((data: IssueItem, seed?: IssueItem) => {
     const base = seed ?? data;
     const metadata = parseReportMetadata(data.metadata ?? base.metadata);
     const issueType: IssueType = metadata.type ?? "IMPROVEMENT";
@@ -98,16 +93,56 @@ export function IssueDetailModal({
     setActivity(activityLog);
   }, [currentUserName]);
 
+  const loadIssue = useCallback(async (issueId: string, seed?: IssueItem) => {
+    setLoading(true);
+    const response = await fetch(`/api/reports/${issueId}`);
+    setLoading(false);
+    if (!response.ok) return;
+    const data = (await response.json()) as IssueItem;
+    applyIssueData(data, seed);
+  }, [applyIssueData]);
+
+  useIssueRealtime({
+    enabled: open && Boolean(detail?.projectId),
+    projectId: detail?.projectId,
+    issueId: detail?.id,
+    onEvent: (event) => {
+      if (event.type === "issue.updated") {
+        applyIssueData(event.issue);
+        onUpdated(event.issue);
+        return;
+      }
+      if (event.type === "issue.deleted") {
+        onOpenChange(false);
+        return;
+      }
+    },
+  });
+
   useEffect(() => {
+    let cancelled = false;
+
     if (!open || !issue) {
       if (!open) {
-        setDetail(null);
-        setActivity([]);
+        queueMicrotask(() => {
+          if (cancelled) return;
+          setDetail(null);
+          setActivity([]);
+        });
       }
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
-    setDetail(issue);
-    void loadIssue(issue.id, issue);
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setDetail(issue);
+      void loadIssue(issue.id, issue);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [open, issue, loadIssue]);
 
   async function patchIssue(
@@ -212,7 +247,7 @@ export function IssueDetailModal({
         >
         <div className="flex min-h-0 flex-1">
           <div className="flex min-w-0 flex-1 flex-col bg-muted/40 dark:bg-background">
-            <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
               <IssueScreenshotPreview screenshotUrl={displayDetail.screenshotUrl} title={displayDetail.title} />
 
               <section className="border-b border-sidebar-border bg-card px-5 py-4 dark:bg-surface-elevated">
@@ -272,18 +307,16 @@ export function IssueDetailModal({
 
               <IssueDescriptionEditor description={displayDetail.description} onSave={saveDescription} />
 
-              <section className="bg-card px-5 py-4 dark:bg-surface-elevated">
-                <h3 className="mb-4 text-sm font-semibold text-foreground">History</h3>
-                {loading ? (
-                  <IssueActivityTimelineSkeleton />
-                ) : (
-                  <IssueActivityTimeline
-                    entries={activity}
-                    currentUserName={currentUserName}
-                    reporterName={reporterName}
-                  />
-                )}
-              </section>
+              <IssueComments
+                key={displayDetail.id}
+                issueId={displayDetail.id}
+                projectId={displayDetail.projectId}
+                currentUserId={currentUserId}
+                currentUserName={currentUserName}
+                reporterName={reporterName}
+                activityEntries={activity}
+                activityLoading={loading}
+              />
             </div>
           </div>
 
