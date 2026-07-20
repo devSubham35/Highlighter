@@ -21,6 +21,7 @@ interface ComboboxProps {
   placeholder?: string;
   searchPlaceholder?: string;
   className?: string;
+  popoverClassName?: string;
   disabled?: boolean;
   emptyMessage?: string;
   searchable?: boolean;
@@ -34,6 +35,7 @@ function Combobox({
   placeholder = "Select…",
   searchPlaceholder = "Search…",
   className,
+  popoverClassName,
   disabled = false,
   emptyMessage = "No results found",
   searchable = true,
@@ -81,7 +83,12 @@ function Combobox({
       </Popover.Trigger>
 
       <Popover.Portal>
-        <Popover.Positioner side="bottom" align="start" sideOffset={4} className="isolate z-50 w-(--anchor-width)">
+        <Popover.Positioner
+          side="bottom"
+          align="start"
+          sideOffset={4}
+          className={cn("isolate z-50 w-(--anchor-width)", popoverClassName)}
+        >
           <Popover.Popup className="rounded-lg border border-sidebar-border bg-popover shadow-xl data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95">
             {searchable ? (
               <div className="flex items-center gap-2 border-b border-sidebar-border px-3 py-2">

@@ -178,8 +178,9 @@ export function IssueRow({
               options={REPORT_STATUS_OPTIONS}
               searchable={false}
               aria-label="Issue status"
+              popoverClassName="min-w-[9.5rem]"
               className={cn(
-                "h-8 min-w-[9.5rem] gap-1.5 border px-2.5 text-xs",
+                "h-8 min-w-[8.75rem] gap-1.5 border px-2.5 text-xs",
                 ISSUE_STATUS_TRIGGER_CLASS[issue.status],
               )}
             />
