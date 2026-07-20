@@ -405,27 +405,27 @@ export function Sidebar({
             render={
               <button
                 type="button"
-                className="flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-md border border-sidebar-border bg-card px-3 py-2 text-left transition-colors hover:bg-muted/40"
+                className="flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-lg border border-primary bg-primary px-3 py-2 text-left shadow-[var(--control-shadow)] transition-colors hover:bg-primary/90"
               >
                 {currentWorkspace ? (
                   <>
-                    <Avatar className="size-7 rounded-md">
-                      <AvatarFallback className="rounded-md text-xs font-semibold">
+                    <Avatar className="size-7 rounded-lg border border-white/30 bg-white text-primary">
+                      <AvatarFallback className="rounded-lg bg-white text-xs font-semibold text-primary">
                         {workspaceInitial(currentWorkspace.name)}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">
                       {currentWorkspace.name}
                     </span>
                   </>
                 ) : (
-                  <span className="flex-1 text-sm text-muted-foreground">Select workspace</span>
+                  <span className="flex-1 text-sm text-white/80">Select workspace</span>
                 )}
-                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <ChevronDown className="h-4 w-4 shrink-0 text-white/80" />
               </button>
             }
           />
-          <DropdownMenuContent align="start" className="w-56">
+          <DropdownMenuContent align="start" sideOffset={8} className="w-64 rounded-xl border-border bg-popover p-1.5 shadow-xl">
             {workspaces.length === 0 ? (
               <DropdownMenuItem onClick={() => router.push("/workspaces")}>
                 Create a workspace
@@ -436,28 +436,28 @@ export function Sidebar({
                   key={workspace.id}
                   onClick={() => router.push(`/workspaces/${workspace.id}`)}
                   className={cn(
-                    "items-start gap-2 rounded-md px-2 py-2",
+                    "items-center gap-2.5 rounded-lg px-3 py-2.5",
                     workspace.id === currentWorkspace?.id &&
                       "bg-primary/10 text-primary data-highlighted:bg-primary/10 data-highlighted:text-primary",
                   )}
                 >
-                  <Avatar className="mt-0.5 size-7 rounded-md">
-                    <AvatarFallback className="rounded-md text-[10px] font-semibold">
+                  <Avatar className="size-7 rounded-lg border border-primary/15 bg-primary/10 text-primary">
+                    <AvatarFallback className="rounded-lg bg-primary/10 text-[10px] font-semibold text-primary">
                       {workspaceInitial(workspace.name)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{workspace.name}</span>
-                    <RoleBadge role={workspace.role} className="mt-1" />
+                  <span className="flex min-w-0 flex-1 items-center gap-2">
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">{workspace.name}</span>
+                    <RoleBadge role={workspace.role} className="shrink-0" />
                   </span>
                   {workspace.id === currentWorkspace?.id ? (
-                    <Check className="mt-1.5 h-4 w-4 shrink-0 text-primary" />
+                    <Check className="h-4 w-4 shrink-0 text-primary" />
                   ) : null}
                 </DropdownMenuItem>
               ))
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push("/workspaces")}>
+            <DropdownMenuItem onClick={() => router.push("/workspaces")} className="rounded-lg px-3 py-2.5 text-[13px] font-medium">
               All workspaces
             </DropdownMenuItem>
           </DropdownMenuContent>
