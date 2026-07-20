@@ -279,7 +279,7 @@ export function WorkspaceOverviewView({
   const openIssues = totalStatusCounts.OPEN + totalStatusCounts.IN_PROGRESS;
 
   return (
-    <div className="mx-auto w-full max-w-[1800px] px-6 py-6">
+    <div className="-mx-1 w-auto max-w-none px-2 pt-4 pb-4 md:-mx-4 md:-mt-2 md:px-3 md:pt-5">
       {projectIds.map((projectId) => (
         <WorkspaceOverviewRealtimeBridge key={projectId} projectId={projectId} onEvent={handleRealtimeEvent} />
       ))}

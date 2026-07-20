@@ -31,6 +31,7 @@ import {
   FolderKanban,
   LayoutDashboard,
   LogOut,
+  MailPlus,
   MessageSquare,
   Plus,
   Puzzle,
@@ -541,13 +542,14 @@ export function Sidebar({
               type="button"
               variant="outline"
               size="sm"
-              className="mt-3 w-full"
+              className="mt-3 w-full gap-2"
               onClick={() => {
                 if (!currentWorkspace) return;
                 router.push(`/workspaces/${currentWorkspace.id}/members?invite=1`);
               }}
             >
-              Invite members
+              <MailPlus className="h-4 w-4" />
+              Invite Members
             </Button>
           </div>
         ) : null}
