@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandLogo } from "@/components/common/BrandLogo";
 import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { RoleBadge } from "@/components/common/RoleBadge";
@@ -396,7 +397,7 @@ export function Sidebar({
     <div className="flex h-full flex-col">
       <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-sidebar-border px-4">
         <Link href="/workspaces" className="flex min-w-0 items-center">
-          <span className="text-lg font-semibold text-foreground">Highlight</span>
+          <BrandLogo className="h-8 w-32" priority />
         </Link>
       </div>
 

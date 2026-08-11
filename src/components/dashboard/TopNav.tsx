@@ -1,6 +1,7 @@
 "use client";
 
 import { NotificationsDrawer } from "@/components/dashboard/NotificationsDrawer";
+import { BrandLogo } from "@/components/common/BrandLogo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,7 +111,7 @@ export function TopNav({
 
         {showLogo ? (
           <Link href="/workspaces" className="flex min-w-0 items-center">
-            <span className="text-lg font-semibold text-foreground">Highlight</span>
+            <BrandLogo className="h-8 w-32" priority />
           </Link>
         ) : null}
 

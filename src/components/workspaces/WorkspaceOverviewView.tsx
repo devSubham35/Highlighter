@@ -297,7 +297,7 @@ export function WorkspaceOverviewView({
                   </span>
                 </div>
                 <h1 className="mt-5 text-3xl font-semibold tracking-normal text-foreground sm:text-4xl">
-                  Welcome back, {currentUserName}
+                  Welcome back, {currentUserName} 👋
                 </h1>
                 <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
                   Here is what is happening across your feedback workspace today.
@@ -379,8 +379,8 @@ export function WorkspaceOverviewView({
           />
         </div>
 
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="space-y-5">
+        <div className="grid gap-4 xl:grid-cols-4">
+          <div className="space-y-5 xl:col-span-3">
             <IssueAnalyticsCard
               selectedRange={activeRange}
               onRangeChange={setActiveRange}
@@ -405,7 +405,7 @@ export function WorkspaceOverviewView({
             <ProjectHealthOverview projectStats={liveProjectStats} totalTickets={totalProjectTickets} />
           </div>
 
-          <aside className="space-y-5">
+          <aside className="space-y-5 xl:col-span-1">
             <RecentActivityPanel activities={recentActivity} />
             <TeamWidget members={teamMembers} />
             <RecentIssuesCard workspaceId={workspaceId} issues={liveRecentIssues} />

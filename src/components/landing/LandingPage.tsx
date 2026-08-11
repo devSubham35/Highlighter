@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/common/BrandLogo";
 import { DashboardPreview } from "@/components/landing/DashboardPreview";
 import { HeroMockup } from "@/components/landing/HeroMockup";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,6 @@ import {
   Check,
   Code2,
   Globe,
-  Highlighter as HighlightIcon,
   Layers,
   MessageSquareText,
   MousePointer2,
@@ -123,10 +123,7 @@ export function LandingPage() {
       <header className="sticky top-0 z-50 border-b border-sidebar-border bg-card/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <HighlightIcon className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-semibold text-foreground">Highlight</span>
+            <BrandLogo priority />
           </Link>
 
           <nav className="hidden items-center gap-6 md:flex">
@@ -434,10 +431,7 @@ export function LandingPage() {
       <footer className="border-t border-sidebar-border bg-card/50">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-6 py-10 sm:flex-row">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <HighlightIcon className="h-4 w-4" />
-            </div>
-            <span className="text-sm font-semibold text-foreground">Highlight</span>
+            <BrandLogo className="h-8 w-32" />
           </div>
 
           <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
