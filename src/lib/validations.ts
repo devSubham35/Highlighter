@@ -187,6 +187,11 @@ export const updateUserProfileSchema = z.object({
     .trim()
     .min(2, "Name must be at least 2 characters")
     .max(50, "Name is too long"),
+  status: z
+    .string()
+    .trim()
+    .min(1, "Status is required")
+    .max(80, "Status is too long"),
 });
 
 export const changePasswordSchema = z.object({

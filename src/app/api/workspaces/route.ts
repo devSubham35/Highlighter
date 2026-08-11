@@ -17,7 +17,10 @@ export async function GET() {
   if ("error" in authResult) return authResult.error;
 
   const workspaces = await db.workspace.findMany({
-    where: { memberships: { some: { userId: authResult.session.user.id } } },
+    where: {
+      deletedAt: null,
+      memberships: { some: { userId: authResult.session.user.id } },
+    },
     orderBy: { createdAt: "desc" },
     include: {
       memberships: {

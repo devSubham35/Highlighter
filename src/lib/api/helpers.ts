@@ -55,6 +55,15 @@ export async function requireWorkspaceMembership(
     return { error: jsonError("Not found", 404) };
   }
 
+  const workspace = await db.workspace.findFirst({
+    where: { id: workspaceId, deletedAt: null },
+    select: { id: true },
+  });
+
+  if (!workspace) {
+    return { error: jsonError("Not found", 404) };
+  }
+
   if (membership.suspended) {
     return { error: jsonError("Workspace access suspended", 403) };
   }
@@ -89,6 +98,7 @@ export function projectAccessWhere(
     OR: [
       {
         workspace: {
+          deletedAt: null,
           memberships: {
             some: {
               userId,
@@ -155,6 +165,7 @@ export async function isWorkspaceNameTaken(userId: string, name: string, exclude
     where: {
       id: excludeId ? { not: excludeId } : undefined,
       name: { equals: name, mode: "insensitive" },
+      deletedAt: null,
       memberships: { some: { userId } },
     },
     select: { id: true },

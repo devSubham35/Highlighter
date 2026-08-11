@@ -17,6 +17,7 @@ export async function GET() {
       email: true,
       emailVerified: true,
       image: true,
+      status: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -45,6 +46,11 @@ export async function PATCH(req: NextRequest) {
     headers: await headers(),
   });
 
+  await db.user.update({
+    where: { id: authResult.session.user.id },
+    data: { status: parsed.data.status },
+  });
+
   const user = await db.user.findUnique({
     where: { id: authResult.session.user.id },
     select: {
@@ -53,6 +59,7 @@ export async function PATCH(req: NextRequest) {
       email: true,
       emailVerified: true,
       image: true,
+      status: true,
       createdAt: true,
       updatedAt: true,
     },

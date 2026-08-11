@@ -16,8 +16,8 @@ export async function POST(req: NextRequest) {
     return jsonError("Invalid invitation token", 400);
   }
 
-  const invitation = await db.invitation.findUnique({
-    where: { token: parsed.data.token },
+  const invitation = await db.invitation.findFirst({
+    where: { token: parsed.data.token, workspace: { deletedAt: null } },
     include: {
       workspace: true,
       projects: { include: { project: { select: { id: true, name: true } } } },

@@ -7,7 +7,10 @@ import { headers } from "next/headers";
 export default async function WorkspacesPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   const workspacesData = await db.workspace.findMany({
-    where: { memberships: { some: { userId: session!.user.id } } },
+    where: {
+      deletedAt: null,
+      memberships: { some: { userId: session!.user.id } },
+    },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,

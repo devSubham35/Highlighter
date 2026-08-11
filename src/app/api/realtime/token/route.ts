@@ -22,7 +22,12 @@ export async function POST(req: NextRequest) {
 
   if (workspaceId) {
     const membership = await db.membership.findFirst({
-      where: { workspaceId, userId: authResult.session.user.id, suspended: false },
+      where: {
+        workspaceId,
+        userId: authResult.session.user.id,
+        suspended: false,
+        workspace: { deletedAt: null },
+      },
       select: { id: true },
     });
     if (!membership) return jsonError("Not found", 404);

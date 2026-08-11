@@ -7,8 +7,8 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/invitations
   const { token } = await ctx.params;
   if (!parseInvitationToken(token)) return jsonError("Invalid invitation token", 400);
 
-  const invitation = await db.invitation.findUnique({
-    where: { token },
+  const invitation = await db.invitation.findFirst({
+    where: { token, workspace: { deletedAt: null } },
     include: {
       workspace: { select: { id: true, name: true } },
       invitedBy: { select: { id: true, name: true, email: true, image: true } },

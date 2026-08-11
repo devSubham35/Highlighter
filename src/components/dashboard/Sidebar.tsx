@@ -3,6 +3,7 @@
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import type { DashboardUserProfile } from "@/components/dashboard/ProfileDialog";
 import { RoleBadge } from "@/components/common/RoleBadge";
 import {
   Dialog,
@@ -314,11 +315,13 @@ export function Sidebar({
   onCloseMobile,
   workspaces,
   user,
+  onProfileClick,
 }: {
   mobileOpen: boolean;
   onCloseMobile: () => void;
   workspaces: SidebarWorkspace[];
-  user: { name?: string | null; email?: string | null; image?: string | null };
+  user: DashboardUserProfile;
+  onProfileClick: () => void;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -590,22 +593,11 @@ export function Sidebar({
                 className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                 onClick={() => {
                   setProfileMenuOpen(false);
-                  router.push("/profile");
+                  onProfileClick();
                 }}
               >
                 <User className="h-4 w-4" />
                 Profile
-              </button>
-              <button
-                type="button"
-                className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                onClick={() => {
-                  setProfileMenuOpen(false);
-                  router.push("/settings");
-                }}
-              >
-                <Settings className="h-4 w-4" />
-                Settings
               </button>
               <div className="-mx-1 my-1 h-px bg-border" />
               <button

@@ -18,6 +18,7 @@ export default async function WorkspaceSettingsPage({
   const workspace = await db.workspace.findFirst({
     where: {
       id: workspaceId,
+      deletedAt: null,
       memberships: { some: { userId: session.user.id, suspended: false } },
     },
     select: {

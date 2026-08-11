@@ -2,15 +2,15 @@
 
 import { NotificationsDrawer } from "@/components/dashboard/NotificationsDrawer";
 import { BrandLogo } from "@/components/common/BrandLogo";
+import type { DashboardUserProfile } from "@/components/dashboard/ProfileDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { signOut } from "@/lib/auth-client";
 import { disconnectRealtimeSocket } from "@/lib/use-issue-realtime";
 import { cn } from "@/lib/utils";
-import { LogOut, Menu, Moon, Search, Settings, Sun, User } from "lucide-react";
+import { LogOut, Menu, Moon, Search, Sun, User } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 
@@ -21,17 +21,18 @@ export function TopNav({
   compact = false,
   showLogo = false,
   user,
+  onProfileClick,
   className,
   contentClassName,
 }: {
   onMenuClick?: () => void;
   compact?: boolean;
   showLogo?: boolean;
-  user?: { name?: string | null; email?: string | null; image?: string | null };
+  user?: DashboardUserProfile;
+  onProfileClick?: () => void;
   className?: string;
   contentClassName?: string;
 }) {
-  const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -183,22 +184,11 @@ export function TopNav({
                     className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
                     onClick={() => {
                       setProfileMenuOpen(false);
-                      router.push("/profile");
+                      onProfileClick?.();
                     }}
                   >
                     <User className="h-4 w-4" />
                     Profile
-                  </button>
-                  <button
-                    type="button"
-                    className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                    onClick={() => {
-                      setProfileMenuOpen(false);
-                      router.push("/settings");
-                    }}
-                  >
-                    <Settings className="h-4 w-4" />
-                    Settings
                   </button>
                   <div className="-mx-1 my-1 h-px bg-border" />
                   <button

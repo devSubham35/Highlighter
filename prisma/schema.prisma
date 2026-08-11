@@ -13,6 +13,7 @@ model User {
   email         String   @unique
   emailVerified Boolean  @default(false)
   image         String?
+  status        String   @default("Available")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -79,11 +80,13 @@ model Workspace {
   ownerId   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
   memberships Membership[]
   projects    Project[]
   invitations Invitation[]
 
+  @@index([deletedAt])
   @@map("workspaces")
 }
 

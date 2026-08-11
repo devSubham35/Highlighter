@@ -2,6 +2,7 @@
 
 import { Sidebar, type SidebarWorkspace } from "@/components/dashboard/Sidebar";
 import { TopNav } from "@/components/dashboard/TopNav";
+import { ProfileDialog, type DashboardUserProfile } from "@/components/dashboard/ProfileDialog";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -11,11 +12,13 @@ export function DashboardShell({
   workspaces,
   children,
 }: {
-  user: { name?: string | null; email?: string | null; image?: string | null };
+  user: DashboardUserProfile;
   workspaces: SidebarWorkspace[];
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileUser, setProfileUser] = useState(user);
   const pathname = usePathname();
   const hideSidebar = pathname === "/workspaces";
 
@@ -27,16 +30,18 @@ export function DashboardShell({
           mobileOpen={mobileOpen}
           onCloseMobile={() => setMobileOpen(false)}
           workspaces={workspaces}
-          user={user}
+          user={profileUser}
+          onProfileClick={() => setProfileOpen(true)}
         />
       ) : null}
       <div className={cn("flex min-h-screen flex-col", !hideSidebar && "md:ml-60")}>
         <TopNav
           compact={hideSidebar}
           showLogo={hideSidebar}
-          user={user}
+          user={profileUser}
           className={hideSidebar ? "md:px-8" : undefined}
           onMenuClick={hideSidebar ? undefined : () => setMobileOpen(true)}
+          onProfileClick={() => setProfileOpen(true)}
         />
         <main
           className={cn(
@@ -50,6 +55,12 @@ export function DashboardShell({
           <div className="relative">{children}</div>
         </main>
       </div>
+      <ProfileDialog
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        user={profileUser}
+        onUserChange={setProfileUser}
+      />
     </div>
   );
 }

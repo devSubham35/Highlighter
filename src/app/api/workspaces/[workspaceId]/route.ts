@@ -31,7 +31,7 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/workspaces/
     },
   });
 
-  if (!workspace) return jsonError("Not found", 404);
+  if (!workspace || workspace.deletedAt) return jsonError("Not found", 404);
 
   const canManage = access.membership.role === "ADMIN" || access.membership.role === "OWNER";
   const projectWhere = canAccessAllWorkspaceProjects(access.membership.role)
@@ -101,6 +101,9 @@ export async function DELETE(_req: NextRequest, ctx: RouteContext<"/api/workspac
   const access = await requireWorkspaceMembership(workspaceId, "OWNER");
   if ("error" in access) return access.error;
 
-  await db.workspace.delete({ where: { id: workspaceId } });
+  await db.workspace.update({
+    where: { id: workspaceId },
+    data: { deletedAt: new Date() },
+  });
   return NextResponse.json({ ok: true });
 }

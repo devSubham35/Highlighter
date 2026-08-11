@@ -8,8 +8,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/login");
 
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      name: true,
+      email: true,
+      image: true,
+      status: true,
+      createdAt: true,
+    },
+  });
+  if (!user) redirect("/login");
+
   const workspaces = await db.workspace.findMany({
-    where: { memberships: { some: { userId: session.user.id } } },
+    where: {
+      deletedAt: null,
+      memberships: { some: { userId: session.user.id } },
+    },
     orderBy: { name: "asc" },
     select: {
       id: true,
@@ -28,7 +43,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }));
 
   return (
-    <DashboardShell user={session.user} workspaces={sidebarWorkspaces}>
+    <DashboardShell
+      user={{
+        name: user.name,
+        email: user.email,
+        image: user.image,
+        status: user.status,
+        createdAt: user.createdAt.toISOString(),
+      }}
+      workspaces={sidebarWorkspaces}
+    >
       {children}
     </DashboardShell>
   );

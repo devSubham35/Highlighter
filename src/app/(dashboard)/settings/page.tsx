@@ -8,7 +8,10 @@ export default async function SettingsPage() {
   if (!session) redirect("/login");
 
   const workspace = await db.workspace.findFirst({
-    where: { memberships: { some: { userId: session.user.id, suspended: false } } },
+    where: {
+      deletedAt: null,
+      memberships: { some: { userId: session.user.id, suspended: false } },
+    },
     orderBy: { name: "asc" },
     select: { id: true },
   });
