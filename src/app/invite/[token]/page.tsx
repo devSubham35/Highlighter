@@ -27,7 +27,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   }
 
   const state =
-    invitation.status === "PENDING" && invitation.expiresAt < new Date()
+    invitation.status === "ACCEPTED" || (invitation.status === "PENDING" && invitation.expiresAt < new Date())
       ? "EXPIRED"
       : invitation.status;
 

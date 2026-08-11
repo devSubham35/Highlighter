@@ -8,14 +8,14 @@ const DEFAULT_AVATAR_IMAGE = "https://github.com/maxleiter.png";
 
 export function AuthLayoutChrome({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative grid min-h-screen md:grid-cols-2">
+    <div className="relative grid min-h-screen md:h-screen md:overflow-hidden md:grid-cols-2">
       <AuthBackground variant="full" />
 
       <aside className="bg-auth-panel relative hidden flex-col overflow-hidden border-r border-border/70 px-10 py-8 md:flex lg:px-14 lg:py-10">
         <AuthBackground variant="panel" />
 
         <Link href="/" className="relative z-10 inline-flex items-center gap-2">
-          <BrandLogo className="h-8 w-32" priority />
+          <BrandLogo className="h-11 w-44" priority />
         </Link>
 
         <div className="relative z-10 mt-16 space-y-8">
@@ -56,7 +56,7 @@ export function AuthLayoutChrome({ children }: { children: React.ReactNode }) {
         <AuthBackground variant="form" />
 
         <Link href="/" className="relative z-10 mb-8 inline-flex items-center gap-2 md:hidden">
-          <BrandLogo className="h-8 w-32" priority />
+          <BrandLogo className="h-10 w-40" priority />
         </Link>
 
         <div className="relative z-10 mx-auto w-full max-w-md">

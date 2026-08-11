@@ -142,6 +142,19 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function invitationErrorMessage(error: unknown) {
+  if (typeof error === "string") return error;
+  if (!error || typeof error !== "object") return "Could not invite this email.";
+
+  const payload = error as { message?: unknown; emails?: unknown };
+  const message = typeof payload.message === "string" ? payload.message : "Could not invite this email.";
+  const emails = Array.isArray(payload.emails)
+    ? payload.emails.filter((email): email is string => typeof email === "string")
+    : [];
+
+  return emails.length > 0 ? `${message} ${emails.join(", ")}` : message;
+}
+
 function InviteMembersDialog({
   workspace,
   open,
@@ -200,6 +213,7 @@ function InviteMembersDialog({
     setError("");
 
     const failed: string[] = [];
+    const errors: string[] = [];
 
     for (const inviteEmail of emails) {
       const response = await fetch("/api/invitations", {
@@ -209,7 +223,9 @@ function InviteMembersDialog({
       });
 
       if (!response.ok) {
+        const payload = await response.json().catch(() => null);
         failed.push(inviteEmail);
+        errors.push(invitationErrorMessage(payload?.error));
       }
     }
 
@@ -219,7 +235,7 @@ function InviteMembersDialog({
       setEmails(failed);
       toast.error(
         "Some invites failed",
-        `${failed.length} ${failed.length === 1 ? "email" : "emails"} could not be invited.`,
+        errors[0] ?? `${failed.length} ${failed.length === 1 ? "email" : "emails"} could not be invited.`,
       );
       return;
     }

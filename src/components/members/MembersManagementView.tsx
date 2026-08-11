@@ -128,6 +128,19 @@ function parseInviteEmails(value: string) {
     .filter(Boolean);
 }
 
+function invitationErrorMessage(error: unknown) {
+  if (typeof error === "string") return error;
+  if (!error || typeof error !== "object") return "Check the invitation details.";
+
+  const payload = error as { message?: unknown; emails?: unknown };
+  const message = typeof payload.message === "string" ? payload.message : "Check the invitation details.";
+  const emails = Array.isArray(payload.emails)
+    ? payload.emails.filter((email): email is string => typeof email === "string")
+    : [];
+
+  return emails.length > 0 ? `${message} ${emails.join(", ")}` : message;
+}
+
 function statusBadge(status: MemberStatus | InvitationStatus) {
   const variant =
     status === "ACTIVE" || status === "ACCEPTED"
@@ -250,6 +263,11 @@ export function MembersManagementView({
     | { type: "remove"; member: MemberRow }
     | null
   >(null);
+  const [pendingInvitationAction, setPendingInvitationAction] = useState<
+    | { type: "cancel-remove"; invitation: InvitationRow }
+    | null
+  >(null);
+  const [invitationActionPending, setInvitationActionPending] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("invite") !== "1") return;
@@ -327,7 +345,7 @@ export function MembersManagementView({
     const payload = await response.json();
     setSubmitting(false);
     if (!response.ok) {
-      toast.error("Invitation failed", typeof payload.error === "string" ? payload.error : payload.error?.message ?? "Check the invitation details.");
+      toast.error("Invitation failed", invitationErrorMessage(payload.error));
       return;
     }
     setInvitations((current) => [
@@ -390,6 +408,28 @@ export function MembersManagementView({
     }
     setInvitations((current) => current.map((item) => (item.id === invitation.id ? { ...item, ...payload, projects: payload.projects?.map((entry: { project: Project }) => entry.project) ?? item.projects } : item)));
     toast.success(action === "resend" ? "Invitation refreshed" : "Invitation updated");
+  }
+
+  async function confirmInvitationAction() {
+    if (!pendingInvitationAction) return;
+    setInvitationActionPending(true);
+    const response = await fetch(`/api/invitations/${pendingInvitationAction.invitation.id}`, {
+      method: "DELETE",
+    });
+    const payload = await response.json().catch(() => null);
+    setInvitationActionPending(false);
+
+    if (!response.ok) {
+      toast.error(
+        "Could not cancel invitation",
+        typeof payload?.error === "string" ? payload.error : "Try again.",
+      );
+      return;
+    }
+
+    setInvitations((current) => current.filter((item) => item.id !== pendingInvitationAction.invitation.id));
+    toast.success("Invitation cancelled and removed");
+    setPendingInvitationAction(null);
   }
 
   return (
@@ -542,10 +582,14 @@ export function MembersManagementView({
                       }
                     />
                     <DropdownMenuContent align="end" sideOffset={8} className="w-48 rounded-xl border-border bg-popover p-1.5 shadow-xl">
-                      <DropdownMenuItem onClick={() => invitationAction(row.invitation, "resend")} className={memberMenuItemClass}><RefreshCcw className="h-4 w-4" /> Resend</DropdownMenuItem>
+                      {row.invitation.status === "PENDING" ? null : (
+                        <DropdownMenuItem onClick={() => invitationAction(row.invitation, "resend")} className={memberMenuItemClass}><RefreshCcw className="h-4 w-4" /> Resend</DropdownMenuItem>
+                      )}
                       <DropdownMenuItem onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/invite/${encodeURIComponent(row.invitation.token)}`).then(() => toast.success("Invitation link copied"))} className={memberMenuItemClass}><Copy className="h-4 w-4" /> Copy link</DropdownMenuItem>
                       <DropdownMenuSeparator className="my-1.5" />
-                      <DropdownMenuItem onClick={() => invitationAction(row.invitation, "cancel")} className={memberMenuDangerItemClass}><XCircle className="h-4 w-4" /> Cancel</DropdownMenuItem>
+                      {row.invitation.status === "PENDING" ? (
+                        <DropdownMenuItem onClick={() => setPendingInvitationAction({ type: "cancel-remove", invitation: row.invitation })} className={memberMenuDangerItemClass}><XCircle className="h-4 w-4" /> Cancel and remove</DropdownMenuItem>
+                      ) : null}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
@@ -685,6 +729,42 @@ export function MembersManagementView({
                 : pendingMemberAction?.member.status === "SUSPENDED"
                   ? "Restore access"
                   : "Suspend access"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(pendingInvitationAction)}
+        onOpenChange={(open) => {
+          if (invitationActionPending) return;
+          if (!open) setPendingInvitationAction(null);
+        }}
+      >
+        <DialogContent showCloseButton className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cancel and remove invitation?</DialogTitle>
+            <DialogDescription>
+              {pendingInvitationAction?.invitation.email} will no longer be able to use this invitation link, and the invitation will be removed from this list.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={invitationActionPending}
+              onClick={() => setPendingInvitationAction(null)}
+            >
+              Keep invitation
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="text-white hover:text-white"
+              disabled={invitationActionPending}
+              onClick={() => void confirmInvitationAction()}
+            >
+              {invitationActionPending ? "Cancelling..." : "Cancel and remove"}
             </Button>
           </DialogFooter>
         </DialogContent>

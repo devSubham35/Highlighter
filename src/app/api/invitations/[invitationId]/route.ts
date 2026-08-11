@@ -5,6 +5,8 @@ import { createInvitationToken, invitationUrl } from "@/lib/invitation-token";
 import { addDays } from "date-fns";
 import { NextRequest, NextResponse } from "next/server";
 
+const INVITATION_EXPIRY_DAYS = 2;
+
 export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/invitations/[invitationId]">) {
   const { invitationId } = await ctx.params;
   const body = (await req.json()) as { action?: string };
@@ -34,7 +36,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/invitation
       data: {
         token,
         status: "PENDING",
-        expiresAt: addDays(new Date(), 7),
+        expiresAt: addDays(new Date(), INVITATION_EXPIRY_DAYS),
         resentAt: new Date(),
       },
       include: {

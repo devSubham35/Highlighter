@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { signIn } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
 import { GoogleIcon } from "@/components/common/GoogleIcon";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +20,8 @@ function LoginPageContent() {
   const invitedEmail = searchParams.get("email") ?? "";
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState(invitedEmail);
 
   const methods = useForm<LoginFormData>({
     resolver: zodResolver(loginFormSchema),
@@ -97,9 +100,17 @@ function LoginPageContent() {
               </button>
             </div>
             <div className="flex justify-end">
-              <Link className="text-xs font-medium text-primary hover:underline" href="#">
+              <button
+                type="button"
+                className="cursor-pointer text-xs font-medium text-primary hover:underline"
+                onClick={() => {
+                  setForgotPasswordEmail(methods.getValues("email"));
+                  setForgotPasswordOpen(true);
+                }}
+                disabled={methods.formState.isSubmitting}
+              >
                 Forgot password?
-              </Link>
+              </button>
             </div>
             {methods.formState.errors.password ? (
               <p className="text-xs text-destructive">{methods.formState.errors.password.message}</p>
@@ -135,6 +146,14 @@ function LoginPageContent() {
           Create account
         </Link>
       </p>
+
+      {forgotPasswordOpen ? (
+        <ForgotPasswordDialog
+          open={forgotPasswordOpen}
+          onOpenChange={setForgotPasswordOpen}
+          initialEmail={forgotPasswordEmail}
+        />
+      ) : null}
     </div>
   );
 }

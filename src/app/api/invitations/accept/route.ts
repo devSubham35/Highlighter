@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (!invitation) return jsonError("Invitation not found", 404);
-  if (invitation.status === "ACCEPTED") return jsonError("Invitation already accepted", 409);
+  if (invitation.status === "ACCEPTED") return jsonError("Invitation link has expired", 409);
   if (invitation.status === "CANCELLED") return jsonError("Invitation was cancelled", 400);
   if (invitation.status === "REVOKED") return jsonError("Invitation was revoked", 400);
   if (invitation.status !== "PENDING") return jsonError("Invitation is no longer valid", 400);

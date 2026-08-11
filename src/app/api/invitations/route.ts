@@ -6,6 +6,8 @@ import { inviteMemberSchema } from "@/lib/validations";
 import { addDays } from "date-fns";
 import { NextRequest, NextResponse } from "next/server";
 
+const INVITATION_EXPIRY_DAYS = 2;
+
 export async function GET(req: NextRequest) {
   const workspaceId = req.nextUrl.searchParams.get("workspaceId");
   if (!workspaceId) {
@@ -56,13 +58,27 @@ export async function POST(req: NextRequest) {
     new Set([...(parsed.data.emails ?? []), ...(parsed.data.email ? [parsed.data.email] : [])].map((email) => email.toLowerCase())),
   );
 
+  const selfEmail = authResult.session.user.email?.toLowerCase();
+  if (selfEmail && emails.includes(selfEmail)) {
+    return jsonError(
+      {
+        message: "You cannot invite yourself.",
+        emails: [selfEmail],
+      },
+      400,
+    );
+  }
+
   const [existingMembers, pendingInvites] = await Promise.all([
     db.membership.findMany({
       where: {
         workspaceId: parsed.data.workspaceId,
         user: { email: { in: emails, mode: "insensitive" } },
       },
-      select: { user: { select: { email: true } } },
+      include: {
+        user: { select: { email: true } },
+        projectMemberships: { select: { projectId: true } },
+      },
     }),
     db.invitation.findMany({
       where: {
@@ -75,16 +91,34 @@ export async function POST(req: NextRequest) {
     }),
   ]);
 
-  const blocked = new Set([
-    ...existingMembers.map((member) => member.user.email.toLowerCase()),
-    ...pendingInvites.map((invite) => invite.email.toLowerCase()),
-  ]);
+  const workspaceMemberEmails = existingMembers.map((member) => member.user.email.toLowerCase());
+  const projectMemberEmails =
+    projectIds.length === 0
+      ? []
+      : existingMembers
+          .filter((member) => {
+            if (["OWNER", "ADMIN"].includes(member.role)) return true;
+            const assignedProjectIds = new Set(member.projectMemberships.map((projectMembership) => projectMembership.projectId));
+            return projectIds.some((projectId) => assignedProjectIds.has(projectId));
+          })
+          .map((member) => member.user.email.toLowerCase());
+  const pendingInviteEmails = pendingInvites.map((invite) => invite.email.toLowerCase());
+  const blocked = new Set([...workspaceMemberEmails, ...pendingInviteEmails]);
 
   if (blocked.size > 0) {
+    const emailsList = Array.from(blocked);
+    const message =
+      projectMemberEmails.length > 0
+        ? "Some email addresses already have access to the selected project or workspace."
+        : "Some email addresses are already workspace members or have pending invitations.";
+
     return jsonError(
       {
-        message: "Some email addresses are already members or have pending invitations.",
-        emails: Array.from(blocked),
+        message,
+        emails: emailsList,
+        workspaceMembers: workspaceMemberEmails,
+        projectMembers: projectMemberEmails,
+        pendingInvites: pendingInviteEmails,
       },
       409,
     );
@@ -101,7 +135,7 @@ export async function POST(req: NextRequest) {
         role: parsed.data.role,
         message: parsed.data.message,
         invitedById: authResult.session.user.id,
-        expiresAt: addDays(new Date(), 7),
+        expiresAt: addDays(new Date(), INVITATION_EXPIRY_DAYS),
         projects: {
           create: projectIds.map((projectId) => ({ projectId })),
         },

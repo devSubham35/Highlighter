@@ -12,6 +12,8 @@ import { createWorkspaceSchema } from "@/lib/validations";
 import { addDays } from "date-fns";
 import { NextRequest, NextResponse } from "next/server";
 
+const INVITATION_EXPIRY_DAYS = 2;
+
 export async function GET() {
   const authResult = await requireSession();
   if ("error" in authResult) return authResult.error;
@@ -96,7 +98,7 @@ export async function POST(req: NextRequest) {
         email: inviteEmail,
         role: "MEMBER",
         invitedById: authResult.session.user.id,
-        expiresAt: addDays(new Date(), 7),
+        expiresAt: addDays(new Date(), INVITATION_EXPIRY_DAYS),
       },
     });
   }
