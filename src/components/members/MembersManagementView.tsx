@@ -27,12 +27,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/lib/toast";
 import type { MemberRole } from "@prisma/client";
 import {
+  ArrowDownAZ,
+  CircleCheck,
+  Clock,
   Copy,
   MailPlus,
   MoreHorizontal,
   RefreshCcw,
   Search,
   ShieldCheck,
+  SlidersHorizontal,
   UserMinus,
   UserRoundCheck,
   Users,
@@ -75,17 +79,32 @@ type InvitationRow = {
 const roles: MemberRole[] = ["OWNER", "ADMIN", "MEMBER", "VIEWER"];
 const statuses = ["ALL", "ACTIVE", "SUSPENDED", "PENDING", "EXPIRED", "CANCELLED", "REVOKED"] as const;
 const allProjectsValue = "__all_projects__";
+const menuIconClassName = "h-4 w-4";
 const roleOptions = [
-  { value: "ALL", label: "All roles" },
-  ...roles.map((role) => ({ value: role, label: roleLabel(role) })),
+  { value: "ALL", label: "All roles", icon: <Users className={menuIconClassName} /> },
+  ...roles.map((role) => ({
+    value: role,
+    label: roleLabel(role),
+    icon: <ShieldCheck className={menuIconClassName} />,
+  })),
 ];
 const statusOptions = statuses.map((status) => ({
   value: status,
   label: status === "ALL" ? "All statuses" : status.charAt(0) + status.slice(1).toLowerCase(),
+  icon:
+    status === "ALL" ? (
+      <SlidersHorizontal className={menuIconClassName} />
+    ) : status === "ACTIVE" ? (
+      <CircleCheck className={menuIconClassName} />
+    ) : status === "PENDING" ? (
+      <Clock className={menuIconClassName} />
+    ) : (
+      <XCircle className={menuIconClassName} />
+    ),
 }));
 const sortOptions = [
-  { value: "name", label: "Name" },
-  { value: "joined", label: "Recently joined" },
+  { value: "name", label: "Sort by", icon: <ArrowDownAZ className={menuIconClassName} /> },
+  { value: "joined", label: "Recently joined", icon: <Clock className={menuIconClassName} /> },
 ];
 const memberMenuItemClass =
   "gap-2.5 rounded-lg px-3 py-2.5 text-[13px] font-medium text-foreground data-highlighted:bg-primary/10 data-highlighted:text-primary";
@@ -212,12 +231,18 @@ export function MembersManagementView({
 
   useEffect(() => {
     if (searchParams.get("invite") !== "1") return;
-    if (currentUser.canInvite) setInviteOpen(true);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled && currentUser.canInvite) setInviteOpen(true);
+    });
 
     const nextParams = new URLSearchParams(searchParams.toString());
     nextParams.delete("invite");
     const query = nextParams.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    return () => {
+      cancelled = true;
+    };
   }, [currentUser.canInvite, pathname, router, searchParams]);
 
   const visibleRows = useMemo(() => {
@@ -374,6 +399,7 @@ export function MembersManagementView({
             onValueChange={(value) => setRoleFilter(value as MemberRole | "ALL")}
             options={roleOptions}
             searchable={false}
+            showSelectedCheck={false}
             aria-label="Filter by role"
             className="h-9 w-full sm:w-36"
           />
@@ -382,6 +408,7 @@ export function MembersManagementView({
             onValueChange={(value) => setStatusFilter(value as (typeof statuses)[number])}
             options={statusOptions}
             searchable={false}
+            showSelectedCheck={false}
             aria-label="Filter by status"
             className="h-9 w-full sm:w-40"
           />
@@ -390,6 +417,7 @@ export function MembersManagementView({
             onValueChange={(value) => setSortBy(value as "name" | "joined")}
             options={sortOptions}
             searchable={false}
+            showSelectedCheck={false}
             aria-label="Sort members"
             className="h-9 w-full sm:w-40"
           />

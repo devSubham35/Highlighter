@@ -181,11 +181,51 @@ export function WorkspaceOverviewView({
   const [issueProjectPickerOpen, setIssueProjectPickerOpen] = useState(false);
   const router = useRouter();
 
-  useEffect(() => setLiveStats(stats), [stats]);
-  useEffect(() => setActiveRange(selectedRange), [selectedRange]);
-  useEffect(() => setLiveIssueGraphs(issueGraphs), [issueGraphs]);
-  useEffect(() => setLiveProjectStats(projectStats), [projectStats]);
-  useEffect(() => setLiveRecentIssues(recentIssues), [recentIssues]);
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setLiveStats(stats);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [stats]);
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setActiveRange(selectedRange);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedRange]);
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setLiveIssueGraphs(issueGraphs);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [issueGraphs]);
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setLiveProjectStats(projectStats);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [projectStats]);
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setLiveRecentIssues(recentIssues);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [recentIssues]);
 
   function handleRealtimeEvent(event: IssueRealtimeEvent) {
     if (event.type === "issue.created") {
@@ -317,7 +357,7 @@ export function WorkspaceOverviewView({
               <div className="flex flex-wrap gap-2">
                 <a
                   href={`/workspaces/${workspaceId}/projects?create=project`}
-                  className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-primary px-3 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-[10px] bg-primary px-3 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
                 >
                   <Plus className="h-4 w-4" />
                   New Project
@@ -325,7 +365,7 @@ export function WorkspaceOverviewView({
                 <button
                   type="button"
                   onClick={() => setIssueProjectPickerOpen(true)}
-                  className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-xl border border-primary/20 bg-white/80 px-3 text-sm font-medium text-foreground shadow-sm transition-colors hover:border-primary/30 hover:bg-muted/60 dark:bg-white/5"
+                  className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-primary/20 bg-white/80 px-3 text-sm font-medium text-foreground shadow-sm transition-colors hover:border-primary/30 hover:bg-muted/60 dark:bg-white/5"
                 >
                   <FileText className="h-4 w-4" />
                   Create Issue
@@ -453,11 +493,18 @@ function CreateIssueProjectDialog({
   const [projectId, setProjectId] = useState("");
 
   useEffect(() => {
-    if (!open) {
-      setProjectId("");
-      return;
-    }
-    setProjectId((current) => current || projects[0]?.id || "");
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      if (!open) {
+        setProjectId("");
+        return;
+      }
+      setProjectId((current) => current || projects[0]?.id || "");
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [open, projects]);
 
   const projectOptions = projects.map((project) => ({

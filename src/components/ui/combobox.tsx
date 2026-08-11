@@ -25,6 +25,7 @@ interface ComboboxProps {
   disabled?: boolean;
   emptyMessage?: string;
   searchable?: boolean;
+  showSelectedCheck?: boolean;
   optionClassName?: (option: ComboboxOption, selected: boolean) => string | undefined;
   "aria-label"?: string;
 }
@@ -40,6 +41,7 @@ function Combobox({
   disabled = false,
   emptyMessage = "No results found",
   searchable = true,
+  showSelectedCheck = true,
   optionClassName,
   "aria-label": ariaLabel,
 }: ComboboxProps) {
@@ -117,7 +119,8 @@ function Combobox({
                       variant="ghost"
                       onClick={() => handleSelect(option.value)}
                       className={cn(
-                        "relative w-full cursor-pointer justify-start gap-2 px-2.5 pr-8 text-left text-sm font-normal",
+                        "relative w-full cursor-pointer justify-start gap-2 px-2.5 text-left text-sm font-normal",
+                        showSelectedCheck && "pr-8",
                         "hover:!bg-secondary hover:!text-secondary-foreground dark:hover:!bg-secondary/90",
                         isSelected && "bg-primary/10 font-semibold text-primary hover:bg-primary/15",
                         optionClassName?.(option, isSelected),
@@ -125,7 +128,7 @@ function Combobox({
                     >
                       {option.icon ? <span className="flex shrink-0 items-center">{option.icon}</span> : null}
                       {option.label}
-                      {isSelected ? (
+                      {showSelectedCheck && isSelected ? (
                         <span className="pointer-events-none absolute right-2 flex h-4 w-4 items-center justify-center text-current">
                           <Check className="h-3 w-3" />
                         </span>
