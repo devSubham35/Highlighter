@@ -158,10 +158,12 @@ function ProjectPicker({
   projects,
   selected,
   onChange,
+  disabled = false,
 }: {
   projects: Project[];
   selected: string[];
   onChange: (projectIds: string[]) => void;
+  disabled?: boolean;
 }) {
   const options = [
     { value: allProjectsValue, label: "All current projects" },
@@ -190,6 +192,7 @@ function ProjectPicker({
       emptyMessage="No projects found"
       ariaLabel="Project access"
       triggerClassName="h-10 bg-card shadow-[var(--control-shadow)]"
+      disabled={disabled}
     />
   );
 }
@@ -524,7 +527,10 @@ export function MembersManagementView({
         )}
       </div>
 
-      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+      <Dialog open={inviteOpen} onOpenChange={(open) => {
+        if (submitting) return;
+        setInviteOpen(open);
+      }}>
         <DialogContent showCloseButton className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Invite members</DialogTitle>
@@ -533,7 +539,12 @@ export function MembersManagementView({
           <DialogBody className="space-y-6">
             <div>
               <label className="mb-2 block text-sm font-medium leading-none">Email addresses</label>
-              <Textarea value={inviteEmails} onChange={(event) => setInviteEmails(event.target.value)} placeholder="alex@example.com, priya@example.com" />
+              <Textarea
+                value={inviteEmails}
+                onChange={(event) => setInviteEmails(event.target.value)}
+                placeholder="alex@example.com, priya@example.com"
+                disabled={submitting}
+              />
             </div>
             <div className="grid gap-4 md:grid-cols-[180px_1fr]">
               <div>
@@ -544,16 +555,22 @@ export function MembersManagementView({
                   options={roles.map((role) => ({ value: role, label: roleLabel(role) }))}
                   searchable={false}
                   aria-label="Invitation role"
+                  disabled={submitting}
                 />
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium leading-none">Project access</label>
-                <ProjectPicker projects={projects} selected={inviteProjects} onChange={setInviteProjects} />
+                <ProjectPicker projects={projects} selected={inviteProjects} onChange={setInviteProjects} disabled={submitting} />
               </div>
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium leading-none">Personal message</label>
-              <Textarea value={inviteMessage} onChange={(event) => setInviteMessage(event.target.value)} placeholder="Optional note for the invitation email" />
+              <Textarea
+                value={inviteMessage}
+                onChange={(event) => setInviteMessage(event.target.value)}
+                placeholder="Optional note for the invitation email"
+                disabled={submitting}
+              />
             </div>
             {preview ? (
               <div className="rounded-md border border-border bg-muted/30 p-4 text-sm">
@@ -564,7 +581,7 @@ export function MembersManagementView({
             ) : null}
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPreview((value) => !value)}>{preview ? "Hide preview" : "Preview"}</Button>
+            <Button variant="outline" onClick={() => setPreview((value) => !value)} disabled={submitting}>{preview ? "Hide preview" : "Preview"}</Button>
             <Button onClick={sendInvite} disabled={submitting || parsedEmails.length === 0}>
               <UserRoundCheck className="h-4 w-4" />
               {submitting ? "Sending..." : "Send invitation"}

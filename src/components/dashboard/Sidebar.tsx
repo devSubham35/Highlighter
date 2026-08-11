@@ -165,11 +165,13 @@ function InviteMembersDialog({
   }
 
   function handleOpenChange(nextOpen: boolean) {
+    if (submitting) return;
     onOpenChange(nextOpen);
     if (!nextOpen) reset();
   }
 
   function addEmail() {
+    if (submitting) return;
     const nextEmail = email.trim().toLowerCase();
     setError("");
 
@@ -255,6 +257,7 @@ function InviteMembersDialog({
                   setEmail(event.target.value);
                   if (error) setError("");
                 }}
+                disabled={submitting}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     event.preventDefault();
@@ -262,7 +265,7 @@ function InviteMembersDialog({
                   }
                 }}
               />
-              <Button type="button" size="icon" onClick={addEmail} aria-label="Add email">
+              <Button type="button" size="icon" onClick={addEmail} aria-label="Add email" disabled={submitting}>
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
@@ -284,6 +287,7 @@ function InviteMembersDialog({
                     <span className="min-w-0 truncate">{inviteEmail}</span>
                     <button
                       type="button"
+                      disabled={submitting}
                       className="inline-flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/15 hover:text-primary"
                       onClick={() => setEmails((current) => current.filter((item) => item !== inviteEmail))}
                       aria-label={`Remove ${inviteEmail}`}
@@ -298,7 +302,7 @@ function InviteMembersDialog({
         </DialogBody>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+          <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={submitting}>
             Cancel
           </Button>
           <Button type="button" onClick={sendInvites} disabled={submitting || emails.length === 0}>

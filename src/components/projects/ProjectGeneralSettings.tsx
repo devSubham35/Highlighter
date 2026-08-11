@@ -145,7 +145,13 @@ export function ProjectGeneralSettings({
         </CardContent>
       </Card>
 
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+      <Dialog
+        open={deleteOpen}
+        onOpenChange={(open) => {
+          if (deleting) return;
+          setDeleteOpen(open);
+        }}
+      >
         <DialogContent showCloseButton>
           <DialogHeader className="border-b-0 pb-4">
             <DialogTitle>Delete Project?</DialogTitle>
@@ -161,6 +167,7 @@ export function ProjectGeneralSettings({
               value={confirmName}
               onChange={(event) => setConfirmName(event.target.value)}
               placeholder={project.name}
+              disabled={deleting}
             />
             {deleteError ? <p className="text-sm text-destructive">{deleteError}</p> : null}
           </div>

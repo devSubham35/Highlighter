@@ -24,6 +24,7 @@ export function IssuePickerPanel({
   onSelect,
   onValuesChange,
   emptyMessage = "No results found",
+  disabled = false,
 }: {
   searchPlaceholder: string;
   items: IssuePickerItem[];
@@ -33,6 +34,7 @@ export function IssuePickerPanel({
   onSelect?: (value: string) => void;
   onValuesChange?: (values: string[]) => void;
   emptyMessage?: string;
+  disabled?: boolean;
 }) {
   const [search, setSearch] = useState("");
 
@@ -49,6 +51,7 @@ export function IssuePickerPanel({
   const selectedSet = new Set(multiple ? (values ?? []) : value ? [value] : []);
 
   function handleClick(itemValue: string) {
+    if (disabled) return;
     if (multiple && onValuesChange) {
       const next = selectedSet.has(itemValue)
         ? (values ?? []).filter((id) => id !== itemValue)
@@ -67,6 +70,7 @@ export function IssuePickerPanel({
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder={searchPlaceholder}
+          disabled={disabled}
           className="h-8 flex-1 border-0 bg-transparent px-0 text-sm text-popover-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
           autoFocus
         />
@@ -82,8 +86,10 @@ export function IssuePickerPanel({
                 key={item.value}
                 type="button"
                 onClick={() => handleClick(item.value)}
+                disabled={disabled}
                 className={cn(
                   "grid w-full cursor-pointer grid-cols-[1.5rem_minmax(0,1fr)_1rem] items-center gap-x-2 rounded-md px-2.5 py-2 text-left text-sm transition-colors",
+                  disabled && "cursor-not-allowed opacity-50",
                   "hover:bg-secondary hover:text-secondary-foreground dark:hover:bg-secondary/90",
                   isSelected && "bg-primary/10 font-medium text-primary hover:bg-primary/15",
                   !item.avatarName && !item.icon && "grid-cols-[minmax(0,1fr)_1rem]",

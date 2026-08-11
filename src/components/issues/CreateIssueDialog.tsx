@@ -98,6 +98,7 @@ export function CreateIssueDialog({
   }
 
   function handleOpenChange(nextOpen: boolean) {
+    if (submitting) return;
     if (controlledOpen === undefined) {
       setUncontrolledOpen(nextOpen);
     }
@@ -155,6 +156,7 @@ export function CreateIssueDialog({
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Issue title"
+                disabled={submitting}
                 required
               />
             </label>
@@ -166,6 +168,7 @@ export function CreateIssueDialog({
                 onChange={(event) => setPageUrl(event.target.value)}
                 placeholder="https://example.com/page"
                 type="url"
+                disabled={submitting}
                 required
               />
             </label>
@@ -176,14 +179,21 @@ export function CreateIssueDialog({
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
                 placeholder="What needs to be fixed?"
+                disabled={submitting}
                 className="h-24 resize-none"
               />
             </label>
 
             <div className="grid gap-4 sm:grid-cols-3">
               <FieldPicker label="Type">
-                <Popover open={typeOpen} onOpenChange={setTypeOpen}>
-                  <PopoverTrigger className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-md border border-input bg-card px-3 text-left text-sm font-medium">
+                <Popover open={typeOpen} onOpenChange={(nextOpen) => setTypeOpen(submitting ? false : nextOpen)}>
+                  <PopoverTrigger
+                    disabled={submitting}
+                    className={cn(
+                      "flex h-9 w-full cursor-pointer items-center gap-2 rounded-md border border-input bg-card px-3 text-left text-sm font-medium",
+                      submitting && "pointer-events-none opacity-50",
+                    )}
+                  >
                     {issueTypeIcon(type)}
                     <span className="min-w-0 flex-1 truncate">{ISSUE_TYPE_LABELS[type]}</span>
                   </PopoverTrigger>
@@ -192,6 +202,7 @@ export function CreateIssueDialog({
                       searchPlaceholder="Change type..."
                       items={ISSUE_TYPE_OPTIONS}
                       value={type}
+                      disabled={submitting}
                       onSelect={(value) => {
                         if (!isIssueType(value)) return;
                         setType(value);
@@ -203,8 +214,14 @@ export function CreateIssueDialog({
               </FieldPicker>
 
               <FieldPicker label="Priority">
-                <Popover open={priorityOpen} onOpenChange={setPriorityOpen}>
-                  <PopoverTrigger className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-md border border-input bg-card px-3 text-left text-sm font-medium">
+                <Popover open={priorityOpen} onOpenChange={(nextOpen) => setPriorityOpen(submitting ? false : nextOpen)}>
+                  <PopoverTrigger
+                    disabled={submitting}
+                    className={cn(
+                      "flex h-9 w-full cursor-pointer items-center gap-2 rounded-md border border-input bg-card px-3 text-left text-sm font-medium",
+                      submitting && "pointer-events-none opacity-50",
+                    )}
+                  >
                     {issuePriorityIcon(priority)}
                     <span className="min-w-0 flex-1 truncate">{ISSUE_PRIORITY_LABELS[priority]}</span>
                   </PopoverTrigger>
@@ -213,6 +230,7 @@ export function CreateIssueDialog({
                       searchPlaceholder="Change priority..."
                       items={ISSUE_PRIORITY_OPTIONS}
                       value={priority}
+                      disabled={submitting}
                       onSelect={(value) => {
                         if (!isIssuePriority(value)) return;
                         setPriority(value);
@@ -224,12 +242,14 @@ export function CreateIssueDialog({
               </FieldPicker>
 
               <FieldPicker label="Assignee">
-                <Popover open={assigneeOpen} onOpenChange={setAssigneeOpen}>
+                <Popover open={assigneeOpen} onOpenChange={(nextOpen) => setAssigneeOpen(submitting ? false : nextOpen)}>
                   <PopoverTrigger
                     aria-label={primaryAssignee ? `Change assignee: ${assigneeLabel}` : "Assign issue"}
+                    disabled={submitting}
                     className={cn(
                       "flex h-9 cursor-pointer items-center gap-2 rounded-md border border-input bg-card text-left text-sm font-medium transition-colors hover:bg-muted/50",
                       primaryAssignee ? "w-fit px-1.5 pr-2" : "w-full px-3",
+                      submitting && "pointer-events-none opacity-50",
                     )}
                   >
                     {primaryAssignee ? (
@@ -247,6 +267,7 @@ export function CreateIssueDialog({
                       items={assigneeItems}
                       values={assigneeIds}
                       multiple
+                      disabled={submitting}
                       onValuesChange={setAssigneeIds}
                     />
                   </PopoverContent>
@@ -255,7 +276,7 @@ export function CreateIssueDialog({
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={submitting}>
               Cancel
             </Button>
             <Button type="submit" disabled={submitting || !title.trim() || !pageUrl.trim()}>

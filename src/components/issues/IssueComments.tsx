@@ -364,6 +364,7 @@ export function IssueComments({
               placeholder="Add a comment"
               className="min-h-12 resize-none border-0 bg-transparent px-3 py-2 text-sm leading-5 shadow-none focus-visible:ring-0"
               rows={2}
+              disabled={sending}
             />
           </div>
           <div className="mt-1.5 flex items-center justify-between gap-2">
@@ -494,6 +495,7 @@ function CommentRow({
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               className="min-h-20 resize-none text-sm"
+              disabled={saving}
               autoFocus
             />
             <div className="flex items-center gap-2">

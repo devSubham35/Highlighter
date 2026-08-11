@@ -18,6 +18,7 @@ export function MultiSelectCombobox({
   triggerClassName,
   emptyMessage = "No results found",
   ariaLabel,
+  disabled = false,
 }: {
   values: string[];
   onValuesChange: (values: string[]) => void;
@@ -28,6 +29,7 @@ export function MultiSelectCombobox({
   triggerClassName?: string;
   emptyMessage?: string;
   ariaLabel?: string;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -50,6 +52,7 @@ export function MultiSelectCombobox({
         : `${selectedLabels.length} selected`;
 
   function toggle(value: string) {
+    if (disabled) return;
     if (values.includes(value)) {
       onValuesChange(values.filter((item) => item !== value));
       return;
@@ -58,11 +61,13 @@ export function MultiSelectCombobox({
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(nextOpen) => setOpen(disabled ? false : nextOpen)}>
       <PopoverTrigger
         aria-label={ariaLabel}
+        disabled={disabled}
         className={cn(
           "flex h-9 w-full min-w-36 items-center justify-between gap-2 rounded-md border border-input bg-card px-3 text-sm font-medium transition-colors outline-none hover:bg-muted/50",
+          disabled && "pointer-events-none opacity-50",
           !selectedLabels.length && "text-muted-foreground",
           triggerClassName,
           className,
@@ -78,6 +83,7 @@ export function MultiSelectCombobox({
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={searchPlaceholder}
+            disabled={disabled}
             className="h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
           />
         </div>
@@ -93,6 +99,7 @@ export function MultiSelectCombobox({
                   type="button"
                   variant="ghost"
                   onClick={() => toggle(option.value)}
+                  disabled={disabled}
                   className={cn(
                     "relative w-full justify-start pr-8 text-left text-sm font-normal",
                     isSelected && "bg-primary/10 font-semibold text-primary hover:bg-primary/15",

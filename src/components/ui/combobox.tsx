@@ -55,20 +55,27 @@ function Combobox({
   }, [options, search]);
 
   const selected = options.find((option) => option.value === value);
+  const popoverOpen = disabled ? false : open;
 
   const handleSelect = (optionValue: string) => {
+    if (disabled) return;
     onValueChange?.(optionValue);
     setOpen(false);
     setSearch("");
   };
 
   const handleOpenChange = (next: boolean) => {
+    if (disabled) {
+      setOpen(false);
+      setSearch("");
+      return;
+    }
     setOpen(next);
     if (!next) setSearch("");
   };
 
   return (
-    <Popover.Root open={open} onOpenChange={handleOpenChange}>
+    <Popover.Root open={popoverOpen} onOpenChange={handleOpenChange}>
       <Popover.Trigger
         disabled={disabled}
         aria-label={ariaLabel}
@@ -101,6 +108,7 @@ function Combobox({
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder={searchPlaceholder}
+                  disabled={disabled}
                   className="h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
                 />
               </div>
@@ -117,6 +125,7 @@ function Combobox({
                       key={option.value}
                       type="button"
                       variant="ghost"
+                      disabled={disabled}
                       onClick={() => handleSelect(option.value)}
                       className={cn(
                         "relative w-full cursor-pointer justify-start gap-2 px-2.5 text-left text-sm font-normal",

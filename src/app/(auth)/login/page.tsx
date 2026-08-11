@@ -49,69 +49,71 @@ function LoginPageContent() {
       <p className="mt-1 text-sm text-muted-foreground">Sign in to continue to Highlight.</p>
 
       <form className="mt-7 space-y-5" onSubmit={methods.handleSubmit(onSubmit)}>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground" htmlFor="email">
-            Email address
-          </label>
-          <div className="relative">
-            <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              autoComplete="email"
-              className="h-11 rounded-md pl-10"
-              {...methods.register("email")}
-            />
+        <fieldset disabled={methods.formState.isSubmitting} className="contents">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground" htmlFor="email">
+              Email address
+            </label>
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                autoComplete="email"
+                className="h-11 rounded-md pl-10"
+                {...methods.register("email")}
+              />
+            </div>
+            {methods.formState.errors.email ? (
+              <p className="text-xs text-destructive">{methods.formState.errors.email.message}</p>
+            ) : null}
           </div>
-          {methods.formState.errors.email ? (
-            <p className="text-xs text-destructive">{methods.formState.errors.email.message}</p>
-          ) : null}
-        </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground" htmlFor="password">
-            Password
-          </label>
-          <div className="relative">
-            <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              autoComplete="current-password"
-              className="h-11 rounded-md px-10"
-              {...methods.register("password")}
-            />
-            <EyeOff className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground" htmlFor="password">
+              Password
+            </label>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                className="h-11 rounded-md px-10"
+                {...methods.register("password")}
+              />
+              <EyeOff className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            </div>
+            <div className="flex justify-end">
+              <Link className="text-xs font-medium text-primary hover:underline" href="#">
+                Forgot password?
+              </Link>
+            </div>
+            {methods.formState.errors.password ? (
+              <p className="text-xs text-destructive">{methods.formState.errors.password.message}</p>
+            ) : null}
           </div>
-          <div className="flex justify-end">
-            <Link className="text-xs font-medium text-primary hover:underline" href="#">
-              Forgot password?
-            </Link>
+
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+          <Button type="submit" className="w-full">
+            <span>{methods.formState.isSubmitting ? "Signing in..." : "Sign in"}</span>
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+
+          <div className="flex items-center gap-3 pt-1">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <div className="h-px flex-1 bg-border" />
           </div>
-          {methods.formState.errors.password ? (
-            <p className="text-xs text-destructive">{methods.formState.errors.password.message}</p>
-          ) : null}
-        </div>
 
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-        <Button type="submit" className="w-full" disabled={methods.formState.isSubmitting}>
-          <span>{methods.formState.isSubmitting ? "Signing in..." : "Sign in"}</span>
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-
-        <div className="flex items-center gap-3 pt-1">
-          <div className="h-px flex-1 bg-border" />
-          <span className="text-xs text-muted-foreground">or</span>
-          <div className="h-px flex-1 bg-border" />
-        </div>
-
-        <Button type="button" variant="outline" className="w-full font-medium">
-          <span className="text-base leading-none">G</span>
-          Continue with Google
-        </Button>
+          <Button type="button" variant="outline" className="w-full font-medium">
+            <span className="text-base leading-none">G</span>
+            Continue with Google
+          </Button>
+        </fieldset>
       </form>
 
       <p className="mt-7 text-center text-sm text-muted-foreground">

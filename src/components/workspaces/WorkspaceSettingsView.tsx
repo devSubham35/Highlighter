@@ -93,6 +93,7 @@ export function WorkspaceSettingsView({
               placeholder={workspace.name}
               className="mt-3 bg-white dark:bg-background"
               aria-label="Workspace deletion confirmation"
+              disabled={deleting}
             />
           </div>
 
@@ -114,7 +115,13 @@ export function WorkspaceSettingsView({
         </div>
       </section>
 
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          if (deleting) return;
+          setConfirmOpen(open);
+        }}
+      >
         <DialogContent showCloseButton className="max-w-md">
           <DialogHeader>
             <DialogTitle>Delete {workspace.name}?</DialogTitle>
@@ -129,7 +136,7 @@ export function WorkspaceSettingsView({
             </div>
           </DialogBody>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setConfirmOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setConfirmOpen(false)} disabled={deleting}>
               Cancel
             </Button>
             <Button

@@ -55,6 +55,7 @@ export function IssueDescriptionEditor({
             onChange={(event) => setDraft(event.target.value)}
             className="h-24 resize-none text-sm"
             placeholder="Add a description…"
+            disabled={saving}
             autoFocus
           />
           <div className="flex justify-end gap-2">

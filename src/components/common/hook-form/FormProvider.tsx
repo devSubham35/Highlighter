@@ -25,7 +25,9 @@ function FormProvider({
   return (
     <Form {...methods}>
       <form onSubmit={onSubmit} noValidate className={className}>
-        {children}
+        <fieldset disabled={methods.formState.isSubmitting} className="contents">
+          {children}
+        </fieldset>
       </form>
     </Form>
   );

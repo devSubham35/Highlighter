@@ -71,9 +71,8 @@ export function ProfileDialog({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, status }),
     });
-    setSaving(false);
-
     if (!response.ok) {
+      setSaving(false);
       toast.error("Profile update failed", "Check your details and try again.");
       return;
     }
@@ -93,12 +92,19 @@ export function ProfileDialog({
       status: updated.status,
       createdAt: updated.createdAt ? new Date(updated.createdAt).toISOString() : user.createdAt,
     });
+    setSaving(false);
     toast.success("Profile updated");
     onOpenChange(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (saving) return;
+        onOpenChange(nextOpen);
+      }}
+    >
       <DialogContent showCloseButton className="max-w-md">
         <DialogHeader>
           <DialogTitle>Profile</DialogTitle>
@@ -118,12 +124,17 @@ export function ProfileDialog({
 
           <label className="block space-y-2">
             <span className="block text-sm font-medium text-foreground">Name</span>
-            <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Your name" />
+            <Input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Your name"
+              disabled={saving}
+            />
           </label>
 
           <label className="block space-y-2">
             <span className="block text-sm font-medium text-foreground">Email</span>
-            <Input value={user.email ?? ""} readOnly className="bg-muted/40 text-muted-foreground" />
+            <Input value={user.email ?? ""} readOnly disabled={saving} className="bg-muted/40 text-muted-foreground" />
           </label>
 
           <label className="block space-y-2">
@@ -134,6 +145,7 @@ export function ProfileDialog({
               options={statusOptions}
               searchable={false}
               showSelectedCheck={false}
+              disabled={saving}
               aria-label="Profile status"
               className="w-full"
             />
@@ -145,7 +157,7 @@ export function ProfileDialog({
           </div>
         </DialogBody>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
           </Button>
           <Button type="button" onClick={saveProfile} disabled={saving || name.trim().length < 2}>
