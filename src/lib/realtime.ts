@@ -186,14 +186,14 @@ type RealtimeState = {
 };
 
 const realtimeGlobal = globalThis as typeof globalThis & {
-  __highlighterRealtime?: RealtimeState;
+  __highlightRealtime?: RealtimeState;
 };
 
 function getState() {
-  if (!realtimeGlobal.__highlighterRealtime) {
-    realtimeGlobal.__highlighterRealtime = { tokens: new Map() };
+  if (!realtimeGlobal.__highlightRealtime) {
+    realtimeGlobal.__highlightRealtime = { tokens: new Map() };
   }
-  return realtimeGlobal.__highlighterRealtime;
+  return realtimeGlobal.__highlightRealtime;
 }
 
 function realtimeSecret() {
@@ -201,7 +201,7 @@ function realtimeSecret() {
     process.env.BETTER_AUTH_SECRET ??
     process.env.AUTH_SECRET ??
     process.env.NEXTAUTH_SECRET ??
-    "highlighter-development-realtime-secret"
+    "highlight-development-realtime-secret"
   );
 }
 
@@ -283,7 +283,7 @@ async function publishIssueEventInternal(event: IssueRealtimeEvent) {
   const hostname = process.env.HOSTNAME ?? "localhost";
   const endpoint =
     process.env.REALTIME_INTERNAL_URL ??
-    `http://${hostname}:${port}/__highlighter/realtime/publish`;
+    `http://${hostname}:${port}/__highlight/realtime/publish`;
 
   try {
     await fetch(endpoint, {

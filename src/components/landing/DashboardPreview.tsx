@@ -1,11 +1,10 @@
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import {
   AlertCircle,
   CheckCircle2,
   Circle,
   Clock,
-  Highlighter,
+  Highlighter as HighlightIcon,
 } from "lucide-react";
 
 const issues = [
@@ -50,7 +49,7 @@ export function DashboardPreview() {
       <div className="flex items-center justify-between border-b border-sidebar-border bg-muted/50 px-5 py-4">
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Highlighter className="h-4 w-4" />
+            <HighlightIcon className="h-4 w-4" />
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground">Marketing site</p>

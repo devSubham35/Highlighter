@@ -31,7 +31,7 @@ export type ProjectListItem = {
 };
 
 type StatusFilter = "active" | "archived";
-const PROJECT_VIEW_MODE_STORAGE_KEY = "highlighter:projects:view-mode";
+const PROJECT_VIEW_MODE_STORAGE_KEY = "highlight:projects:view-mode";
 
 export function ProjectsView({
   workspaceId,

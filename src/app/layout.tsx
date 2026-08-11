@@ -11,7 +11,7 @@ const poppins = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Highlighter",
+  title: "Highlight",
   description: "Visual bug reporting SaaS",
 };
 

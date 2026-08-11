@@ -36,7 +36,6 @@ export function DashboardShell({
           showLogo={hideSidebar}
           user={hideSidebar ? user : undefined}
           className={hideSidebar ? "md:px-8" : undefined}
-          contentClassName={hideSidebar ? "max-w-7xl" : undefined}
           onMenuClick={hideSidebar ? undefined : () => setMobileOpen(true)}
         />
         <main className="flex-1 px-4 py-4 md:px-8 md:py-6">{children}</main>

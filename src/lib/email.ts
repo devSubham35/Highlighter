@@ -55,7 +55,7 @@ function getTransporter() {
 
 export async function sendInvitationEmail(input: InvitationEmailInput) {
   const { user, adminEmail } = requireEmailEnv();
-  const fromName = `${input.inviterName} via Highlighter`;
+  const fromName = `${input.inviterName} via Highlight`;
   const projectText =
     input.projects.length > 0 ? input.projects.join(", ") : "All current projects";
   const subject = `${input.inviterName} invited you to ${input.workspaceName}`;
@@ -77,7 +77,7 @@ export async function sendInvitationEmail(input: InvitationEmailInput) {
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden">
         <tr>
           <td style="padding:28px 32px;border-bottom:1px solid #eef0f3">
-            <div style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2563eb">Highlighter</div>
+            <div style="font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2563eb">Highlight</div>
             <h1 style="margin:12px 0 0;font-size:24px;line-height:1.25;color:#111827">${escapeHtml(input.workspaceName)} invitation</h1>
             <p style="margin:10px 0 0;font-size:15px;line-height:1.6;color:#4b5563">${escapeHtml(input.inviterName)} invited you to collaborate in ${escapeHtml(input.workspaceName)}.</p>
           </td>

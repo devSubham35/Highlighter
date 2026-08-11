@@ -9,7 +9,7 @@ import {
   Check,
   Code2,
   Globe,
-  Highlighter,
+  Highlighter as HighlightIcon,
   Layers,
   MessageSquareText,
   MousePointer2,
@@ -124,9 +124,9 @@ export function LandingPage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Highlighter className="h-5 w-5" />
+              <HighlightIcon className="h-5 w-5" />
             </div>
-            <span className="text-sm font-semibold text-foreground">Highlighter</span>
+            <span className="text-sm font-semibold text-foreground">Highlight</span>
           </Link>
 
           <nav className="hidden items-center gap-6 md:flex">
@@ -174,7 +174,7 @@ export function LandingPage() {
               Ship faster by fixing what users actually see.
             </h1>
             <p className="mt-6 max-w-lg text-lg leading-8 text-muted-foreground">
-              Highlighter turns any website into a feedback channel. One script, annotated screenshots, and
+              Highlight turns any website into a feedback channel. One script, annotated screenshots, and
               complete session metadata — all flowing into a dashboard your team will actually use.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -226,7 +226,7 @@ export function LandingPage() {
             Everything you need to close the feedback loop
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            From the first screenshot to the final fix, Highlighter keeps visual context at the center.
+            From the first screenshot to the final fix, Highlight keeps visual context at the center.
           </p>
         </div>
 
@@ -435,9 +435,9 @@ export function LandingPage() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-6 py-10 sm:flex-row">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Highlighter className="h-4 w-4" />
+              <HighlightIcon className="h-4 w-4" />
             </div>
-            <span className="text-sm font-semibold text-foreground">Highlighter</span>
+            <span className="text-sm font-semibold text-foreground">Highlight</span>
           </div>
 
           <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
@@ -455,7 +455,7 @@ export function LandingPage() {
           </nav>
 
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Highlighter
+            © {new Date().getFullYear()} Highlight
           </p>
         </div>
       </footer>

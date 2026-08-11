@@ -11,7 +11,7 @@ const port = Number(process.env.PORT ?? 3000);
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
-const realtimeState = (globalThis.__highlighterRealtime ??= { tokens: new Map() });
+const realtimeState = (globalThis.__highlightRealtime ??= { tokens: new Map() });
 
 function cleanupExpiredTokens() {
   const now = Date.now();
@@ -25,7 +25,7 @@ function realtimeSecret() {
     process.env.BETTER_AUTH_SECRET ??
     process.env.AUTH_SECRET ??
     process.env.NEXTAUTH_SECRET ??
-    "highlighter-development-realtime-secret"
+    "highlight-development-realtime-secret"
   );
 }
 
@@ -83,7 +83,7 @@ await app.prepare();
 
 const server = createServer((req, res) => {
   const parsedUrl = parse(req.url, true);
-  if (req.method === "POST" && parsedUrl.pathname === "/__highlighter/realtime/publish") {
+  if (req.method === "POST" && parsedUrl.pathname === "/__highlight/realtime/publish") {
     let body = "";
     req.setEncoding("utf8");
     req.on("data", (chunk) => {

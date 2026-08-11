@@ -1,4 +1,4 @@
-import { Highlighter, MousePointer2 } from "lucide-react";
+import { Highlighter as HighlightIcon, MousePointer2 } from "lucide-react";
 
 export function AuthGraphic() {
   return (
@@ -27,7 +27,7 @@ export function AuthGraphic() {
           </div>
 
           <div className="absolute bottom-6 right-6 flex h-11 w-11 items-center justify-center rounded-full [background:var(--button-brand-bg)] text-primary-foreground shadow-[var(--shadow-button)]">
-            <Highlighter className="h-4 w-4" />
+            <HighlightIcon className="h-4 w-4" />
           </div>
 
           <div className="absolute left-8 top-11 w-48 rounded-xl border border-border/70 bg-card p-2.5 shadow-[var(--shadow-surface)]">

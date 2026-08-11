@@ -396,7 +396,7 @@ export function Sidebar({
     <div className="flex h-full flex-col">
       <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-sidebar-border px-4">
         <Link href="/workspaces" className="flex min-w-0 items-center">
-          <span className="text-lg font-semibold text-foreground">Highlighter</span>
+          <span className="text-lg font-semibold text-foreground">Highlight</span>
         </Link>
       </div>
 

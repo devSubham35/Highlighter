@@ -1,5 +1,5 @@
 /**
- * Integration test runner for Highlighter API routes.
+ * Integration test runner for Highlight API routes.
  * Usage: npx tsx scripts/test-api.ts [baseUrl]
  */
 
@@ -88,7 +88,7 @@ function assertStatus(name: string, method: string, path: string, status: number
 }
 
 async function main() {
-  console.log(`\nHighlighter API tests @ ${BASE}\n`);
+  console.log(`\nHighlight API tests @ ${BASE}\n`);
 
   // --- Public / docs ---
   {

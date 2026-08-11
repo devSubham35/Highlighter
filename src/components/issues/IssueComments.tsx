@@ -31,7 +31,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 export type IssueComment = IssueRealtimeComment;
 type ActivityFilter = "all" | "comments" | "history";
 type ActivitySort = "newest" | "oldest";
-const ACTIVITY_SORT_STORAGE_KEY = "highlighter:issue-activity-sort";
+const ACTIVITY_SORT_STORAGE_KEY = "highlight:issue-activity-sort";
 const QUICK_REACTIONS = ["✅", "👀", "🙌", "🙏", "➕", "👏", "💡", "🎯", "👋", "👍", "❤️", "🔥"] as const;
 const REACTION_LABELS: Record<string, string> = {
   "✅": "Done",

@@ -1,5 +1,5 @@
 {
-  "name": "highlighter-widget",
+  "name": "highlight-widget",
   "private": true,
   "scripts": {
     "build": "vite build",

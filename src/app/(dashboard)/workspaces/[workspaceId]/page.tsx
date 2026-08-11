@@ -218,7 +218,7 @@ export default async function WorkspaceOverviewPage({
       return log.map((entry) => ({
         id: `${report.id}-${entry.id}`,
         kind: entry.kind,
-        actorName: entry.actorName ?? metadata.reporterName ?? "Highlighter",
+        actorName: entry.actorName ?? metadata.reporterName ?? "Highlight",
         action: activityLabel(entry, report.title),
         projectName: report.project.name,
         at: entry.at,

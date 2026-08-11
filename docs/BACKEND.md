@@ -1,6 +1,6 @@
-# Highlighter Backend Documentation
+# Highlight Backend Documentation
 
-This document describes the current backend implementation for **Highlighter** — a visual bug-reporting SaaS. The backend is a **Next.js App Router API** backed by **PostgreSQL** (via Prisma), **Better Auth** for sessions, and **Cloudflare R2** for screenshot storage.
+This document describes the current backend implementation for **Highlight** — a visual bug-reporting SaaS. The backend is a **Next.js App Router API** backed by **PostgreSQL** (via Prisma), **Better Auth** for sessions, and **Cloudflare R2** for screenshot storage.
 
 ---
 
@@ -907,4 +907,4 @@ npm run dev               # Start dev server (API + UI)
 
 ---
 
-*Last updated to reflect the codebase as implemented in the Highlighter repository.*
+*Last updated to reflect the codebase as implemented in the Highlight repository.*

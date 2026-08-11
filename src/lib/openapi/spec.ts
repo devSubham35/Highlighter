@@ -20,11 +20,11 @@ export function getOpenApiSpec(baseUrl = "http://localhost:3000") {
   return {
     openapi: "3.0.3",
     info: {
-      title: "Highlighter API",
+      title: "Highlight API",
       version: OPENAPI_VERSION,
       description:
-        "REST API for Highlighter — visual bug reporting SaaS. Authenticated dashboard routes use session cookies from Better Auth. Widget routes accept public project API keys and support CORS.",
-      contact: { name: "Highlighter" },
+        "REST API for Highlight — visual bug reporting SaaS. Authenticated dashboard routes use session cookies from Better Auth. Widget routes accept public project API keys and support CORS.",
+      contact: { name: "Highlight" },
     },
     servers: [{ url: baseUrl, description: "Local development" }],
     tags: [

@@ -48,7 +48,7 @@ function RegisterPageContent() {
   return (
     <div>
       <h1 className="text-[2rem] font-semibold tracking-tight text-foreground">Create account ✨</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Join Highlighter and start tracking issues.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Join Highlight and start tracking issues.</p>
 
       <form className="mt-7 space-y-4" onSubmit={methods.handleSubmit(onSubmit)}>
         <div className="space-y-2">

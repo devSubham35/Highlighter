@@ -3,7 +3,7 @@ import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 const TOKEN_VERSION = "inv_v1";
 
 function secret() {
-  return process.env.INVITATION_TOKEN_SECRET ?? process.env.BETTER_AUTH_SECRET ?? "highlighter-dev-secret";
+  return process.env.INVITATION_TOKEN_SECRET ?? process.env.BETTER_AUTH_SECRET ?? "highlight-dev-secret";
 }
 
 function signPayload(payload: string) {

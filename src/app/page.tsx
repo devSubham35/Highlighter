@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Highlighter — Visual bug reporting for any website",
+  title: "Highlight — Visual bug reporting for any website",
   description:
     "Install one script, capture annotated screenshots with full session metadata, and triage issues in a focused dashboard.",
 };

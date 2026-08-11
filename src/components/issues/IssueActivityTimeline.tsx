@@ -84,7 +84,7 @@ export function ActivityRow({
         </span>
         <div className="min-w-0 flex-1 text-[13px] leading-5 text-muted-foreground">
           <p className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold text-foreground">Highlighter</span>
+            <span className="font-semibold text-foreground">Highlight</span>
             <span className="text-[12px] font-medium text-muted-foreground">{relativeTime(entry.at)}</span>
           </p>
           <p className="mt-1 text-[13px] font-medium leading-5 text-foreground">

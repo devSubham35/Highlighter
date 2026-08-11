@@ -110,7 +110,7 @@ export function TopNav({
 
         {showLogo ? (
           <Link href="/workspaces" className="flex min-w-0 items-center">
-            <span className="text-lg font-semibold text-foreground">Highlighter</span>
+            <span className="text-lg font-semibold text-foreground">Highlight</span>
           </Link>
         ) : null}
 

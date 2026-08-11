@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Highlighter, MousePointer2 } from "lucide-react";
+import { Highlighter as HighlightIcon, MousePointer2 } from "lucide-react";
 
 export function HeroMockup() {
   return (
@@ -37,7 +37,7 @@ export function HeroMockup() {
           </div>
 
           <div className="absolute bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-            <Highlighter className="h-5 w-5" />
+            <HighlightIcon className="h-5 w-5" />
           </div>
 
           <div className="absolute left-8 top-16 w-52 rounded-xl border border-sidebar-border bg-card p-3 shadow-xl">

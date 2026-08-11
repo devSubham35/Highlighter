@@ -1,7 +1,7 @@
 import { AuthBackground } from "@/components/auth/AuthBackground";
 import { AuthGraphic } from "@/components/auth/AuthGraphic";
 import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "@/components/ui/avatar";
-import { Highlighter } from "lucide-react";
+import { Highlighter as HighlightIcon } from "lucide-react";
 import Link from "next/link";
 
 const DEFAULT_AVATAR_IMAGE = "https://github.com/maxleiter.png";
@@ -16,9 +16,9 @@ export function AuthLayoutChrome({ children }: { children: React.ReactNode }) {
 
         <Link href="/" className="relative z-10 inline-flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/80 text-primary shadow-[var(--shadow-surface)]">
-            <Highlighter className="h-4 w-4" />
+            <HighlightIcon className="h-4 w-4" />
           </div>
-          <span className="text-sm font-semibold text-foreground">Highlighter</span>
+          <span className="text-sm font-semibold text-foreground">Highlight</span>
         </Link>
 
         <div className="relative z-10 mt-16 space-y-8">
@@ -60,9 +60,9 @@ export function AuthLayoutChrome({ children }: { children: React.ReactNode }) {
 
         <Link href="/" className="relative z-10 mb-8 inline-flex items-center gap-2 md:hidden">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Highlighter className="h-4 w-4" />
+            <HighlightIcon className="h-4 w-4" />
           </div>
-          <span className="text-sm font-semibold text-foreground">Highlighter</span>
+          <span className="text-sm font-semibold text-foreground">Highlight</span>
         </Link>
 
         <div className="relative z-10 mx-auto w-full max-w-md">
