@@ -84,10 +84,12 @@ const navItems: NavItem[] = [
       workspaceId !== null && pathname.startsWith(`/workspaces/${workspaceId}/members`),
   },
   {
-    label: "Settings",
+    label: "Workspace Settings",
     icon: Settings,
-    href: "/settings",
-    match: (pathname) => pathname === "/settings" || pathname === "/profile",
+    href: (workspaceId) =>
+      workspaceId ? `/workspaces/${workspaceId}/settings` : "/workspaces",
+    match: (pathname, workspaceId) =>
+      workspaceId !== null && pathname.startsWith(`/workspaces/${workspaceId}/settings`),
   },
 ];
 
