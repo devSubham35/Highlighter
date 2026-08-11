@@ -10,6 +10,7 @@ import {
   Check,
   Code2,
   Globe,
+  HelpCircle,
   Layers,
   MessageSquareText,
   MousePointer2,
@@ -161,9 +162,9 @@ export function LandingPage() {
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--auth-grid-soft)_1px,transparent_1px),linear-gradient(to_bottom,var(--auth-grid-soft)_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_at_center,black,transparent_75%)]"
         />
 
-        <div className="relative mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-2 md:items-center md:py-24 lg:gap-16">
+        <div className="relative mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-[0.92fr_1.08fr] md:items-center md:py-24 lg:gap-16">
           <div>
-            <Badge variant="success" className="mb-4 gap-1.5 px-3 py-1">
+            <Badge className="mb-4 gap-1.5 px-3 py-1">
               <Zap className="h-3 w-3" />
               Visual bug reporting
             </Badge>
@@ -377,21 +378,41 @@ export function LandingPage() {
       </section>
 
       <section id="faq" className="scroll-mt-24 border-t border-sidebar-border bg-muted/30 py-20 md:py-28">
-        <div className="mx-auto max-w-3xl px-6">
-          <div className="text-center">
-            <p className="text-sm font-semibold uppercase tracking-wide text-primary">FAQ</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">Common questions</h2>
+        <div className="mx-auto max-w-4xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <Badge className="gap-1.5 px-3 py-1">
+              <HelpCircle className="h-3.5 w-3.5" />
+              FAQ
+            </Badge>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+              Questions teams ask before installing Highlight
+            </h2>
+            <p className="mt-4 text-base leading-7 text-muted-foreground">
+              A quick look at setup, collected context, customization, and reporter access.
+            </p>
           </div>
 
-          <div className="mt-12 space-y-4">
+          <div className="mt-12 grid gap-4">
             {faqs.map((faq) => (
-              <Card key={faq.question} className="border border-sidebar-border bg-card dark:bg-surface-elevated">
-                <CardContent className="p-5">
+              <div
+                key={faq.question}
+                className="grid min-h-32 gap-4 rounded-xl border border-sidebar-border bg-card p-5 shadow-sm transition-colors hover:border-primary/25 hover:bg-primary/5 dark:bg-surface-elevated sm:grid-cols-[2.5rem_1fr]"
+              >
+                <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <HelpCircle className="h-4 w-4" />
+                </span>
+                <div>
                   <h3 className="text-base font-semibold text-foreground">{faq.question}</h3>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">{faq.answer}</p>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
+          </div>
+
+          <div className="mt-6 rounded-xl border border-primary/20 bg-primary/5 px-5 py-4 text-center">
+            <p className="text-sm font-medium text-foreground">
+              Start with one workspace and one project. You can tune widget settings after the first report lands.
+            </p>
           </div>
         </div>
       </section>
@@ -413,15 +434,6 @@ export function LandingPage() {
               >
                 Get started free
                 <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button
-                type="button"
-                variant="outline"
-                className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
-              >
-                Log in
               </Button>
             </Link>
           </div>

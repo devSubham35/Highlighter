@@ -5,11 +5,12 @@ import { Suspense, useState } from "react";
 import { signUp } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { GoogleIcon } from "@/components/common/GoogleIcon";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerFormSchema, type RegisterFormData } from "@/lib/validations";
-import { ArrowRight, EyeOff, Lock, Mail, User } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 
 function RegisterPageContent() {
   const router = useRouter();
@@ -17,6 +18,7 @@ function RegisterPageContent() {
   const inviteToken = searchParams.get("invite");
   const invitedEmail = searchParams.get("email") ?? "";
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const methods = useForm<RegisterFormData>({
     resolver: zodResolver(registerFormSchema),
@@ -50,8 +52,8 @@ function RegisterPageContent() {
       <h1 className="text-[2rem] font-semibold tracking-tight text-foreground">Create account ✨</h1>
       <p className="mt-1 text-sm text-muted-foreground">Join Highlight and start tracking issues.</p>
 
-      <form className="mt-7 space-y-4" onSubmit={methods.handleSubmit(onSubmit)}>
-        <fieldset disabled={methods.formState.isSubmitting} className="contents">
+      <form className="mt-7" onSubmit={methods.handleSubmit(onSubmit)}>
+        <fieldset disabled={methods.formState.isSubmitting} className="m-0 min-w-0 space-y-4 border-0 p-0">
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground" htmlFor="name">
               Full name
@@ -100,13 +102,21 @@ function RegisterPageContent() {
               <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Create a password"
                 autoComplete="new-password"
                 className="h-11 rounded-md px-10"
                 {...methods.register("password")}
               />
-              <EyeOff className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 cursor-pointer items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => setShowPassword((value) => !value)}
+                disabled={methods.formState.isSubmitting}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
             {methods.formState.errors.password ? (
               <p className="text-xs text-destructive">{methods.formState.errors.password.message}</p>
@@ -115,7 +125,7 @@ function RegisterPageContent() {
 
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="h-11 w-full">
             <span>{methods.formState.isSubmitting ? "Creating account..." : "Create account"}</span>
             <ArrowRight className="h-4 w-4" />
           </Button>
@@ -126,8 +136,8 @@ function RegisterPageContent() {
             <div className="h-px flex-1 bg-border" />
           </div>
 
-          <Button type="button" variant="outline" className="w-full font-medium">
-            <span className="text-base leading-none">G</span>
+          <Button type="button" variant="outline" className="h-11 w-full font-medium">
+            <GoogleIcon />
             Continue with Google
           </Button>
         </fieldset>

@@ -6,10 +6,11 @@ import { useForm } from "react-hook-form";
 import { signIn } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { GoogleIcon } from "@/components/common/GoogleIcon";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginFormSchema, type LoginFormData } from "@/lib/validations";
-import { ArrowRight, EyeOff, Lock, Mail } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Lock, Mail } from "lucide-react";
 
 function LoginPageContent() {
   const router = useRouter();
@@ -17,6 +18,7 @@ function LoginPageContent() {
   const inviteToken = searchParams.get("invite");
   const invitedEmail = searchParams.get("email") ?? "";
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const methods = useForm<LoginFormData>({
     resolver: zodResolver(loginFormSchema),
@@ -48,8 +50,8 @@ function LoginPageContent() {
       <h1 className="text-[2rem] font-semibold tracking-tight text-foreground">Welcome back 👋</h1>
       <p className="mt-1 text-sm text-muted-foreground">Sign in to continue to Highlight.</p>
 
-      <form className="mt-7 space-y-5" onSubmit={methods.handleSubmit(onSubmit)}>
-        <fieldset disabled={methods.formState.isSubmitting} className="contents">
+      <form className="mt-7" onSubmit={methods.handleSubmit(onSubmit)}>
+        <fieldset disabled={methods.formState.isSubmitting} className="m-0 min-w-0 space-y-5 border-0 p-0">
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground" htmlFor="email">
               Email address
@@ -78,13 +80,21 @@ function LoginPageContent() {
               <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 autoComplete="current-password"
                 className="h-11 rounded-md px-10"
                 {...methods.register("password")}
               />
-              <EyeOff className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 cursor-pointer items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => setShowPassword((value) => !value)}
+                disabled={methods.formState.isSubmitting}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
             <div className="flex justify-end">
               <Link className="text-xs font-medium text-primary hover:underline" href="#">
@@ -98,7 +108,7 @@ function LoginPageContent() {
 
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="h-11 w-full">
             <span>{methods.formState.isSubmitting ? "Signing in..." : "Sign in"}</span>
             <ArrowRight className="h-4 w-4" />
           </Button>
@@ -109,8 +119,8 @@ function LoginPageContent() {
             <div className="h-px flex-1 bg-border" />
           </div>
 
-          <Button type="button" variant="outline" className="w-full font-medium">
-            <span className="text-base leading-none">G</span>
+          <Button type="button" variant="outline" className="h-11 w-full font-medium">
+            <GoogleIcon />
             Continue with Google
           </Button>
         </fieldset>

@@ -712,7 +712,7 @@ function IssueTrendChart({ graph }: { graph: WorkspaceIssueGraphPoint[] }) {
           data={chartData}
           barGap={3}
           barCategoryGap="28%"
-          margin={{ top: 8, right: 6, bottom: 0, left: -18 }}
+          margin={{ top: 8, right: 6, bottom: 0, left: 6 }}
         >
           <CartesianGrid vertical={false} strokeDasharray="2 8" strokeLinecap="round" />
           <XAxis
@@ -722,7 +722,14 @@ function IssueTrendChart({ graph }: { graph: WorkspaceIssueGraphPoint[] }) {
             tickMargin={8}
             minTickGap={18}
           />
-          <YAxis tickLine={false} axisLine={false} tickMargin={8} allowDecimals={false} width={34} />
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            allowDecimals={false}
+            width={42}
+            className="text-xs"
+          />
           <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
           <Bar dataKey="open" fill="var(--color-open)" radius={[6, 6, 0, 0]} />
           <Bar dataKey="inProgress" fill="var(--color-inProgress)" radius={[6, 6, 0, 0]} />
