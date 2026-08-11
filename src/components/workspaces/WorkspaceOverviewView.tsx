@@ -3,6 +3,12 @@
 import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog,
@@ -41,6 +47,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 export type WorkspaceOverviewStats = {
   activeProjects: number;
@@ -290,9 +297,13 @@ export function WorkspaceOverviewView({
             <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-primary/5 to-transparent" />
             <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
               <div className="max-w-3xl">
-                <div className="flex flex-wrap items-center gap-2">
-                  <RoleBadge role={role} />
-                  <span className="inline-flex h-6 min-h-6 items-center rounded-full border border-white/70 bg-white/70 px-3 py-0 text-[11px] font-medium leading-none text-muted-foreground shadow-sm dark:border-white/10 dark:bg-white/5">
+                <div className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-full border border-border/70 bg-white/80 p-1 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-white/5">
+                  <RoleBadge
+                    role={role}
+                    className="h-7 min-h-7 border-primary bg-primary px-3 text-[10px] text-primary-foreground shadow-none dark:border-primary dark:bg-primary dark:text-primary-foreground"
+                  />
+                  <span className="inline-flex h-7 min-h-7 items-center gap-2 rounded-full bg-muted/70 px-3 py-0 text-xs font-semibold leading-none text-foreground dark:bg-white/10">
+                    <span className="size-1.5 rounded-full bg-primary" />
                     {workspaceName}
                   </span>
                 </div>
@@ -302,12 +313,6 @@ export function WorkspaceOverviewView({
                 <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
                   Here is what is happening across your feedback workspace today.
                 </p>
-                <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                  <HeroStat label="Active projects" value={liveStats.activeProjects} />
-                  <HeroStat label="Total reports" value={liveStats.totalReports} />
-                  <HeroStat label="Waiting review" value={openIssues} />
-                  <HeroStat label="Team members" value={liveStats.memberCount} />
-                </div>
               </div>
               <div className="flex flex-wrap gap-2">
                 <a
@@ -512,15 +517,6 @@ function CreateIssueProjectDialog({
   );
 }
 
-function HeroStat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-2xl border border-white/70 bg-white/75 px-4 py-3 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-white/5">
-      <p className="text-2xl font-semibold text-foreground">{value}</p>
-      <p className="mt-1 text-xs font-medium text-muted-foreground">{label}</p>
-    </div>
-  );
-}
-
 function MetricCard({
   label,
   value,
@@ -603,15 +599,16 @@ function IssueAnalyticsCard({
             {totalReported} reported, {totalResolved} resolved in the last 6 months
           </p>
         </div>
-        <div className="flex rounded-xl border border-border bg-muted/30 p-1 text-xs">
+        <div className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-full border border-border/70 bg-white/80 p-1 text-xs shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-white/5">
           {filters.map((filter) => (
             <button
               key={filter.value}
               type="button"
               onClick={() => onRangeChange(filter.value)}
               className={cn(
-                "cursor-pointer rounded-lg px-3 py-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground",
-                selectedRange === filter.value && "bg-card text-foreground shadow-sm",
+                "inline-flex h-7 cursor-pointer items-center rounded-full px-3 font-semibold text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground dark:hover:bg-white/10",
+                selectedRange === filter.value &&
+                  "bg-primary text-primary-foreground shadow-none hover:bg-primary hover:text-primary-foreground",
               )}
             >
               {filter.label}
@@ -634,165 +631,60 @@ function IssueAnalyticsCard({
 }
 
 function IssueTrendChart({ graph }: { graph: WorkspaceIssueGraphPoint[] }) {
-  const width = 1000;
-  const height = 260;
-  const paddingX = 36;
-  const paddingTop = 18;
-  const baseline = 194;
-  const maxValue = Math.max(
-    ...graph.flatMap((point) => [point.open, point.inProgress, point.resolved, point.closed]),
-    1,
-  );
-  const bucketWidth = (width - paddingX * 2) / Math.max(graph.length, 1);
-  const barWidth = Math.min(Math.max(bucketWidth * 0.12, 7), 16);
-  const barGap = Math.min(Math.max(bucketWidth * 0.035, 3), 6);
-  const groupWidth = STATUS_SEGMENTS.length * barWidth + (STATUS_SEGMENTS.length - 1) * barGap;
-  const yAxisTicks = buildYAxisTicks(maxValue, paddingTop, baseline);
-  const points = graph.map((point, index) => {
-    const x = paddingX + bucketWidth * index + bucketWidth / 2;
-    const statusValues = getGraphStatusValues(point);
-    const minY = Math.min(
-      ...statusValues
-        .filter((status) => status.value > 0)
-        .map((status) => baseline - (status.value / maxValue) * (baseline - paddingTop)),
-      baseline,
-    );
-    return {
-      ...point,
-      x,
-      minY,
-      statusValues,
-    };
-  });
+  const chartData = graph.map((point) => ({
+    label: point.label,
+    open: point.open,
+    inProgress: point.inProgress,
+    resolved: point.resolved,
+    closed: point.closed,
+  }));
+  const chartConfig = {
+    open: {
+      label: ISSUE_STATUS_LABELS.OPEN,
+      color: "var(--primary)",
+    },
+    inProgress: {
+      label: ISSUE_STATUS_LABELS.IN_PROGRESS,
+      color: "#F59E0B",
+    },
+    resolved: {
+      label: ISSUE_STATUS_LABELS.RESOLVED,
+      color: "#22C55E",
+    },
+    closed: {
+      label: ISSUE_STATUS_LABELS.CLOSED,
+      color: "#64748B",
+    },
+  } satisfies ChartConfig;
 
   return (
-    <div className="mt-4 overflow-visible rounded-2xl bg-linear-to-b from-primary/5 to-transparent px-2 py-4">
-      <div className="relative overflow-visible">
-        <svg className="h-[270px] w-full overflow-visible" viewBox={`0 0 ${width} ${height}`} role="img">
-          <defs>
-            <filter id="chart-shadow" x="-10%" y="-10%" width="120%" height="130%">
-              <feDropShadow dx="0" dy="6" stdDeviation="7" floodColor="var(--primary)" floodOpacity="0.12" />
-            </filter>
-          </defs>
-          {yAxisTicks.map((tick, index) => (
-            <g key={tick.value}>
-              <text
-                x={0}
-                y={tick.y + 4}
-                textAnchor="start"
-                className="fill-muted-foreground text-[10px]"
-              >
-                {tick.value}
-              </text>
-              <line
-                x1={paddingX}
-                x2={width - paddingX}
-                y1={tick.y}
-                y2={tick.y}
-                className="stroke-border/70"
-                strokeWidth="1"
-                strokeDasharray={index === yAxisTicks.length - 1 ? "0" : "4 8"}
-              />
-            </g>
-          ))}
-          {points.map((point) => (
-            <g key={point.key}>
-              {point.statusValues.map((statusValue, statusIndex) => {
-                const barHeight = (statusValue.value / maxValue) * (baseline - paddingTop);
-                const barX = point.x - groupWidth / 2 + statusIndex * (barWidth + barGap);
-                const barY = baseline - barHeight;
-
-                return (
-                  <path
-                    key={statusValue.status}
-                    d={topRoundedBarPath(
-                      barX,
-                      barY,
-                      barWidth,
-                      Math.max(barHeight, statusValue.value > 0 ? 6 : 0),
-                      6,
-                    )}
-                    fill={statusValue.fill}
-                    opacity={statusValue.status === "OPEN" ? 0.92 : 0.86}
-                    filter={statusValue.status === "OPEN" ? "url(#chart-shadow)" : undefined}
-                  />
-                );
-              })}
-              <text x={point.x} y={baseline + 28} textAnchor="middle" className="fill-muted-foreground text-[11px]">
-                {point.label}
-              </text>
-            </g>
-          ))}
-        </svg>
-        <div className="absolute inset-0">
-          {points.map((point) => (
-            <ChartHoverPoint
-              key={point.key}
-              point={point}
-              left={(point.x / width) * 100}
-              top={(point.minY / height) * 100}
-              widthPercent={100 / Math.max(points.length, 1)}
-            />
-          ))}
-        </div>
-      </div>
+    <div className="mt-4 rounded-2xl bg-linear-to-b from-primary/5 to-transparent px-1 pt-2">
+      <ChartContainer config={chartConfig} className="h-[190px] w-full">
+        <BarChart
+          accessibilityLayer
+          data={chartData}
+          barGap={3}
+          barCategoryGap="28%"
+          margin={{ top: 8, right: 6, bottom: 0, left: -18 }}
+        >
+          <CartesianGrid vertical={false} strokeDasharray="2 8" strokeLinecap="round" />
+          <XAxis
+            dataKey="label"
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            minTickGap={18}
+          />
+          <YAxis tickLine={false} axisLine={false} tickMargin={8} allowDecimals={false} width={34} />
+          <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+          <Bar dataKey="open" fill="var(--color-open)" radius={[6, 6, 0, 0]} />
+          <Bar dataKey="inProgress" fill="var(--color-inProgress)" radius={[6, 6, 0, 0]} />
+          <Bar dataKey="resolved" fill="var(--color-resolved)" radius={[6, 6, 0, 0]} />
+          <Bar dataKey="closed" fill="var(--color-closed)" radius={[6, 6, 0, 0]} />
+        </BarChart>
+      </ChartContainer>
     </div>
   );
-}
-
-function ChartHoverPoint({
-  point,
-  left,
-  top,
-  widthPercent,
-}: {
-  point: WorkspaceIssueGraphPoint;
-  left: number;
-  top: number;
-  widthPercent: number;
-}) {
-  return (
-    <span
-      className="group absolute top-0 z-20 h-full -translate-x-1/2 cursor-pointer rounded-full"
-      style={{ left: `${left}%`, width: `${widthPercent}%` }}
-    >
-      <span className="pointer-events-none absolute top-4 left-1/2 hidden h-[194px] w-px -translate-x-1/2 bg-primary/20 group-hover:block" />
-      <span
-        className="pointer-events-none absolute left-1/2 z-30 hidden w-44 -translate-x-1/2 rounded-xl border border-border bg-white p-3 text-xs text-foreground opacity-100 shadow-xl dark:bg-neutral-950 group-hover:block"
-        style={{ top: `max(0.5rem, calc(${top}% - 5.5rem))` }}
-      >
-        <span className="block font-semibold">{point.label}</span>
-        {getGraphStatusValues(point).map((statusValue) => (
-          <span key={statusValue.status} className="mt-1.5 flex items-center justify-between">
-            <LegendDot className={statusValue.dotClassName} label={ISSUE_STATUS_LABELS[statusValue.status]} />
-            <span className="font-semibold">{statusValue.value}</span>
-          </span>
-        ))}
-      </span>
-    </span>
-  );
-}
-
-function getGraphStatusValues(point: WorkspaceIssueGraphPoint) {
-  const fills: Record<ReportStatus, string> = {
-    OPEN: "var(--primary)",
-    IN_PROGRESS: "#F59E0B",
-    RESOLVED: "#22C55E",
-    CLOSED: "#64748B",
-  };
-  const values: Record<ReportStatus, number> = {
-    OPEN: point.open,
-    IN_PROGRESS: point.inProgress,
-    RESOLVED: point.resolved,
-    CLOSED: point.closed,
-  };
-
-  return STATUS_SEGMENTS.map((segment) => ({
-    status: segment.status,
-    value: values[segment.status],
-    fill: fills[segment.status],
-    dotClassName: segment.dotClassName,
-  }));
 }
 
 function StatusSummaryCard({
@@ -1212,32 +1104,6 @@ function findGraphPointKey(graph: WorkspaceIssueGraphPoint[], createdAt: string)
   const dayKey = createdAt.slice(0, 10);
   const monthKey = createdAt.slice(0, 7);
   return graph.find((point) => point.key === dayKey || point.key === monthKey)?.key ?? graph.at(-1)?.key;
-}
-
-function buildYAxisTicks(maxValue: number, paddingTop: number, baseline: number) {
-  const values = maxValue <= 1 ? [1, 0] : [maxValue, Math.ceil(maxValue / 2), 0];
-  const uniqueValues = Array.from(new Set(values));
-
-  return uniqueValues.map((value) => ({
-    value,
-    y: baseline - (value / Math.max(maxValue, 1)) * (baseline - paddingTop),
-  }));
-}
-
-function topRoundedBarPath(x: number, y: number, width: number, height: number, radius: number) {
-  if (height <= 0) return "";
-  const r = Math.min(radius, width / 2, height);
-  const bottom = y + height;
-
-  return [
-    `M ${x} ${bottom}`,
-    `L ${x} ${y + r}`,
-    `Q ${x} ${y} ${x + r} ${y}`,
-    `L ${x + width - r} ${y}`,
-    `Q ${x + width} ${y} ${x + width} ${y + r}`,
-    `L ${x + width} ${bottom}`,
-    "Z",
-  ].join(" ");
 }
 
 function incrementProjectStatus(projectStats: WorkspaceProjectStats[], projectId: string, status: ReportStatus) {

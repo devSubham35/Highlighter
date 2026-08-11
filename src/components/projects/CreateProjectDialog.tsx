@@ -100,7 +100,7 @@ export function CreateProjectDialog({
       <DialogContent showCloseButton>
         <FormProvider methods={methods} onSubmit={methods.handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Add Project</DialogTitle>
+            <DialogTitle>Create Project</DialogTitle>
             <DialogDescription>Connect a website to start collecting visual feedback.</DialogDescription>
           </DialogHeader>
           <DialogBody className="space-y-4">
@@ -127,7 +127,7 @@ export function CreateProjectDialog({
             </Button>
             <Button type="submit" disabled={methods.formState.isSubmitting}>
               <Plus className="h-4 w-4" />
-              {methods.formState.isSubmitting ? "Adding..." : "Add"}
+              {methods.formState.isSubmitting ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>
         </FormProvider>

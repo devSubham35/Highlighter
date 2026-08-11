@@ -15,7 +15,16 @@ import type { IssueRealtimeEvent } from "@/lib/realtime";
 import { useIssueRealtime } from "@/lib/use-issue-realtime";
 import { cn } from "@/lib/utils";
 import type { ReportStatus } from "@/types";
-import { LayoutGrid, List, Search } from "lucide-react";
+import {
+  Archive,
+  ArrowDownWideNarrow,
+  ArrowUpWideNarrow,
+  FolderPlus,
+  LayoutGrid,
+  List,
+  Search,
+  SearchX,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -78,12 +87,32 @@ export function ProjectsView({
 
   useEffect(() => {
     if (searchParams.get("create") !== "project") return;
-    setCreateOpen(true);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setCreateOpen(true);
+    });
     router.replace(`/workspaces/${workspaceId}/projects`, { scroll: false });
+    return () => {
+      cancelled = true;
+    };
   }, [router, searchParams, workspaceId]);
 
   const activeCount = projectItems.filter((project) => !project.archived).length;
   const archivedCount = projectItems.filter((project) => project.archived).length;
+  const hasSearch = search.trim().length > 0;
+  const sortOptions = useMemo(
+    () =>
+      PROJECT_SORT_OPTIONS.map((option) => ({
+        ...option,
+        icon:
+          option.value === "newest" ? (
+            <ArrowDownWideNarrow className="h-4 w-4" />
+          ) : (
+            <ArrowUpWideNarrow className="h-4 w-4" />
+          ),
+      })),
+    [],
+  );
 
   const filteredProjects = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -145,24 +174,38 @@ export function ProjectsView({
 
       <div className="flex flex-col gap-2 rounded-xl border border-sidebar-border bg-white p-3 dark:bg-surface-elevated lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-          <div className="inline-flex rounded-lg border border-sidebar-border bg-muted/40 p-0.5">
+          <div className="inline-flex rounded-lg border border-border/70 bg-white/80 p-0.5 text-xs shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-white/5">
             <Button
               type="button"
               variant={status === "active" ? "secondary" : "ghost"}
               size="sm"
-              className={cn("text-xs", status === "active" && "bg-card text-primary shadow-sm")}
+              className={cn(
+                "text-xs text-muted-foreground hover:bg-muted/70 hover:text-foreground dark:hover:bg-white/10",
+                status === "active" &&
+                  "bg-primary text-primary-foreground shadow-none hover:bg-primary hover:text-primary-foreground",
+              )}
               onClick={() => setStatus("active")}
             >
-              Active <span className="ml-1 text-muted-foreground">{activeCount}</span>
+              Active{" "}
+              <span className={cn("ml-1 text-muted-foreground", status === "active" && "text-primary-foreground/80")}>
+                {activeCount}
+              </span>
             </Button>
             <Button
               type="button"
               variant={status === "archived" ? "secondary" : "ghost"}
               size="sm"
-              className={cn("text-xs", status === "archived" && "bg-card text-primary shadow-sm")}
+              className={cn(
+                "text-xs text-muted-foreground hover:bg-muted/70 hover:text-foreground dark:hover:bg-white/10",
+                status === "archived" &&
+                  "bg-primary text-primary-foreground shadow-none hover:bg-primary hover:text-primary-foreground",
+              )}
               onClick={() => setStatus("archived")}
             >
-              Archived <span className="ml-1 text-muted-foreground">{archivedCount}</span>
+              Archived{" "}
+              <span className={cn("ml-1 text-muted-foreground", status === "archived" && "text-primary-foreground/80")}>
+                {archivedCount}
+              </span>
             </Button>
           </div>
 
@@ -179,12 +222,16 @@ export function ProjectsView({
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-          <div className="inline-flex rounded-lg border border-sidebar-border bg-muted/40 p-0.5">
+          <div className="inline-flex rounded-lg border border-border/70 bg-white/80 p-0.5 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-white/5">
             <Button
               type="button"
               variant={viewMode === "grid" ? "secondary" : "ghost"}
               size="sm"
-              className={cn(viewMode === "grid" && "bg-card text-primary shadow-sm")}
+              className={cn(
+                "text-muted-foreground hover:bg-muted/70 hover:text-foreground dark:hover:bg-white/10",
+                viewMode === "grid" &&
+                  "bg-primary text-primary-foreground shadow-none hover:bg-primary hover:text-primary-foreground",
+              )}
               onClick={() => setViewMode("grid")}
             >
               <LayoutGrid className="h-4 w-4" />
@@ -193,7 +240,11 @@ export function ProjectsView({
               type="button"
               variant={viewMode === "list" ? "secondary" : "ghost"}
               size="sm"
-              className={cn(viewMode === "list" && "bg-card text-primary shadow-sm")}
+              className={cn(
+                "text-muted-foreground hover:bg-muted/70 hover:text-foreground dark:hover:bg-white/10",
+                viewMode === "list" &&
+                  "bg-primary text-primary-foreground shadow-none hover:bg-primary hover:text-primary-foreground",
+              )}
               onClick={() => setViewMode("list")}
             >
               <List className="h-4 w-4" />
@@ -203,7 +254,7 @@ export function ProjectsView({
           <Combobox
             value={sortBy}
             onValueChange={(value) => setSortBy(value as ProjectSort)}
-            options={PROJECT_SORT_OPTIONS}
+            options={sortOptions}
             searchable={false}
             aria-label="Sort by"
             className="h-9 w-36 text-sm"
@@ -218,13 +269,13 @@ export function ProjectsView({
       </div>
 
       {filteredProjects.length === 0 ? (
-        <div className="rounded-xl border border-sidebar-border bg-card p-10 text-center dark:bg-surface-elevated">
-          <p className="text-sm text-muted-foreground">
-            {status === "archived"
-              ? "No archived projects yet."
-              : "No projects match your search."}
-          </p>
-        </div>
+        <ProjectsEmptyState
+          status={status}
+          hasSearch={hasSearch}
+          onClearSearch={() => setSearch("")}
+          onCreateProject={() => setCreateOpen(true)}
+          onViewActive={() => setStatus("active")}
+        />
       ) : (
         <div
           className={cn(
@@ -252,6 +303,61 @@ export function ProjectsView({
         </div>
       )}
     </div>
+  );
+}
+
+function ProjectsEmptyState({
+  status,
+  hasSearch,
+  onClearSearch,
+  onCreateProject,
+  onViewActive,
+}: {
+  status: StatusFilter;
+  hasSearch: boolean;
+  onClearSearch: () => void;
+  onCreateProject: () => void;
+  onViewActive: () => void;
+}) {
+  const isArchived = status === "archived";
+  const Icon = hasSearch ? SearchX : isArchived ? Archive : FolderPlus;
+  const title = hasSearch
+    ? "No projects found"
+    : isArchived
+      ? "No archived projects"
+      : "Create your first project";
+  const description = hasSearch
+    ? "Try a different website name or clear the search to see all projects."
+    : isArchived
+      ? "Projects you archive will appear here, away from your active workspace."
+      : "Connect a website and start collecting visual feedback from your team.";
+
+  return (
+    <section className="flex min-h-72 items-center justify-center rounded-[18px] border border-dashed border-border/80 bg-card px-6 py-12 text-center shadow-sm dark:bg-surface-elevated">
+      <div className="mx-auto flex max-w-sm flex-col items-center">
+        <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15">
+          <Icon className="h-5 w-5" />
+        </span>
+        <h2 className="mt-4 text-base font-semibold text-foreground">{title}</h2>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          {hasSearch ? (
+            <Button type="button" variant="outline" size="sm" onClick={onClearSearch}>
+              Clear Search
+            </Button>
+          ) : isArchived ? (
+            <Button type="button" variant="outline" size="sm" onClick={onViewActive}>
+              View Active
+            </Button>
+          ) : (
+            <Button type="button" size="sm" onClick={onCreateProject}>
+              <FolderPlus className="h-4 w-4" />
+              Create Project
+            </Button>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
 
