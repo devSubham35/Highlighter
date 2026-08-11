@@ -40,6 +40,7 @@ import {
   UserMinus,
   UserRoundCheck,
   Users,
+  X,
   XCircle,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -120,6 +121,13 @@ function initials(value: string) {
     .toUpperCase();
 }
 
+function parseInviteEmails(value: string) {
+  return value
+    .split(/[\s,;]+/)
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 function statusBadge(status: MemberStatus | InvitationStatus) {
   const variant =
     status === "ACTIVE" || status === "ACCEPTED"
@@ -138,6 +146,9 @@ function statusBadge(status: MemberStatus | InvitationStatus) {
 }
 
 function ProjectChips({ projects, allCount }: { projects: Project[]; allCount: number }) {
+  if (allCount === 0) {
+    return <span className="text-sm text-muted-foreground">No projects yet</span>;
+  }
   if (projects.length === 0) {
     return <span className="text-sm text-muted-foreground">All projects</span>;
   }
@@ -165,6 +176,14 @@ function ProjectPicker({
   onChange: (projectIds: string[]) => void;
   disabled?: boolean;
 }) {
+  if (projects.length === 0) {
+    return (
+      <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted/30 px-3 text-sm font-medium text-muted-foreground shadow-[var(--control-shadow)]">
+        No projects yet
+      </div>
+    );
+  }
+
   const options = [
     { value: allProjectsValue, label: "All current projects" },
     ...projects.map((project) => ({ value: project.id, label: project.name })),
@@ -221,10 +240,10 @@ export function MembersManagementView({
   const [sortBy, setSortBy] = useState<"name" | "joined">("name");
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmails, setInviteEmails] = useState("");
+  const [inviteEmailChips, setInviteEmailChips] = useState<string[]>([]);
   const [inviteRole, setInviteRole] = useState<MemberRole>("MEMBER");
   const [inviteProjects, setInviteProjects] = useState<string[]>([]);
   const [inviteMessage, setInviteMessage] = useState("");
-  const [preview, setPreview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [pendingMemberAction, setPendingMemberAction] = useState<
     | { type: "suspend"; member: MemberRow }
@@ -275,10 +294,21 @@ export function MembersManagementView({
       });
   }, [invitations, members, query, roleFilter, sortBy, statusFilter]);
 
-  const parsedEmails = useMemo(
-    () => Array.from(new Set(inviteEmails.split(/[\s,;]+/).map((email) => email.trim().toLowerCase()).filter(Boolean))),
-    [inviteEmails],
-  );
+  const parsedEmails = useMemo(() => Array.from(new Set([...inviteEmailChips, ...parseInviteEmails(inviteEmails)])), [inviteEmailChips, inviteEmails]);
+
+  function addInviteEmailChips() {
+    if (submitting) return;
+    const nextEmails = parseInviteEmails(inviteEmails);
+    if (nextEmails.length === 0) return;
+
+    setInviteEmailChips((current) => Array.from(new Set([...current, ...nextEmails])));
+    setInviteEmails("");
+  }
+
+  function removeInviteEmailChip(email: string) {
+    if (submitting) return;
+    setInviteEmailChips((current) => current.filter((item) => item !== email));
+  }
 
   async function sendInvite() {
     if (parsedEmails.length === 0) return;
@@ -316,8 +346,8 @@ export function MembersManagementView({
       toast.success("Invitations sent", `${payload.sent} invitation ${payload.sent === 1 ? "email was" : "emails were"} delivered.`);
     }
     setInviteOpen(false);
-    setPreview(false);
     setInviteEmails("");
+    setInviteEmailChips([]);
     setInviteProjects([]);
     setInviteMessage("");
   }
@@ -539,12 +569,36 @@ export function MembersManagementView({
           <DialogBody className="space-y-6">
             <div>
               <label className="mb-2 block text-sm font-medium leading-none">Email addresses</label>
-              <Textarea
-                value={inviteEmails}
-                onChange={(event) => setInviteEmails(event.target.value)}
-                placeholder="alex@example.com, priya@example.com"
-                disabled={submitting}
-              />
+              <div className="flex h-24 flex-wrap content-start gap-2 overflow-y-auto rounded-md border border-input bg-card px-3 py-2 shadow-[var(--control-shadow)] focus-within:border-ring focus-within:ring-1 focus-within:ring-ring/50">
+                {inviteEmailChips.map((email) => (
+                  <Badge key={email} variant="secondary" className="h-7 max-w-full gap-1.5 rounded-md px-2.5">
+                    <span className="truncate">{email}</span>
+                    <button
+                      type="button"
+                      className="inline-flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={() => removeInviteEmailChip(email)}
+                      disabled={submitting}
+                      aria-label={`Remove ${email}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+                <input
+                  value={inviteEmails}
+                  onChange={(event) => setInviteEmails(event.target.value)}
+                  onBlur={addInviteEmailChips}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === "," || event.key === ";") {
+                      event.preventDefault();
+                      addInviteEmailChips();
+                    }
+                  }}
+                  placeholder={inviteEmailChips.length === 0 ? "alex@example.com, priya@example.com" : "Add another email"}
+                  disabled={submitting}
+                  className="h-7 min-w-48 flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
             </div>
             <div className="grid gap-4 md:grid-cols-[180px_1fr]">
               <div>
@@ -570,18 +624,11 @@ export function MembersManagementView({
                 onChange={(event) => setInviteMessage(event.target.value)}
                 placeholder="Optional note for the invitation email"
                 disabled={submitting}
+                className="h-24 resize-none"
               />
             </div>
-            {preview ? (
-              <div className="rounded-md border border-border bg-muted/30 p-4 text-sm">
-                <p className="font-medium">Invitation preview</p>
-                <p className="mt-2 text-muted-foreground">{parsedEmails.length} recipient(s) will be invited as {roleLabel(inviteRole)} to {inviteProjects.length === 0 ? "all current projects" : `${inviteProjects.length} selected project(s)`}.</p>
-                {inviteMessage ? <p className="mt-2 rounded-md bg-background p-3">{inviteMessage}</p> : null}
-              </div>
-            ) : null}
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPreview((value) => !value)} disabled={submitting}>{preview ? "Hide preview" : "Preview"}</Button>
             <Button onClick={sendInvite} disabled={submitting || parsedEmails.length === 0}>
               <UserRoundCheck className="h-4 w-4" />
               {submitting ? "Sending..." : "Send invitation"}
