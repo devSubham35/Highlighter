@@ -34,11 +34,21 @@ export function DashboardShell({
         <TopNav
           compact={hideSidebar}
           showLogo={hideSidebar}
-          user={hideSidebar ? user : undefined}
+          user={user}
           className={hideSidebar ? "md:px-8" : undefined}
           onMenuClick={hideSidebar ? undefined : () => setMobileOpen(true)}
         />
-        <main className="flex-1 px-4 py-4 md:px-8 md:py-6">{children}</main>
+        <main
+          className={cn(
+            "relative flex-1 px-4 py-4 md:px-8 md:py-6",
+            hideSidebar && "overflow-hidden",
+          )}
+        >
+          {hideSidebar ? (
+            <div aria-hidden className="pointer-events-none absolute inset-0 bg-workspace-accent" />
+          ) : null}
+          <div className="relative">{children}</div>
+        </main>
       </div>
     </div>
   );
